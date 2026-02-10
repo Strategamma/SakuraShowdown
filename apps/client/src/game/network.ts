@@ -4,6 +4,7 @@ import type { GameConfig, GameState, Move } from "@game/rules";
 export type OnlineHandlers = {
   onState: (state: GameState) => void;
   onConfig: (config: GameConfig) => void;
+  onRoom?: (roomId: string) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
 };
@@ -24,6 +25,7 @@ export class OnlineSession {
         ? await this.client.joinById(roomId)
         : await this.client.joinOrCreate("onitama");
 
+      this.handlers.onRoom?.(this.room.id);
       this.room.onMessage("state", (state: GameState) => this.handlers.onState(state));
       this.room.onMessage("config", (config: GameConfig) => this.handlers.onConfig(config));
       this.room.onMessage("player", (payload: { playerId?: string }) =>

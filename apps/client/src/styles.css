@@ -1,14 +1,18 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600&display=swap");
 
 :root {
-  --bg: #f3efe7;
-  --ink: #201f1c;
-  --muted: #6b6258;
+  --bg: #f6f1ea;
+  --ink: #2b1d1a;
+  --muted: #6e5b56;
   --panel: #ffffff;
-  --accent: #c6463a;
-  --board-light: #efe3d1;
+  --accent: #c23a49;
+  --accent-strong: #8f2436;
+  --board-light: #efe4d3;
   --board-dark: #d7c1a2;
-  --shadow: rgba(21, 18, 14, 0.15);
+  --shadow: rgba(24, 18, 14, 0.16);
+  --glow: rgba(194, 58, 73, 0.25);
+  --font-display: "Cinzel", serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
 }
 
 * {
@@ -17,8 +21,8 @@
 
 body {
   margin: 0;
-  font-family: "Space Grotesk", system-ui, sans-serif;
-  background: radial-gradient(circle at 20% 10%, #f7f3ec 0%, var(--bg) 45%, #ebe2d4 100%);
+  font-family: var(--font-body);
+  background: radial-gradient(circle at 15% 20%, #fff8f0 0%, var(--bg) 45%, #efe3d2 100%);
   color: var(--ink);
   min-height: 100vh;
 }
@@ -34,7 +38,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  background: var(--panel);
+  background: linear-gradient(120deg, #fffdf9 0%, #f7efe4 100%);
   box-shadow: 0 6px 18px var(--shadow);
   position: sticky;
   top: 0;
@@ -42,8 +46,42 @@ body {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 20%, #ffd9de 0%, #f3b3bc 40%, #e28b96 100%);
+  box-shadow: 0 8px 16px var(--glow);
+}
+
+.logo svg {
+  width: 34px;
+  height: 34px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-subtitle {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
 }
 
 .status {
@@ -51,18 +89,37 @@ body {
   font-size: 0.95rem;
 }
 
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(194, 58, 73, 0.2);
+  box-shadow: 0 6px 18px var(--shadow);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow);
+}
+
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr) 250px;
   gap: 16px;
   padding: 16px;
 }
 
 #canvas-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
-  border-radius: 16px;
-  box-shadow: 0 10px 30px var(--shadow);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35));
+  border-radius: 20px;
+  box-shadow: 0 18px 40px var(--shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,7 +176,7 @@ button {
   border: none;
   border-radius: 10px;
   padding: 10px 12px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
   color: white;
   font-weight: 600;
   cursor: pointer;
@@ -128,13 +185,13 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(198, 70, 58, 0.3);
+  box-shadow: 0 10px 20px var(--glow);
 }
 
 .ghost-button {
-  background: #f3e8d8;
-  color: #5f4c3b;
-  border: 1px solid #e2d7c7;
+  background: #f6ede0;
+  color: #5d4743;
+  border: 1px solid #e4d5c7;
   box-shadow: none;
 }
 
@@ -162,6 +219,47 @@ button:hover {
   letter-spacing: 0.08em;
   color: var(--muted);
   margin-bottom: 6px;
+}
+
+.room-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.room-row input {
+  flex: 1;
+}
+
+.room-info {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.online-only {
+  display: none;
+}
+
+.local-only {
+  display: none;
+}
+
+#app[data-mode="online"] .online-only {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#app[data-mode="online"] .local-only {
+  display: none;
+}
+
+#app[data-mode="local"] .local-only {
+  display: inline-flex;
+}
+
+#app[data-mode="local"] .online-only {
+  display: none;
 }
 
 .cards {
@@ -435,6 +533,11 @@ button:hover {
   #top-bar {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .brand {
+    flex-direction: column;
+    text-align: center;
   }
 
   #canvas-container {

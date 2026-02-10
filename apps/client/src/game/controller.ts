@@ -9,6 +9,7 @@ export type ControllerCallbacks = {
   onConfig: (config: GameConfig) => void;
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
+  onRoom?: (roomId: string) => void;
 };
 
 export class GameController {
@@ -71,6 +72,9 @@ export class GameController {
       onConfig: (config) => {
         this.config = config;
         this.callbacks.onConfig(config);
+      },
+      onRoom: (roomId) => {
+        this.callbacks.onRoom?.(roomId);
       },
       onPlayer: (playerId) => {
         this.playerId = playerId;

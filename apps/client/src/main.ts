@@ -10,9 +10,14 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "ws://localhost:2567";
 const STORAGE_KEY = "sakura.customConfig";
 
 const statusEl = document.getElementById("status") as HTMLElement;
+const appEl = document.getElementById("app") as HTMLElement;
 const modeSelect = document.getElementById("mode") as HTMLSelectElement;
 const connectBtn = document.getElementById("connect") as HTMLButtonElement;
 const roomInput = document.getElementById("room") as HTMLInputElement;
+const roomInfoEl = document.getElementById("room-info") as HTMLElement;
+const copyRoomBtn = document.getElementById("copy-room") as HTMLButtonElement;
+const quickOnlineBtn = document.getElementById("quick-online") as HTMLButtonElement;
+const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
@@ -39,6 +44,7 @@ let previousHand: string[] = [];
 let previousPoolCard: string | undefined;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
+let currentRoomId: string | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -53,6 +59,12 @@ const controller = new GameController({
   },
   onStatus: (message) => {
     statusEl.textContent = message;
+  },
+  onRoom: (roomId) => {
+    currentRoomId = roomId;
+    roomInput.value = roomId;
+    roomInfoEl.textContent = `Room code: ${roomId}`;
+    statusEl.textContent = `Online match ready · Room ${roomId}`;
   },
   onPlayer: (playerId) => {
     playerLabel.textContent = playerId ?? "Spectator";
@@ -90,6 +102,18 @@ function renderAll() {
     statusEl.textContent = `Winner: ${latestState.winnerId}`;
   } else {
     statusEl.textContent = `Turn ${latestState.turn} · ${latestState.activePlayerId}`;
+  }
+}
+
+function setMode(mode: "local" | "online") {
+  appEl.dataset.mode = mode;
+  controller.setMode(mode);
+  if (mode === "local") {
+    currentRoomId = undefined;
+    roomInfoEl.textContent = "Not connected";
+    if (latestConfig) {
+      controller.startLocal();
+    }
   }
 }
 
@@ -376,11 +400,7 @@ async function bootstrap() {
 
 modeSelect.addEventListener("change", () => {
   const mode = modeSelect.value === "online" ? "online" : "local";
-  controller.setMode(mode);
-
-  if (mode === "local") {
-    controller.startLocal();
-  }
+  setMode(mode);
 });
 
 connectBtn.addEventListener("click", async () => {
@@ -390,6 +410,30 @@ connectBtn.addEventListener("click", async () => {
   }
 
   await controller.connectOnline(SERVER_URL, roomInput.value.trim() || undefined);
+});
+
+quickOnlineBtn.addEventListener("click", async () => {
+  modeSelect.value = "online";
+  setMode("online");
+  roomInput.value = "";
+  await controller.connectOnline(SERVER_URL);
+});
+
+copyRoomBtn.addEventListener("click", async () => {
+  if (!currentRoomId) {
+    statusEl.textContent = "No room code yet.";
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(currentRoomId);
+    statusEl.textContent = "Room code copied.";
+  } catch {
+    statusEl.textContent = "Copy failed. Select and copy the room code.";
+  }
+});
+
+restartLocalBtn.addEventListener("click", () => {
+  setMode("local");
 });
 
 customizeBtn.addEventListener("click", openCustomize);
@@ -411,4 +455,5 @@ cardsApplyBtn.addEventListener("click", applyCardChanges);
 cardsResetBtn.addEventListener("click", resetCardChanges);
 cardsExportBtn.addEventListener("click", exportConfig);
 
+appEl.dataset.mode = "local";
 bootstrap();
