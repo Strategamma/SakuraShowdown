@@ -18,6 +18,8 @@ const canvasContainer = document.getElementById("canvas-container") as HTMLEleme
 let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
+let previousHand: string[] = [];
+let previousPoolCard: string | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -86,8 +88,15 @@ function renderCards() {
       const cardEl = document.createElement("div");
       cardEl.className = "card";
       cardEl.textContent = card?.name ?? cardId;
+      if (!previousHand.includes(cardId)) {
+        cardEl.classList.add("reveal");
+      }
       if (selection.selectedCardId === cardId) {
         cardEl.classList.add("active");
+      }
+      if (card) {
+        const pattern = drawCardPattern(card.moves);
+        cardEl.appendChild(pattern);
       }
       cardEl.addEventListener("click", () => {
         const next = selection.selectedCardId === cardId ? undefined : cardId;
@@ -103,7 +112,17 @@ function renderCards() {
   const poolCardEl = document.createElement("div");
   poolCardEl.className = "card disabled";
   poolCardEl.textContent = poolCard?.name ?? latestState.poolCard;
+  if (previousPoolCard && previousPoolCard !== latestState.poolCard) {
+    poolCardEl.classList.add("swap");
+  }
+  if (poolCard) {
+    const pattern = drawCardPattern(poolCard.moves);
+    poolCardEl.appendChild(pattern);
+  }
   poolEl.appendChild(poolCardEl);
+
+  previousHand = playerState?.hand ?? [];
+  previousPoolCard = latestState.poolCard;
 }
 
 function filterMoves(
@@ -117,6 +136,51 @@ function filterMoves(
     if (selectedPieceId && move.pieceId !== selectedPieceId) return false;
     return true;
   });
+}
+
+function drawCardPattern(moves: { x: number; y: number }[]) {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  canvas.className = "card-pattern";
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  const center = { x: 2, y: 2 };
+  const cell = size / 5;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.strokeStyle = "rgba(150, 120, 90, 0.25)";
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i <= 5; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(0, i * cell);
+    ctx.lineTo(size, i * cell);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i * cell, 0);
+    ctx.lineTo(i * cell, size);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#7b4d3a";
+  ctx.beginPath();
+  ctx.arc((center.x + 0.5) * cell, (center.y + 0.5) * cell, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#c6463a";
+  for (const move of moves) {
+    const x = center.x + move.x;
+    const y = center.y - move.y;
+    if (x < 0 || x > 4 || y < 0 || y > 4) continue;
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * cell, (y + 0.5) * cell, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  return canvas;
 }
 
 async function bootstrap() {
