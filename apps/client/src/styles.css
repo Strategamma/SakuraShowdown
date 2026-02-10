@@ -752,11 +752,50 @@ button:hover {
   color: rgba(243, 233, 239, 0.7);
 }
 
+.draft-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 20px;
+  align-items: start;
+}
+
 .draft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 16px;
   width: 100%;
+}
+
+.draft-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(18, 12, 16, 0.6);
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid rgba(226, 74, 127, 0.2);
+}
+
+.draft-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.draft-selected-item {
+  border-radius: 12px;
+  border: 1px solid rgba(120, 90, 105, 0.6);
+  background: linear-gradient(160deg, #22141d 0%, #151017 100%);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.draft-selected-item .card-pattern {
+  width: 64px;
+  height: 64px;
 }
 
 .draft-item {
@@ -782,7 +821,6 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
 }
 
 .draft-count {
@@ -1032,6 +1070,10 @@ button:hover {
 }
 
 @media (max-width: 900px) {
+  .draft-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
   #game-area {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -1056,6 +1098,10 @@ button:hover {
 }
 
 @media (max-width: 600px) {
+  .draft-grid {
+    grid-template-columns: repeat(1, minmax(140px, 1fr));
+  }
+
   #game-area {
     padding: 12px;
   }

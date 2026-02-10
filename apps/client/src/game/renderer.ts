@@ -332,15 +332,15 @@ export class GameRenderer {
       if (!highlight) continue;
       const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
       const borderMat = highlight.border.material as THREE.LineBasicMaterial;
-      let baseColor = 0x5aa8ff;
-      if (move.playerId === primaryId) baseColor = 0xe0565b;
-      if (move.playerId === secondaryId) baseColor = 0x5aa8ff;
-      const color = move.capture ? 0xf1c65a : baseColor;
-      const opacity = move.capture ? 0.6 : 0.4;
+      let baseColor = 0x5ab4ff;
+      if (move.playerId === primaryId) baseColor = 0xe85c6d;
+      if (move.playerId === secondaryId) baseColor = 0x5ab4ff;
+      const color = move.capture ? 0xf2c15f : baseColor;
+      const opacity = move.capture ? 0.7 : 0.5;
       fillMat.color.set(color);
       borderMat.color.set(color);
       fillMat.opacity = opacity;
-      borderMat.opacity = opacity + 0.5;
+      borderMat.opacity = opacity + 0.35;
       highlight.fill.userData.baseOpacity = opacity;
     }
   }

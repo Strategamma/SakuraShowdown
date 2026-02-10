@@ -72,6 +72,7 @@ const draftGrid = document.getElementById("draft-grid") as HTMLElement;
 const draftCount = document.getElementById("draft-count") as HTMLElement;
 const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElement;
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
+const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement;
 
 appEl.dataset.started = "false";
 
@@ -138,13 +139,25 @@ function handleCellTap(x: number, y: number) {
   if (movesForCell.length === 0) return;
 
   if (!selection.selectedPieceId) {
-    if (movesForCell.length === 1) {
-      const only = movesForCell[0];
-      controller.selectPiece(only.pieceId);
-      controller.selectCard(only.cardId);
-      controller.tryMove(x, y);
-      controller.clearSelection();
-      pendingMove = undefined;
+    const uniquePieces = Array.from(new Set(movesForCell.map((move) => move.pieceId)));
+    if (uniquePieces.length === 1) {
+      const pieceId = uniquePieces[0];
+      controller.selectPiece(pieceId);
+      if (movesForCell.length === 1) {
+        const only = movesForCell[0];
+        controller.selectCard(only.cardId);
+        controller.tryMove(x, y);
+        controller.clearSelection();
+        pendingMove = undefined;
+        renderAll();
+        return;
+      }
+      pendingMove = {
+        pieceId,
+        to: { x, y },
+        cardIds: Array.from(new Set(movesForCell.map((move) => move.cardId)))
+      };
+      statusEl.textContent = "Choose a card to play this move.";
       renderAll();
       return;
     }
@@ -207,12 +220,10 @@ function renderAll() {
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
   renderer.render(latestState, moves, selection);
 
-  if (modeSelect.value === "local" && latestConfig.players[0]) {
-    const flip = latestState.activePlayerId !== latestConfig.players[0].id;
-    renderer.setBoardFlip(flip);
-  } else {
-    renderer.setBoardFlip(false);
-  }
+  const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
+  const primaryId = latestConfig.players[0]?.id;
+  const flip = Boolean(primaryId && viewPlayerId !== primaryId);
+  renderer.setBoardFlip(flip);
 
   if (latestState.winnerId) {
     const winnerName =
@@ -296,11 +307,14 @@ function renderCards() {
   const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
   const playerState = latestState.players.find((p) => p.id === viewPlayerId);
   const opponentState = latestState.players.find((p) => p.id !== viewPlayerId);
-  const playerName = latestConfig.players.find((p) => p.id === viewPlayerId)?.name ?? "You";
-  const opponentName = latestConfig.players.find((p) => p.id !== viewPlayerId)?.name ?? "Opponent";
+  const playerMeta = latestConfig.players.find((p) => p.id === viewPlayerId);
+  const opponentMeta = latestConfig.players.find((p) => p.id !== viewPlayerId);
+  const playerName = playerMeta?.name ?? "You";
+  const opponentName = opponentMeta?.name ?? "Opponent";
+  const primaryId = latestConfig.players[0]?.id;
+  const patternFlip = Boolean(primaryId && viewPlayerId !== primaryId);
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
-  const primaryId = latestConfig.players[0]?.id;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
   const opponentId = latestConfig.players.find((p) => p.id !== viewPlayerId)?.id;
   setNameClass(playerNameEl, playerId === primaryId ? "primary" : "secondary");
@@ -339,7 +353,7 @@ function renderCards() {
         cardEl.classList.add("swap-in");
       }
       if (card) {
-        const pattern = drawCardPattern(card.moves);
+        const pattern = drawCardPattern(card.moves, patternFlip);
         cardEl.appendChild(pattern);
       }
       cardEl.addEventListener("click", () => {
@@ -379,7 +393,7 @@ function renderCards() {
         title.textContent = card?.name ?? cardId;
         cardEl.appendChild(title);
         if (card) {
-          const pattern = drawCardPattern(card.moves);
+          const pattern = drawCardPattern(card.moves, patternFlip);
           cardEl.appendChild(pattern);
         }
       }
@@ -399,7 +413,7 @@ function renderCards() {
     poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
-    const pattern = drawCardPattern(poolCard.moves);
+    const pattern = drawCardPattern(poolCard.moves, patternFlip);
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);
@@ -461,7 +475,7 @@ function filterMoves(
   });
 }
 
-function drawCardPattern(moves: { x: number; y: number }[]) {
+function drawCardPattern(moves: { x: number; y: number }[], flip = false) {
   const size = 80;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -496,8 +510,10 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
 
   ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
-    const x = center.x + move.x;
-    const y = center.y - move.y;
+    const mx = flip ? -move.x : move.x;
+    const my = flip ? -move.y : move.y;
+    const x = center.x + mx;
+    const y = center.y - my;
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
     ctx.fillRect(x * cell + cell * 0.18, y * cell + cell * 0.18, cell * 0.64, cell * 0.64);
   }
@@ -796,6 +812,7 @@ function maybeShowStartOverlay() {
 function renderDraft() {
   if (!baseConfig) return;
   draftGrid.innerHTML = "";
+  draftSelectedEl.innerHTML = "";
   for (const card of baseConfig.cards) {
     const item = document.createElement("div");
     item.className = "draft-item";
@@ -818,6 +835,20 @@ function renderDraft() {
   }
   draftCount.textContent = `${draftSelection.size} / 5 selected`;
   draftStartBtn.disabled = draftSelection.size !== 5;
+
+  for (const cardId of draftSelection) {
+    const card = baseConfig.cards.find((c) => c.id === cardId);
+    if (!card) continue;
+    const item = document.createElement("div");
+    item.className = "draft-selected-item";
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = card.name;
+    const pattern = drawCardPattern(card.moves);
+    item.appendChild(title);
+    item.appendChild(pattern);
+    draftSelectedEl.appendChild(item);
+  }
 }
 
 async function bootstrap() {
