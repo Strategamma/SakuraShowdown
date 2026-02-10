@@ -117,6 +117,15 @@ body {
   display: none;
 }
 
+#app[data-started="true"] #right-panel {
+  display: none !important;
+}
+
+#app[data-started="true"] #game-area {
+  grid-template-columns: minmax(200px, 22vw) minmax(0, 1fr) !important;
+  grid-template-areas: "cards board" !important;
+}
+
 .status {
   color: var(--muted);
   font-size: 0.95rem;
@@ -146,8 +155,8 @@ body {
   display: grid;
   grid-template-columns: minmax(200px, 20vw) minmax(0, 1fr) minmax(200px, 18vw);
   grid-template-areas: "cards board right";
-  gap: 16px;
-  padding: 12px;
+  gap: 14px;
+  padding: 10px;
   min-height: 0;
   align-items: stretch;
 }
@@ -166,9 +175,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 420px;
+  min-height: 460px;
   height: min(90vh, 90vw);
-  max-height: 900px;
+  max-height: 960px;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
@@ -197,7 +206,7 @@ body {
   border-radius: 18px;
   box-shadow: 0 18px 36px var(--shadow);
   display: grid;
-  grid-template-rows: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  grid-template-rows: minmax(180px, 1fr) auto minmax(180px, 1fr);
   gap: 16px;
   padding: 14px;
   min-height: 0;
@@ -227,6 +236,42 @@ body {
 .card-house-section.active .card {
   border-color: rgba(226, 74, 127, 0.65);
   box-shadow: 0 8px 18px rgba(226, 74, 127, 0.2);
+}
+
+#opponent-hand,
+#hand {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#pool {
+  display: flex;
+  justify-content: center;
+}
+
+.captured-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.captured-token {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(226, 74, 127, 0.5);
+  box-shadow: 0 0 6px rgba(226, 74, 127, 0.3);
+}
+
+.captured-token.primary {
+  background: rgba(226, 74, 127, 0.8);
+}
+
+.captured-token.secondary {
+  background: rgba(96, 165, 250, 0.8);
 }
 
 .panel-section {
@@ -451,7 +496,7 @@ button:hover {
   border-radius: 10px;
   background: linear-gradient(140deg, #241820 0%, #1a1118 100%);
   border: 1px solid #3c2732;
-  min-width: clamp(140px, 18vw, 180px);
+  min-width: 0;
   min-height: 96px;
   text-align: center;
   display: flex;
@@ -464,6 +509,15 @@ button:hover {
   box-shadow: 0 6px 14px rgba(5, 4, 6, 0.6);
   position: relative;
   overflow: hidden;
+}
+
+#card-house .card {
+  min-height: 82px;
+}
+
+#card-house .card-pattern {
+  width: 64px;
+  height: 64px;
 }
 
 .card-title {
@@ -557,6 +611,65 @@ button:hover {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.victory-card {
+  width: min(640px, 92vw);
+}
+
+.victory-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.victory-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.draft-card {
+  width: min(820px, 94vw);
+}
+
+.draft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.draft-item {
+  border-radius: 12px;
+  border: 1px solid #3a2732;
+  background: #1a1218;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.draft-item.selected {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(226, 74, 127, 0.2);
+}
+
+.draft-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.draft-count {
+  color: var(--muted);
 }
 
 .overlay-header {
@@ -757,6 +870,33 @@ button:hover {
   }
 }
 
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 60;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  transform: translateY(-100vh) rotate(0deg);
+  animation: confetti-fall 1.8s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(120vh) rotate(320deg);
+    opacity: 0;
+  }
+}
+
 @media (max-width: 900px) {
   #game-area {
     grid-template-columns: 1fr;
@@ -767,13 +907,12 @@ button:hover {
   }
 
   #card-house {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
+    display: grid;
+    grid-template-rows: minmax(160px, 1fr) auto minmax(160px, 1fr);
   }
 
   .card-house-section {
-    min-width: 180px;
+    min-width: 0;
   }
 
   #right-panel {
@@ -817,6 +956,15 @@ button:hover {
   }
 
   .card-house-section {
-    min-width: 160px;
+    min-width: 0;
+  }
+
+  #card-house .card {
+    min-height: 80px;
+  }
+
+  #card-house .card-pattern {
+    width: 56px;
+    height: 56px;
   }
 }

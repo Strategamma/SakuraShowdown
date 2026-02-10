@@ -61,7 +61,7 @@ export class GameRenderer {
   private lastSelection: RendererSelection = {};
   private pieces = new Map<string, PieceVisual>();
   private cells: THREE.Mesh[] = [];
-  private highlights: THREE.Mesh[] = [];
+  private highlights: Array<{ base: THREE.Mesh; ring: THREE.Mesh }> = [];
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
   private loader = new GLTFLoader();
@@ -287,40 +287,56 @@ export class GameRenderer {
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
       for (let x = 0; x < this.boardSize.width; x += 1) {
-        const geom = new THREE.CircleGeometry(this.cellSize * 0.3, 36);
-        const mat = new THREE.MeshBasicMaterial({
+        const baseGeom = new THREE.CircleGeometry(this.cellSize * 0.26, 36);
+        const ringGeom = new THREE.RingGeometry(this.cellSize * 0.28, this.cellSize * 0.38, 36);
+        const baseMat = new THREE.MeshBasicMaterial({
           color: 0x34d399,
           transparent: true,
           opacity: 0,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending
+          depthWrite: false
         });
-        const ring = new THREE.Mesh(geom, mat);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0x34d399,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        });
+        const base = new THREE.Mesh(baseGeom, baseMat);
+        const ring = new THREE.Mesh(ringGeom, ringMat);
+        base.rotation.x = -Math.PI / 2;
         ring.rotation.x = -Math.PI / 2;
+        base.position.copy(this.gridToWorld(x, y, 0.11));
         ring.position.copy(this.gridToWorld(x, y, 0.12));
-        ring.userData = { type: "highlight", x, y, baseOpacity: 0 };
-        this.highlightGroup.add(ring);
-        this.highlights.push(ring);
+        base.userData = { type: "highlight", x, y, baseOpacity: 0 };
+        ring.userData = base.userData;
+        this.highlightGroup.add(base, ring);
+        this.highlights.push({ base, ring });
       }
     }
   }
 
   private updateHighlights(legalMoves: LegalMove[]) {
     for (const highlight of this.highlights) {
-      const mat = highlight.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0;
-      highlight.userData.baseOpacity = 0;
+      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
+      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
+      baseMat.opacity = 0;
+      ringMat.opacity = 0;
+      highlight.base.userData.baseOpacity = 0;
     }
 
     for (const move of legalMoves) {
       const index = move.to.y * this.boardSize.width + move.to.x;
       const highlight = this.highlights[index];
       if (!highlight) continue;
-      const mat = highlight.material as THREE.MeshBasicMaterial;
-      mat.color.set(move.capture ? 0xf97316 : 0x34d399);
-      const opacity = move.capture ? 0.8 : 0.55;
-      mat.opacity = opacity;
-      highlight.userData.baseOpacity = opacity;
+      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
+      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
+      const color = move.capture ? 0xf97316 : 0x34d399;
+      const opacity = move.capture ? 0.7 : 0.45;
+      baseMat.color.set(color);
+      ringMat.color.set(color);
+      baseMat.opacity = opacity;
+      ringMat.opacity = opacity + 0.15;
+      highlight.base.userData.baseOpacity = opacity;
     }
   }
 
@@ -830,10 +846,13 @@ export class GameRenderer {
     }
 
     for (const highlight of this.highlights) {
-      const mat = highlight.material as THREE.MeshBasicMaterial;
-      const base = highlight.userData.baseOpacity as number;
-      if (base > 0) {
-        mat.opacity = base + Math.sin(time * 4 + highlight.position.x) * 0.08;
+      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
+      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
+      const baseOpacity = highlight.base.userData.baseOpacity as number;
+      if (baseOpacity > 0) {
+        const pulse = Math.sin(time * 4 + highlight.base.position.x) * 0.06;
+        baseMat.opacity = baseOpacity + pulse;
+        ringMat.opacity = baseOpacity + 0.15 + pulse * 0.6;
       }
     }
 

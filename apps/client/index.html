@@ -38,6 +38,7 @@
             </div>
             <div id="room-info" class="room-info online-only">Not connected</div>
           </div>
+          <button id="open-customize" class="ghost-button">Customize</button>
           <button id="toggle-view" class="ghost-button">2D View</button>
           <div class="status-pill">
             <span class="status-dot"></span>
@@ -49,6 +50,7 @@
         <aside id="card-house">
           <div class="card-house-section" id="opponent-section">
             <div class="player-name" id="opponent-name">Opponent</div>
+            <div class="captured-row" id="opponent-captured"></div>
             <div id="opponent-hand" class="cards vertical"></div>
           </div>
           <div class="card-house-section" id="pool-section">
@@ -57,6 +59,7 @@
           </div>
           <div class="card-house-section" id="player-section">
             <div class="player-name" id="player-name">You</div>
+            <div class="captured-row" id="player-captured"></div>
             <div id="hand" class="cards vertical"></div>
           </div>
         </aside>
@@ -125,6 +128,41 @@
           <button id="cards-export" class="ghost-button">Export JSON</button>
           <button id="cards-apply">Apply Changes</button>
         </footer>
+      </div>
+    </div>
+    <div id="victory-overlay" class="overlay hidden">
+      <div class="overlay-card victory-card">
+        <header class="overlay-header">
+          <div>
+            <div class="overlay-title" id="victory-title">Victory!</div>
+            <div class="overlay-subtitle" id="victory-subtitle">Well played.</div>
+          </div>
+          <button id="victory-close" class="ghost-button">Close</button>
+        </header>
+        <div class="overlay-body victory-body">
+          <div class="victory-actions">
+            <button id="victory-random">Start Random 5</button>
+            <button id="victory-choose" class="ghost-button">Choose 5 Cards</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="draft-overlay" class="overlay hidden">
+      <div class="overlay-card draft-card">
+        <header class="overlay-header">
+          <div>
+            <div class="overlay-title">Select 5 Cards</div>
+            <div class="overlay-subtitle">Pick any five cards for the next match.</div>
+          </div>
+          <button id="draft-close" class="ghost-button">Close</button>
+        </header>
+        <div class="overlay-body">
+          <div class="draft-grid" id="draft-grid"></div>
+          <div class="draft-footer">
+            <div class="draft-count" id="draft-count">0 / 5 selected</div>
+            <button id="draft-start">Start Match</button>
+          </div>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

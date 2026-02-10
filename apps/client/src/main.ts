@@ -36,9 +36,12 @@ const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
+const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
+const opponentCapturedEl = document.getElementById("opponent-captured") as HTMLElement;
+const playerCapturedEl = document.getElementById("player-captured") as HTMLElement;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
 const overlay = document.getElementById("customize-overlay") as HTMLElement;
@@ -55,6 +58,17 @@ const cardRemoveBtn = document.getElementById("card-remove") as HTMLButtonElemen
 const cardsApplyBtn = document.getElementById("cards-apply") as HTMLButtonElement;
 const cardsResetBtn = document.getElementById("cards-reset") as HTMLButtonElement;
 const cardsExportBtn = document.getElementById("cards-export") as HTMLButtonElement;
+const victoryOverlay = document.getElementById("victory-overlay") as HTMLElement;
+const victoryTitle = document.getElementById("victory-title") as HTMLElement;
+const victorySubtitle = document.getElementById("victory-subtitle") as HTMLElement;
+const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
+const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
+const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
+const draftOverlay = document.getElementById("draft-overlay") as HTMLElement;
+const draftGrid = document.getElementById("draft-grid") as HTMLElement;
+const draftCount = document.getElementById("draft-count") as HTMLElement;
+const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElement;
+const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
 
 appEl.dataset.started = "false";
 
@@ -71,6 +85,8 @@ let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
 let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
+let draftSelection = new Set<string>();
+let lastWinnerId: string | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -142,11 +158,16 @@ function renderAll() {
       latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
       latestState.winnerId;
     statusEl.textContent = `Winner: ${winnerName}`;
+    if (lastWinnerId !== latestState.winnerId) {
+      showVictory(winnerName);
+      lastWinnerId = latestState.winnerId;
+    }
   } else {
     const activeName =
       latestConfig.players.find((p) => p.id === latestState.activePlayerId)?.name ??
       latestState.activePlayerId;
     statusEl.textContent = `Turn ${latestState.turn} · ${activeName}`;
+    lastWinnerId = undefined;
   }
 
   updateStartedUI();
@@ -217,6 +238,7 @@ function renderCards() {
   const hasWinner = Boolean(latestState.winnerId);
   playerSection.classList.toggle("active", !hasWinner && isPlayerActive);
   opponentSection.classList.toggle("active", !hasWinner && !isPlayerActive);
+  renderCaptured(viewPlayerId);
 
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
@@ -298,6 +320,41 @@ function renderCards() {
   previousPoolCard = latestState.poolCard;
 }
 
+function renderCaptured(viewPlayerId: string) {
+  if (!latestState || !latestConfig) return;
+  opponentCapturedEl.innerHTML = "";
+  playerCapturedEl.innerHTML = "";
+
+  const deadPieces = latestState.pieces.filter((p) => !p.alive);
+  const playerCaptured = deadPieces.filter((p) => p.ownerId !== viewPlayerId);
+  const opponentCaptured = deadPieces.filter((p) => p.ownerId === viewPlayerId);
+  const primaryId = latestConfig.players[0]?.id;
+
+  for (const piece of playerCaptured) {
+    const token = document.createElement("div");
+    token.className = "captured-token";
+    if (piece.ownerId === primaryId) {
+      token.classList.add("primary");
+    } else {
+      token.classList.add("secondary");
+    }
+    token.title = piece.typeId;
+    playerCapturedEl.appendChild(token);
+  }
+
+  for (const piece of opponentCaptured) {
+    const token = document.createElement("div");
+    token.className = "captured-token";
+    if (piece.ownerId === primaryId) {
+      token.classList.add("primary");
+    } else {
+      token.classList.add("secondary");
+    }
+    token.title = piece.typeId;
+    opponentCapturedEl.appendChild(token);
+  }
+}
+
 function filterMoves(
   moves: LegalMove[],
   selectedCardId?: string,
@@ -325,8 +382,8 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   const center = { x: 1.5, y: 1.5 };
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(220, 170, 200, 0.3)";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(220, 170, 200, 0.45)";
+  ctx.lineWidth = 1.2;
 
   for (let i = 0; i <= grid; i += 1) {
     ctx.beginPath();
@@ -544,6 +601,123 @@ function exportConfig() {
   URL.revokeObjectURL(url);
 }
 
+function showVictory(winnerName: string) {
+  victoryTitle.textContent = `${winnerName} Wins!`;
+  victorySubtitle.textContent = "A masterful duel.";
+  victoryOverlay.classList.remove("hidden");
+  triggerConfetti();
+}
+
+function hideVictory() {
+  victoryOverlay.classList.add("hidden");
+}
+
+function triggerConfetti() {
+  let container = document.getElementById("confetti");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "confetti";
+    document.body.appendChild(container);
+  }
+  container.innerHTML = "";
+  const colors = ["#f472b6", "#f97316", "#facc15", "#34d399", "#60a5fa"];
+  for (let i = 0; i < 80; i += 1) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.4;
+    const duration = 1.2 + Math.random() * 0.8;
+    piece.style.left = `${left}%`;
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = `${delay}s`;
+    piece.style.animationDuration = `${duration}s`;
+    container.appendChild(piece);
+  }
+  setTimeout(() => {
+    container?.remove();
+  }, 2200);
+}
+
+function createConfigWithDeck(deck: string[]): GameConfig {
+  if (!baseConfig) throw new Error("Missing base config.");
+  const next = structuredClone(baseConfig) as GameConfig;
+  next.deck = deck;
+  return validateConfig(next);
+}
+
+function startWithDeck(deck: string[]) {
+  try {
+    const validated = createConfigWithDeck(deck);
+    baseConfig = validated;
+    const localConfig = applyLocalName(validated);
+    latestConfig = localConfig;
+    controller.setConfig(localConfig);
+    renderer.setConfig(localConfig);
+    startLocalMatch();
+    playerLabel.textContent = localName || "You";
+    previousHand = [];
+    previousPoolCard = undefined;
+    hideVictory();
+    draftOverlay.classList.add("hidden");
+  } catch {
+    statusEl.textContent = "Deck selection invalid.";
+  }
+}
+
+function startRandomFive() {
+  if (modeSelect.value !== "local") {
+    statusEl.textContent = "Random deck is available for local matches only.";
+    return;
+  }
+  if (!baseConfig) return;
+  const candidates = [...baseConfig.cards];
+  const selection: string[] = [];
+  while (selection.length < 5 && candidates.length > 0) {
+    const index = Math.floor(Math.random() * candidates.length);
+    const [card] = candidates.splice(index, 1);
+    if (card) selection.push(card.id);
+  }
+  startWithDeck(selection);
+}
+
+function openDraft() {
+  if (modeSelect.value !== "local") {
+    statusEl.textContent = "Deck selection is available for local matches only.";
+    return;
+  }
+  if (!baseConfig) return;
+  draftSelection = new Set();
+  renderDraft();
+  draftOverlay.classList.remove("hidden");
+}
+
+function renderDraft() {
+  if (!baseConfig) return;
+  draftGrid.innerHTML = "";
+  for (const card of baseConfig.cards) {
+    const item = document.createElement("div");
+    item.className = "draft-item";
+    if (draftSelection.has(card.id)) item.classList.add("selected");
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = card.name;
+    const pattern = drawCardPattern(card.moves);
+    item.appendChild(title);
+    item.appendChild(pattern);
+    item.addEventListener("click", () => {
+      if (draftSelection.has(card.id)) {
+        draftSelection.delete(card.id);
+      } else if (draftSelection.size < 5) {
+        draftSelection.add(card.id);
+      }
+      renderDraft();
+    });
+    draftGrid.appendChild(item);
+  }
+  draftCount.textContent = `${draftSelection.size} / 5 selected`;
+  draftStartBtn.disabled = draftSelection.size !== 5;
+}
+
 async function bootstrap() {
   try {
     const fallback = validateConfig(defaultConfig);
@@ -672,6 +846,7 @@ startingPlayerSelect.addEventListener("change", () => {
 });
 
 customizeBtn.addEventListener("click", openCustomize);
+openCustomizeBtn.addEventListener("click", openCustomize);
 closeBtn.addEventListener("click", closeCustomize);
 overlay.addEventListener("click", (event) => {
   if (event.target === overlay) closeCustomize();
@@ -689,6 +864,24 @@ cardRemoveBtn.addEventListener("click", removeCard);
 cardsApplyBtn.addEventListener("click", applyCardChanges);
 cardsResetBtn.addEventListener("click", resetCardChanges);
 cardsExportBtn.addEventListener("click", exportConfig);
+
+victoryCloseBtn.addEventListener("click", hideVictory);
+victoryRandomBtn.addEventListener("click", startRandomFive);
+victoryChooseBtn.addEventListener("click", openDraft);
+victoryOverlay.addEventListener("click", (event) => {
+  if (event.target === victoryOverlay) hideVictory();
+});
+
+draftCloseBtn.addEventListener("click", () => {
+  draftOverlay.classList.add("hidden");
+});
+draftOverlay.addEventListener("click", (event) => {
+  if (event.target === draftOverlay) draftOverlay.classList.add("hidden");
+});
+draftStartBtn.addEventListener("click", () => {
+  if (draftSelection.size !== 5) return;
+  startWithDeck([...draftSelection]);
+});
 
 appEl.dataset.mode = "local";
 bootstrap();
