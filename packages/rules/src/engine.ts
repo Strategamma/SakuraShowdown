@@ -1,7 +1,8 @@
-import { validateConfig } from "./config";
-import { applyAfterMoveMechanics, applyMoveFilters, checkMechanicWinners } from "./mechanics";
-import { mulberry32, shuffle } from "./rng";
+import { validateConfig } from "./config.js";
+import { applyAfterMoveMechanics, applyMoveFilters, checkMechanicWinners } from "./mechanics.js";
+import { mulberry32, shuffle } from "./rng.js";
 import type {
+  Card,
   GameConfig,
   GameState,
   LegalMove,
@@ -9,16 +10,16 @@ import type {
   Piece,
   PlayerState,
   Vec2
-} from "./types";
+} from "./types.js";
 
 export function createInitialState(rawConfig: unknown, seed = Date.now()): GameState {
   const config = validateConfig(rawConfig);
 
-  const pieceTypeIds = new Set(config.pieceTypes.map((p) => p.id));
-  const playerIds = new Set(config.players.map((p) => p.id));
-  const cardIds = new Set(config.cards.map((c) => c.id));
+  const pieceTypeIds = new Set(config.pieceTypes.map((p: GameConfig["pieceTypes"][number]) => p.id));
+  const playerIds = new Set(config.players.map((p: GameConfig["players"][number]) => p.id));
+  const cardIds = new Set(config.cards.map((c: Card) => c.id));
 
-  config.startingPieces.forEach((piece, index) => {
+  config.startingPieces.forEach((piece: GameConfig["startingPieces"][number], index) => {
     if (!pieceTypeIds.has(piece.typeId)) {
       throw new Error(`Unknown piece typeId at startingPieces[${index}]: ${piece.typeId}`);
     }
@@ -30,7 +31,7 @@ export function createInitialState(rawConfig: unknown, seed = Date.now()): GameS
     }
   });
 
-  config.deck.forEach((cardId, index) => {
+  config.deck.forEach((cardId: string, index) => {
     if (!cardIds.has(cardId)) {
       throw new Error(`Unknown card id at deck[${index}]: ${cardId}`);
     }
@@ -43,7 +44,7 @@ export function createInitialState(rawConfig: unknown, seed = Date.now()): GameS
     throw new Error(`Deck has ${deck.length} cards, but needs ${totalNeeded}.`);
   }
 
-  const players: PlayerState[] = config.players.map((player) => ({
+  const players: PlayerState[] = config.players.map((player: GameConfig["players"][number]) => ({
     id: player.id,
     hand: deck.splice(0, config.handSize)
   }));
@@ -51,7 +52,7 @@ export function createInitialState(rawConfig: unknown, seed = Date.now()): GameS
   const poolCard = deck.shift();
   if (!poolCard) throw new Error("Deck did not provide a pool card.");
 
-  const pieces: Piece[] = config.startingPieces.map((piece, index) => ({
+  const pieces: Piece[] = config.startingPieces.map((piece: GameConfig["startingPieces"][number], index) => ({
     id: `${piece.ownerId}:${piece.typeId}:${index}`,
     typeId: piece.typeId,
     ownerId: piece.ownerId,
@@ -73,14 +74,14 @@ export function createInitialState(rawConfig: unknown, seed = Date.now()): GameS
 export function listLegalMoves(state: GameState, config: GameConfig): LegalMove[] {
   if (state.winnerId) return [];
 
-  const player = config.players.find((p) => p.id === state.activePlayerId);
+  const player = config.players.find((p: GameConfig["players"][number]) => p.id === state.activePlayerId);
   if (!player) return [];
 
-  const playerState = state.players.find((p) => p.id === player.id);
+  const playerState = state.players.find((p: PlayerState) => p.id === player.id);
   if (!playerState) return [];
 
-  const cardById = new Map(config.cards.map((card) => [card.id, card]));
-  const alivePieces = state.pieces.filter((p) => p.alive && p.ownerId === player.id);
+  const cardById = new Map<string, Card>(config.cards.map((card: Card) => [card.id, card]));
+  const alivePieces = state.pieces.filter((p: Piece) => p.alive && p.ownerId === player.id);
 
   let moves: LegalMove[] = [];
 
@@ -132,7 +133,7 @@ export function applyMove(state: GameState, move: Move, config: GameConfig): Gam
   }
 
   const next = structuredClone(state) as GameState;
-  const piece = next.pieces.find((p) => p.id === move.pieceId);
+  const piece = next.pieces.find((p: Piece) => p.id === move.pieceId);
   if (!piece) throw new Error("Piece not found.");
 
   const target = getPieceAt(next, move.to);

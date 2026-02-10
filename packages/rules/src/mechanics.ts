@@ -1,4 +1,4 @@
-import type { GameState, Mechanic, MechanicContext, Move } from "./types";
+import type { GameState, Mechanic, MechanicContext, Move } from "./types.js";
 
 const swapWithPool: Mechanic = {
   id: "swap_with_pool",
