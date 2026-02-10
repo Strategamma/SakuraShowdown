@@ -157,12 +157,23 @@ export function applyMove(state, move, config) {
   if (!piece) throw new Error("Piece not found.");
 
   const target = getPieceAt(next, move.to);
+  let capturedMaster = false;
   if (target && target.ownerId !== piece.ownerId) {
     target.alive = false;
+    if (target.typeId === "master") capturedMaster = true;
   }
 
   piece.x = move.to.x;
   piece.y = move.to.y;
+
+  for (const other of next.pieces) {
+    if (other.id === piece.id) continue;
+    if (!other.alive) continue;
+    if (other.x === piece.x && other.y === piece.y && other.ownerId !== piece.ownerId) {
+      other.alive = false;
+      if (other.typeId === "master") capturedMaster = true;
+    }
+  }
 
   const ctx = { config, state: next };
   const withMechanics = applyAfterMoveMechanics(next, move, ctx, config.mechanics);
@@ -172,8 +183,12 @@ export function applyMove(state, move, config) {
   withMechanics.turn += 1;
   withMechanics.activePlayerId = nextPlayerId(config, move.playerId);
 
-  const winner = checkMechanicWinners(withMechanics, { config, state: withMechanics }, config.mechanics);
-  if (winner) withMechanics.winnerId = winner;
+  if (capturedMaster) {
+    withMechanics.winnerId = move.playerId;
+  } else {
+    const winner = checkMechanicWinners(withMechanics, { config, state: withMechanics }, config.mechanics);
+    if (winner) withMechanics.winnerId = winner;
+  }
 
   return withMechanics;
 }

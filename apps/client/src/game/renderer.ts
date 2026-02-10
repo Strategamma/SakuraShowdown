@@ -61,7 +61,7 @@ export class GameRenderer {
   private lastSelection: RendererSelection = {};
   private pieces = new Map<string, PieceVisual>();
   private cells: THREE.Mesh[] = [];
-  private highlights: Array<{ base: THREE.Mesh; ring: THREE.Mesh }> = [];
+  private highlights: Array<{ fill: THREE.Mesh; border: THREE.LineSegments }> = [];
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
   private loader = new GLTFLoader();
@@ -284,41 +284,40 @@ export class GameRenderer {
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
       for (let x = 0; x < this.boardSize.width; x += 1) {
-        const baseGeom = new THREE.CircleGeometry(this.cellSize * 0.26, 36);
-        const ringGeom = new THREE.RingGeometry(this.cellSize * 0.28, this.cellSize * 0.38, 36);
-        const baseMat = new THREE.MeshBasicMaterial({
+        const planeGeom = new THREE.PlaneGeometry(this.cellSize * 0.88, this.cellSize * 0.88);
+        const edgeGeom = new THREE.EdgesGeometry(planeGeom);
+        const fillMat = new THREE.MeshBasicMaterial({
           color: 0x5873b6,
           transparent: true,
           opacity: 0,
           depthWrite: false
         });
-        const ringMat = new THREE.MeshBasicMaterial({
+        const borderMat = new THREE.LineBasicMaterial({
           color: 0x5873b6,
           transparent: true,
-          opacity: 0,
-          depthWrite: false
+          opacity: 0
         });
-        const base = new THREE.Mesh(baseGeom, baseMat);
-        const ring = new THREE.Mesh(ringGeom, ringMat);
-        base.rotation.x = -Math.PI / 2;
-        ring.rotation.x = -Math.PI / 2;
-        base.position.copy(this.gridToWorld(x, y, 0.11));
-        ring.position.copy(this.gridToWorld(x, y, 0.12));
-        base.userData = { type: "highlight", x, y, baseOpacity: 0 };
-        ring.userData = base.userData;
-        this.highlightGroup.add(base, ring);
-        this.highlights.push({ base, ring });
+        const fill = new THREE.Mesh(planeGeom, fillMat);
+        const border = new THREE.LineSegments(edgeGeom, borderMat);
+        fill.rotation.x = -Math.PI / 2;
+        border.rotation.x = -Math.PI / 2;
+        fill.position.copy(this.gridToWorld(x, y, 0.11));
+        border.position.copy(this.gridToWorld(x, y, 0.12));
+        fill.userData = { type: "highlight", x, y, baseOpacity: 0 };
+        border.userData = fill.userData;
+        this.highlightGroup.add(fill, border);
+        this.highlights.push({ fill, border });
       }
     }
   }
 
   private updateHighlights(legalMoves: LegalMove[]) {
     for (const highlight of this.highlights) {
-      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
-      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
-      baseMat.opacity = 0;
-      ringMat.opacity = 0;
-      highlight.base.userData.baseOpacity = 0;
+      const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
+      const borderMat = highlight.border.material as THREE.LineBasicMaterial;
+      fillMat.opacity = 0;
+      borderMat.opacity = 0;
+      highlight.fill.userData.baseOpacity = 0;
     }
 
     const primaryId = this.config?.players[0]?.id;
@@ -328,18 +327,18 @@ export class GameRenderer {
       const index = move.to.y * this.boardSize.width + move.to.x;
       const highlight = this.highlights[index];
       if (!highlight) continue;
-      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
-      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
-      let baseColor = 0x5873b6;
+      const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
+      const borderMat = highlight.border.material as THREE.LineBasicMaterial;
+      let baseColor = 0x4f7ccf;
       if (move.playerId === primaryId) baseColor = 0xcc4b4b;
-      if (move.playerId === secondaryId) baseColor = 0x4b7bd3;
+      if (move.playerId === secondaryId) baseColor = 0x4f7ccf;
       const color = move.capture ? 0xd8a647 : baseColor;
-      const opacity = move.capture ? 0.65 : 0.38;
-      baseMat.color.set(color);
-      ringMat.color.set(color);
-      baseMat.opacity = opacity;
-      ringMat.opacity = opacity + 0.15;
-      highlight.base.userData.baseOpacity = opacity;
+      const opacity = move.capture ? 0.5 : 0.3;
+      fillMat.color.set(color);
+      borderMat.color.set(color);
+      fillMat.opacity = opacity;
+      borderMat.opacity = opacity + 0.25;
+      highlight.fill.userData.baseOpacity = opacity;
     }
   }
 
@@ -849,13 +848,13 @@ export class GameRenderer {
     }
 
     for (const highlight of this.highlights) {
-      const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
-      const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
-      const baseOpacity = highlight.base.userData.baseOpacity as number;
+      const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
+      const borderMat = highlight.border.material as THREE.LineBasicMaterial;
+      const baseOpacity = highlight.fill.userData.baseOpacity as number;
       if (baseOpacity > 0) {
-        const pulse = Math.sin(time * 4 + highlight.base.position.x) * 0.06;
-        baseMat.opacity = baseOpacity + pulse;
-        ringMat.opacity = baseOpacity + 0.15 + pulse * 0.6;
+        const pulse = Math.sin(time * 4 + highlight.fill.position.x) * 0.05;
+        fillMat.opacity = baseOpacity + pulse;
+        borderMat.opacity = baseOpacity + 0.25 + pulse * 0.6;
       }
     }
 

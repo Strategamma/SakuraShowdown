@@ -799,10 +799,10 @@ button:hover {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
   gap: 6px;
-  width: min(220px, 60%);
+  width: min(240px, 70%);
   aspect-ratio: 1 / 1;
   position: relative;
   margin: 6px 0 4px;

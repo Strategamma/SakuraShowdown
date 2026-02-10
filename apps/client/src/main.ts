@@ -431,7 +431,7 @@ function filterMoves(
 }
 
 function drawCardPattern(moves: { x: number; y: number }[]) {
-  const size = 72;
+  const size = 80;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -439,13 +439,13 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
 
-  const grid = 4;
+  const grid = 5;
   const cell = size / grid;
-  const center = { x: 1.5, y: 1.5 };
+  const center = { x: 2, y: 2 };
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(90, 70, 90, 0.4)";
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = "rgba(90, 70, 90, 0.45)";
+  ctx.lineWidth = 1.2;
 
   for (let i = 0; i <= grid; i += 1) {
     ctx.beginPath();
@@ -465,8 +465,8 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
 
   ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
-    const x = Math.round(center.x + move.x);
-    const y = Math.round(center.y - move.y);
+    const x = center.x + move.x;
+    const y = center.y - move.y;
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
     ctx.fillRect(x * cell + cell * 0.18, y * cell + cell * 0.18, cell * 0.64, cell * 0.64);
   }
@@ -537,16 +537,16 @@ function renderCardEditor() {
   });
 }
 
-const GRID_VALUES = [-2, -1, 0, 1];
+const GRID_VALUES = [-2, -1, 0, 1, 2];
 
 function renderCardGrid(card: { moves: { x: number; y: number }[] }) {
   cardGridEl.innerHTML = "";
   const moveSet = new Set(card.moves.map((m) => `${m.x},${m.y}`));
 
-  for (let row = 0; row < 4; row += 1) {
-    for (let col = 0; col < 4; col += 1) {
+  for (let row = 0; row < 5; row += 1) {
+    for (let col = 0; col < 5; col += 1) {
       const moveX = GRID_VALUES[col];
-      const moveY = GRID_VALUES[3 - row];
+      const moveY = GRID_VALUES[4 - row];
       const key = `${moveX},${moveY}`;
       const cell = document.createElement("div");
       cell.className = "grid-cell";
