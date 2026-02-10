@@ -1,0 +1,211 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+
+:root {
+  --bg: #f3efe7;
+  --ink: #201f1c;
+  --muted: #6b6258;
+  --panel: #ffffff;
+  --accent: #c6463a;
+  --board-light: #efe3d1;
+  --board-dark: #d7c1a2;
+  --shadow: rgba(21, 18, 14, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  background: radial-gradient(circle at 20% 10%, #f7f3ec 0%, var(--bg) 45%, #ebe2d4 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--panel);
+  box-shadow: 0 6px 18px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+#game-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
+  padding: 16px;
+}
+
+#canvas-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
+  border-radius: 16px;
+  box-shadow: 0 10px 30px var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  height: min(70vh, 70vw);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+#canvas-container canvas {
+  touch-action: none;
+}
+
+#side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-section {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 10px 20px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+select,
+input,
+button {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+select,
+input {
+  border-radius: 10px;
+  border: 1px solid #e0d6c5;
+  padding: 8px 10px;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(198, 70, 58, 0.3);
+}
+
+#card-bar {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 16px;
+  padding: 14px 16px 18px;
+}
+
+.card-group {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 18px var(--shadow);
+}
+
+.group-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.cards {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f8f4ee;
+  border: 1px solid #e2d7c7;
+  min-width: 80px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(198, 70, 58, 0.2);
+}
+
+.card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  #game-area {
+    grid-template-columns: 1fr;
+  }
+
+  #side-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  #card-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  #game-area {
+    padding: 12px;
+  }
+
+  #card-bar {
+    padding: 12px;
+  }
+
+  #top-bar {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #canvas-container {
+    height: min(60vh, 90vw);
+  }
+}

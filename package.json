@@ -1,0 +1,13 @@
+{
+  "name": "onitama-like",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w apps/client",
+    "dev:server": "npm run dev -w apps/server",
+    "dev:all": "npm run dev -w apps/server & npm run dev -w apps/client",
+    "build": "npm run build -w apps/client && npm run build -w apps/server",
+    "typecheck": "npm run typecheck -w packages/rules && npm run typecheck -w apps/server && npm run typecheck -w apps/client",
+    "lint": "npm run lint -w apps/client && npm run lint -w apps/server"
+  }
+}

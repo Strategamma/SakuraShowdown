@@ -1,0 +1,66 @@
+{
+  "board": { "width": 5, "height": 5 },
+  "players": [
+    { "id": "p1", "name": "Red", "forward": -1, "temple": { "x": 2, "y": 4 } },
+    { "id": "p2", "name": "Blue", "forward": 1, "temple": { "x": 2, "y": 0 } }
+  ],
+  "pieceTypes": [
+    { "id": "master", "name": "Master", "tag": "king" },
+    { "id": "student", "name": "Student" }
+  ],
+  "startingPieces": [
+    { "typeId": "student", "ownerId": "p1", "x": 0, "y": 4 },
+    { "typeId": "student", "ownerId": "p1", "x": 1, "y": 4 },
+    { "typeId": "master", "ownerId": "p1", "x": 2, "y": 4 },
+    { "typeId": "student", "ownerId": "p1", "x": 3, "y": 4 },
+    { "typeId": "student", "ownerId": "p1", "x": 4, "y": 4 },
+
+    { "typeId": "student", "ownerId": "p2", "x": 0, "y": 0 },
+    { "typeId": "student", "ownerId": "p2", "x": 1, "y": 0 },
+    { "typeId": "master", "ownerId": "p2", "x": 2, "y": 0 },
+    { "typeId": "student", "ownerId": "p2", "x": 3, "y": 0 },
+    { "typeId": "student", "ownerId": "p2", "x": 4, "y": 0 }
+  ],
+  "cards": [
+    { "id": "tiger", "name": "Tiger", "moves": [{ "x": 0, "y": 2 }, { "x": 0, "y": -1 }] },
+    { "id": "dragon", "name": "Dragon", "moves": [{ "x": -2, "y": 1 }, { "x": 2, "y": 1 }, { "x": -1, "y": -1 }, { "x": 1, "y": -1 }] },
+    { "id": "frog", "name": "Frog", "moves": [{ "x": -2, "y": 0 }, { "x": -1, "y": 1 }, { "x": 1, "y": -1 }] },
+    { "id": "rabbit", "name": "Rabbit", "moves": [{ "x": 2, "y": 0 }, { "x": 1, "y": 1 }, { "x": -1, "y": -1 }] },
+    { "id": "crab", "name": "Crab", "moves": [{ "x": 0, "y": 1 }, { "x": -2, "y": 0 }, { "x": 2, "y": 0 }] },
+    { "id": "elephant", "name": "Elephant", "moves": [{ "x": -1, "y": 1 }, { "x": 1, "y": 1 }, { "x": -1, "y": 0 }, { "x": 1, "y": 0 }] },
+    { "id": "goose", "name": "Goose", "moves": [{ "x": -1, "y": 1 }, { "x": -1, "y": 0 }, { "x": 1, "y": 0 }, { "x": 1, "y": -1 }] },
+    { "id": "rooster", "name": "Rooster", "moves": [{ "x": 1, "y": 1 }, { "x": 1, "y": 0 }, { "x": -1, "y": 0 }, { "x": -1, "y": -1 }] },
+    { "id": "monkey", "name": "Monkey", "moves": [{ "x": -1, "y": 1 }, { "x": 1, "y": 1 }, { "x": -1, "y": -1 }, { "x": 1, "y": -1 }] },
+    { "id": "mantis", "name": "Mantis", "moves": [{ "x": -1, "y": 1 }, { "x": 0, "y": -1 }, { "x": 1, "y": 1 }] },
+    { "id": "horse", "name": "Horse", "moves": [{ "x": -1, "y": 0 }, { "x": 0, "y": 1 }, { "x": 0, "y": -1 }] },
+    { "id": "ox", "name": "Ox", "moves": [{ "x": 1, "y": 0 }, { "x": 0, "y": 1 }, { "x": 0, "y": -1 }] },
+    { "id": "crane", "name": "Crane", "moves": [{ "x": 0, "y": 1 }, { "x": -1, "y": -1 }, { "x": 1, "y": -1 }] },
+    { "id": "boar", "name": "Boar", "moves": [{ "x": -1, "y": 0 }, { "x": 0, "y": 1 }, { "x": 1, "y": 0 }] },
+    { "id": "eel", "name": "Eel", "moves": [{ "x": -1, "y": 1 }, { "x": 1, "y": 0 }, { "x": -1, "y": -1 }] },
+    { "id": "cobra", "name": "Cobra", "moves": [{ "x": 1, "y": 1 }, { "x": -1, "y": 0 }, { "x": 1, "y": -1 }] }
+  ],
+  "deck": [
+    "tiger",
+    "dragon",
+    "frog",
+    "rabbit",
+    "crab",
+    "elephant",
+    "goose",
+    "rooster",
+    "monkey",
+    "mantis",
+    "horse",
+    "ox",
+    "crane",
+    "boar",
+    "eel",
+    "cobra"
+  ],
+  "handSize": 2,
+  "mechanics": [
+    { "id": "swap_with_pool" },
+    { "id": "win_capture_piece", "params": { "pieceTypeId": "master" } },
+    { "id": "win_reach_temple", "params": { "pieceTypeId": "master" } }
+  ]
+}
