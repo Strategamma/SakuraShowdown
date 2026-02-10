@@ -1,16 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600&display=swap");
 
 :root {
-  --bg: #f6f1ea;
-  --ink: #2b1d1a;
-  --muted: #6e5b56;
-  --panel: #ffffff;
-  --accent: #c23a49;
-  --accent-strong: #8f2436;
-  --board-light: #efe4d3;
-  --board-dark: #d7c1a2;
-  --shadow: rgba(24, 18, 14, 0.16);
-  --glow: rgba(194, 58, 73, 0.25);
+  --bg: #0f0b10;
+  --ink: #f3e9ef;
+  --muted: #a98f9e;
+  --panel: #1c141b;
+  --panel-soft: #231820;
+  --accent: #e24a7f;
+  --accent-strong: #9f1f4f;
+  --board-light: #2a1c25;
+  --board-dark: #1a1218;
+  --shadow: rgba(10, 6, 10, 0.6);
+  --glow: rgba(226, 74, 127, 0.35);
   --font-display: "Cinzel", serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;
 }
@@ -22,7 +23,7 @@
 body {
   margin: 0;
   font-family: var(--font-body);
-  background: radial-gradient(circle at 15% 20%, #fff8f0 0%, var(--bg) 45%, #efe3d2 100%);
+  background: radial-gradient(circle at 20% 10%, rgba(255, 180, 210, 0.12) 0%, var(--bg) 45%, #0a070b 100%);
   color: var(--ink);
   min-height: 100vh;
 }
@@ -38,7 +39,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  background: linear-gradient(120deg, #fffdf9 0%, #f7efe4 100%);
+  background: linear-gradient(120deg, #1e151d 0%, #140d13 100%);
   box-shadow: 0 6px 18px var(--shadow);
   position: sticky;
   top: 0;
@@ -57,7 +58,7 @@ body {
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 30% 20%, #ffd9de 0%, #f3b3bc 40%, #e28b96 100%);
+  background: radial-gradient(circle at 30% 20%, #f9c6d5 0%, #d67690 45%, #872944 100%);
   box-shadow: 0 8px 16px var(--glow);
 }
 
@@ -95,8 +96,8 @@ body {
   gap: 8px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(194, 58, 73, 0.2);
+  background: rgba(24, 16, 22, 0.9);
+  border: 1px solid rgba(226, 74, 127, 0.3);
   box-shadow: 0 6px 18px var(--shadow);
 }
 
@@ -111,13 +112,13 @@ body {
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 280px;
+  grid-template-columns: 160px minmax(0, 1fr) 280px;
   gap: 16px;
   padding: 16px;
 }
 
 #canvas-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35));
+  background: radial-gradient(circle at 20% 20%, rgba(226, 74, 127, 0.15), rgba(12, 8, 12, 0.95));
   border-radius: 20px;
   box-shadow: 0 18px 40px var(--shadow);
   display: flex;
@@ -137,29 +138,23 @@ body {
   display: block;
 }
 
-#side-panel {
+#right-panel,
+#pool-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-#left-panel,
-#right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.hand-panel .card-group {
+#pool-panel {
   position: sticky;
-  top: 88px;
+  top: 96px;
 }
 
 .panel-section {
   background: var(--panel);
   border-radius: 14px;
   padding: 12px;
-  box-shadow: 0 10px 20px var(--shadow);
+  box-shadow: 0 12px 24px var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -180,7 +175,9 @@ button {
 select,
 input {
   border-radius: 10px;
-  border: 1px solid #e0d6c5;
+  border: 1px solid #3a2732;
+  background: #160f15;
+  color: var(--ink);
   padding: 8px 10px;
 }
 
@@ -201,9 +198,9 @@ button:hover {
 }
 
 .ghost-button {
-  background: #f6ede0;
-  color: #5d4743;
-  border: 1px solid #e4d5c7;
+  background: #1a1218;
+  color: var(--ink);
+  border: 1px solid #3a2732;
   box-shadow: none;
 }
 
@@ -211,18 +208,32 @@ button:hover {
   box-shadow: 0 4px 12px rgba(95, 76, 59, 0.2);
 }
 
-#card-bar {
-  display: grid;
-  grid-template-columns: 1fr 180px;
+#opponent-bar,
+#player-bar {
+  padding: 12px 16px;
+  background: linear-gradient(120deg, #1b1219 0%, #130d12 100%);
+  box-shadow: 0 12px 30px var(--shadow);
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
   gap: 16px;
-  padding: 14px 16px 18px;
+}
+
+.player-name {
+  min-width: 140px;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
 }
 
 .card-group {
   background: var(--panel);
   border-radius: 14px;
   padding: 10px 12px;
-  box-shadow: 0 8px 18px var(--shadow);
+  box-shadow: 0 10px 22px var(--shadow);
 }
 
 .group-label {
@@ -295,14 +306,14 @@ button:hover {
 .card {
   padding: 8px 12px;
   border-radius: 10px;
-  background: linear-gradient(140deg, #faf6f0 0%, #f1e6d6 100%);
-  border: 1px solid #e2d7c7;
+  background: linear-gradient(140deg, #241820 0%, #1a1118 100%);
+  border: 1px solid #3c2732;
   min-width: 80px;
   text-align: center;
   cursor: pointer;
   transform-style: preserve-3d;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 6px 14px rgba(32, 31, 28, 0.12);
+  box-shadow: 0 6px 14px rgba(5, 4, 6, 0.6);
   position: relative;
   overflow: hidden;
 }
@@ -315,7 +326,7 @@ button:hover {
 
 .card.active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(198, 70, 58, 0.2);
+  box-shadow: 0 0 0 2px rgba(226, 74, 127, 0.3);
   transform: translateY(-6px) rotateX(8deg);
 }
 
@@ -536,27 +547,24 @@ button:hover {
 }
 
 @media (max-width: 900px) {
+  .player-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   #game-area {
     grid-template-columns: 1fr;
   }
 
-  #left-panel,
+  #pool-panel,
   #right-panel {
     flex-direction: row;
     flex-wrap: wrap;
-  }
-
-  .hand-panel .card-group {
-    position: static;
   }
 }
 
 @media (max-width: 600px) {
   #game-area {
-    padding: 12px;
-  }
-
-  #card-bar {
     padding: 12px;
   }
 

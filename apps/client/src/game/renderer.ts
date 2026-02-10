@@ -16,7 +16,6 @@ type PieceVisual = {
   group: THREE.Group;
   body: THREE.Mesh;
   ring: THREE.Mesh;
-  label: THREE.Sprite;
   pieceId: string;
   alive: boolean;
   selected: boolean;
@@ -90,6 +89,7 @@ export class GameRenderer {
     cobra: { arc: 0.35, tilt: 0.3 }
   };
   private pieceBaseHeight = 0.12;
+  private isFlipped = false;
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -149,6 +149,16 @@ export class GameRenderer {
     this.updatePieces(state, selection);
   }
 
+  setBoardFlip(flipped: boolean) {
+    if (this.isFlipped === flipped) return;
+    this.isFlipped = flipped;
+    const angle = flipped ? Math.PI : 0;
+    this.boardGroup.rotation.y = angle;
+    this.templeGroup.rotation.y = angle;
+    this.highlightGroup.rotation.y = angle;
+    this.pieceGroup.rotation.y = angle;
+  }
+
   private setupLights() {
     const hemi = new THREE.HemisphereLight(0xfaf4e6, 0x3a3a3a, 0.8);
     this.scene.add(hemi);
@@ -182,8 +192,8 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0xf1e2cb,
-        roughness: 0.7,
+        color: 0x1a1218,
+        roughness: 0.85,
         metalness: 0.05
       })
     );
@@ -192,13 +202,13 @@ export class GameRenderer {
     this.boardGroup.add(base);
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0xf4e8d7,
-      roughness: 0.75,
+      color: 0x2a1c25,
+      roughness: 0.8,
       map: this.woodTexture
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0xd9c0a0,
-      roughness: 0.8,
+      color: 0x1a1218,
+      roughness: 0.85,
       map: this.woodTexture
     });
 
@@ -362,18 +372,16 @@ export class GameRenderer {
     let group: THREE.Group;
     let body: THREE.Mesh;
     let ring: THREE.Mesh;
-    let label: THREE.Sprite;
+    // no labels on pieces
 
     if (modelEntry) {
       group = modelEntry.group.clone(true);
       this.prepareModel(group, isPrimary);
       body = this.extractPrimaryMesh(group);
       ring = this.createSelectionRing();
-      label = this.createLabel(typeId.charAt(0).toUpperCase());
-      label.position.set(0, 0.7, 0);
-      group.add(ring, label);
+      group.add(ring);
     } else {
-      ({ group, body, ring, label } = this.createProceduralPiece(typeId, isPrimary));
+      ({ group, body, ring } = this.createProceduralPiece(typeId, isPrimary));
     }
 
     group.userData = { type: "piece", pieceId };
@@ -383,7 +391,6 @@ export class GameRenderer {
       group,
       body,
       ring,
-      label,
       pieceId,
       alive: true,
       selected: false,
@@ -440,10 +447,8 @@ export class GameRenderer {
     head.castShadow = true;
 
     const ring = this.createSelectionRing();
-    const label = this.createLabel(typeId.charAt(0).toUpperCase());
-    label.position.set(0, height + 0.6, 0);
 
-    group.add(base, body, head, ring, label);
+    group.add(base, body, head, ring);
 
     if (isMaster) {
       const beard = new THREE.Mesh(
@@ -512,7 +517,7 @@ export class GameRenderer {
       group.add(swordBlade, swordHandle, hair);
     }
 
-    return { group, body, ring, label };
+    return { group, body, ring };
   }
 
   private createSelectionRing() {
@@ -526,31 +531,6 @@ export class GameRenderer {
     return ring;
   }
 
-  private createLabel(text: string) {
-    const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.beginPath();
-      ctx.arc(64, 64, 40, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#2b2a27";
-      ctx.font = "bold 56px 'Cinzel'";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, 64, 70);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(0.5, 0.5, 0.5);
-    return sprite;
-  }
 
   private extractPrimaryMesh(group: THREE.Group) {
     let targetMesh: THREE.Mesh | undefined;

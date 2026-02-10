@@ -26,6 +26,8 @@ const quickOnlineBtn = document.getElementById("quick-online") as HTMLButtonElem
 const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonElement;
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
+const playerNameEl = document.getElementById("player-name") as HTMLElement;
+const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
@@ -113,6 +115,13 @@ function renderAll() {
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
   renderer.render(latestState, moves, selection);
 
+  if (modeSelect.value === "local" && latestConfig.players[0]) {
+    const flip = latestState.activePlayerId !== latestConfig.players[0].id;
+    renderer.setBoardFlip(flip);
+  } else {
+    renderer.setBoardFlip(false);
+  }
+
   if (latestState.winnerId) {
     const winnerName =
       latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
@@ -159,6 +168,10 @@ function renderCards() {
   const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
   const playerState = latestState.players.find((p) => p.id === viewPlayerId);
   const opponentState = latestState.players.find((p) => p.id !== viewPlayerId);
+  const playerName = latestConfig.players.find((p) => p.id === viewPlayerId)?.name ?? "You";
+  const opponentName = latestConfig.players.find((p) => p.id !== viewPlayerId)?.name ?? "Opponent";
+  playerNameEl.textContent = playerName;
+  opponentNameEl.textContent = opponentName;
 
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
