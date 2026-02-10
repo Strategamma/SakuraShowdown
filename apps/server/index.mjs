@@ -1,19 +1,23 @@
-import { Room, Client } from "colyseus";
-import { applyMove, createInitialState, listLegalMoves } from "@game/rules";
-import type { GameConfig, GameState, Move } from "@game/rules";
-import { loadConfig } from "../config";
+import http from "node:http";
+import express from "express";
+import cors from "cors";
+import { Server } from "colyseus";
+import { Room } from "colyseus";
+import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rules.mjs";
 
-export class GameRoom extends Room {
+const PORT = Number(process.env.PORT ?? 2567);
+
+class GameRoom extends Room {
   maxClients = 2;
-  private config!: GameConfig;
-  private stateData!: GameState;
-  private playerByClient = new Map<string, string>();
+  config;
+  stateData;
+  playerByClient = new Map();
 
   onCreate() {
     this.config = loadConfig();
     this.stateData = createInitialState(this.config);
 
-    this.onMessage("move", (client, move: Move) => {
+    this.onMessage("move", (client, move) => {
       const playerId = this.playerByClient.get(client.sessionId);
       if (!playerId) return;
       if (this.stateData.winnerId) return;
@@ -36,7 +40,7 @@ export class GameRoom extends Room {
     });
   }
 
-  onJoin(client: Client) {
+  onJoin(client) {
     const assigned = this.config.players[this.clients.length - 1]?.id;
     if (assigned) this.playerByClient.set(client.sessionId, assigned);
 
@@ -45,7 +49,31 @@ export class GameRoom extends Room {
     client.send("state", this.stateData);
   }
 
-  onLeave(client: Client) {
+  onLeave(client) {
     this.playerByClient.delete(client.sessionId);
   }
 }
+
+const app = express();
+app.use(cors());
+
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+app.get("/config", (_req, res) => {
+  try {
+    const config = loadConfig();
+    res.json(config);
+  } catch {
+    res.status(500).json({ error: "Failed to load config." });
+  }
+});
+
+const server = http.createServer(app);
+const gameServer = new Server({ server });
+
+gameServer.define("onitama", GameRoom);
+
+gameServer.listen(PORT);
+console.log(`Game server listening on ws/http://localhost:${PORT}`);

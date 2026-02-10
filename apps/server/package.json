@@ -3,20 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
-    "start": "tsx src/index.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint . --ext .ts"
+    "start": "node index.mjs"
   },
   "dependencies": {
-    "@game/rules": "*",
     "colyseus": "^0.15.57",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "tsx": "^4.7.1"
-  },
-  "devDependencies": {
-    "typescript": "^5.4.5"
+    "express": "^4.19.2"
   }
 }

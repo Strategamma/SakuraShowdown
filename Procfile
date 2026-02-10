@@ -1,1 +1,1 @@
-web: npm run start -w apps/server
+web: node apps/server/index.mjs
