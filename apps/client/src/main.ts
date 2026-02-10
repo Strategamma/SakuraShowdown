@@ -535,7 +535,7 @@ function drawCardPattern(moves: { x: number; y: number }[], orientation: 1 | -1 
 
   ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
-    const mx = move.x * orientation;
+    const mx = move.x;
     const my = move.y * orientation;
     const x = center.x + mx;
     const y = center.y - my;

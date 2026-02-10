@@ -265,6 +265,7 @@ body {
   border-radius: 14px;
   transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   align-items: stretch;
+  position: relative;
 }
 
 .card-house-section.active {
@@ -350,10 +351,8 @@ body {
 .icon-sword {
   width: 16px;
   height: 16px;
-  display: inline-block;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'><path%20fill='black'%20d='M14%203l7%207-2.2%202.2-7-7L14%203zM10.8%206.2L4%2013l3%203%206.8-6.8-3-3zM6%2017l-2%202%203%203%202-2-3-3z'/></svg>") no-repeat center / contain;
-  mask: url("data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'><path%20fill='black'%20d='M14%203l7%207-2.2%202.2-7-7L14%203zM10.8%206.2L4%2013l3%203%206.8-6.8-3-3zM6%2017l-2%202%203%203%202-2-3-3z'/></svg>") no-repeat center / contain;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 .local-name-block input:disabled,
@@ -636,6 +635,12 @@ button:hover {
   background: rgba(24, 16, 20, 0.7);
   box-shadow: 0 6px 14px rgba(10, 6, 10, 0.45);
   animation: hint-pulse 1.8s ease-in-out infinite;
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .card-hint.hidden {
