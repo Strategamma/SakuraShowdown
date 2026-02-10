@@ -38,6 +38,7 @@
             </div>
             <div id="room-info" class="room-info online-only">Not connected</div>
           </div>
+          <button id="new-game" class="ghost-button">New Game</button>
           <button id="open-customize" class="ghost-button">Customize</button>
           <button id="toggle-view" class="ghost-button">2D View</button>
           <div class="status-pill">
@@ -60,6 +61,7 @@
           <div class="card-house-section" id="player-section">
             <div class="player-name" id="player-name">You</div>
             <div class="captured-row" id="player-captured"></div>
+            <div id="card-choice-hint" class="card-hint hidden">Choose card to discard</div>
             <div id="hand" class="cards vertical"></div>
           </div>
         </aside>
@@ -68,7 +70,13 @@
 
         <aside id="right-panel">
           <div class="panel-section">
-            <label class="label">Names</label>
+            <div class="panel-title-row">
+              <label class="label">Names</label>
+              <button id="names-edit" class="icon-button ghost-button" type="button" aria-pressed="false" title="Edit names">
+                <span class="icon-sword" aria-hidden="true"></span>
+                <span class="icon-label">Edit</span>
+              </button>
+            </div>
             <div class="local-name-block">
               <label class="label">Player Name</label>
               <input id="local-name" type="text" placeholder="Your name" />
@@ -156,8 +164,8 @@
             <div class="overlay-subtitle">Start with a random set of 5 or hand-pick your own.</div>
           </div>
         </header>
-        <div class="overlay-body victory-body">
-          <div class="victory-actions">
+        <div class="overlay-body start-body">
+          <div class="start-actions">
             <button id="start-random">Random 5</button>
             <button id="start-choose" class="ghost-button">Choose 5 Cards</button>
           </div>

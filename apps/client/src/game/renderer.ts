@@ -516,17 +516,29 @@ export class GameRenderer {
       new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
       clothMat
     );
-    leftArm.position.set(-baseRadius * 0.75, shoulders.position.y - 0.06, 0);
-    leftArm.rotation.z = Math.PI / 2.7;
+    leftArm.position.set(-baseRadius * 0.5, shoulders.position.y - 0.12, 0.02);
+    leftArm.rotation.z = Math.PI / 6;
     leftArm.castShadow = true;
 
     const rightArm = new THREE.Mesh(
       new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
       clothMat
     );
-    rightArm.position.set(baseRadius * 0.75, shoulders.position.y - 0.06, 0);
-    rightArm.rotation.z = -Math.PI / 2.7;
+    rightArm.position.set(baseRadius * 0.5, shoulders.position.y - 0.12, 0.02);
+    rightArm.rotation.z = -Math.PI / 6;
     rightArm.castShadow = true;
+
+    const sleeveLeft = new THREE.Mesh(
+      new THREE.ConeGeometry(baseRadius * 0.22, 0.22, 20),
+      clothMat
+    );
+    sleeveLeft.position.set(-baseRadius * 0.52, shoulders.position.y - 0.18, 0.04);
+    sleeveLeft.rotation.z = Math.PI / 6;
+    sleeveLeft.castShadow = true;
+
+    const sleeveRight = sleeveLeft.clone();
+    sleeveRight.position.set(baseRadius * 0.52, shoulders.position.y - 0.18, 0.04);
+    sleeveRight.rotation.z = -Math.PI / 6;
 
     const cloak = new THREE.Mesh(
       new THREE.ConeGeometry(baseRadius * 0.95, height * 0.75, 32, 1, true),
@@ -549,6 +561,8 @@ export class GameRenderer {
       head,
       leftArm,
       rightArm,
+      sleeveLeft,
+      sleeveRight,
       cloak,
       ring
     );
@@ -557,13 +571,13 @@ export class GameRenderer {
 
     if (isMaster) {
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.32, 0.5, 24),
+        new THREE.ConeGeometry(baseRadius * 0.36, 0.58, 24),
         new THREE.MeshStandardMaterial({
-          color: 0xe8d9c8,
+          color: 0xf4efe9,
           roughness: 0.6
         })
       );
-      beard.position.set(0, head.position.y - 0.05, baseRadius * 0.08);
+      beard.position.set(0, head.position.y - 0.08, baseRadius * 0.1);
       beard.rotation.x = Math.PI;
 
       const moustache = new THREE.Mesh(

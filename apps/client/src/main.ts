@@ -30,13 +30,17 @@ const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonEl
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const localOpponentNameInput = document.getElementById("local-opponent-name") as HTMLInputElement;
 const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
+const namesEditBtn = document.getElementById("names-edit") as HTMLButtonElement;
+const namesEditLabel = namesEditBtn?.querySelector(".icon-label") as HTMLElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const playerNameEl = document.getElementById("player-name") as HTMLElement;
 const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
+const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
+const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
@@ -95,6 +99,7 @@ let pendingMove:
   | { pieceId: string; to: { x: number; y: number }; cardIds: string[] }
   | undefined;
 let startChoiceResolved = false;
+let namesEditing = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -421,6 +426,25 @@ function renderCards() {
 
   previousHand = playerState?.hand ?? [];
   previousPoolCard = latestState.poolCard;
+
+  if (cardChoiceHint) {
+    const showHint = Boolean(pendingMove);
+    cardChoiceHint.classList.toggle("hidden", !showHint);
+  }
+}
+
+function setNamesEditing(enabled: boolean) {
+  namesEditing = enabled;
+  localNameInput.disabled = !enabled;
+  localOpponentNameInput.disabled = !enabled;
+  startingPlayerSelect.disabled = !enabled;
+  if (namesEditBtn) {
+    namesEditBtn.setAttribute("aria-pressed", String(enabled));
+    namesEditBtn.classList.toggle("active", enabled);
+  }
+  if (namesEditLabel) {
+    namesEditLabel.textContent = enabled ? "Done" : "Edit";
+  }
 }
 
 function renderCaptured(viewPlayerId: string) {
@@ -943,6 +967,18 @@ restartLocalBtn.addEventListener("click", () => {
   startLocalMatch();
 });
 
+newGameBtn.addEventListener("click", () => {
+  if (modeSelect.value === "local") {
+    startChoiceResolved = false;
+    startOverlay.classList.remove("hidden");
+  } else {
+    roomInfoEl.textContent = "Not connected";
+    roomInput.value = "";
+    controller.disconnectOnline();
+    statusEl.textContent = "Start a new online match when ready.";
+  }
+});
+
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
 toggleViewBtn.addEventListener("click", () => {
   viewMode = viewMode === "3d" ? "2d" : "3d";
@@ -954,6 +990,10 @@ toggleViewBtn.addEventListener("click", () => {
 localNameInput.value = localName;
 playerNameEl.textContent = localName || "You";
 opponentNameEl.textContent = localOpponentName || "Opponent";
+setNamesEditing(!localName && !localOpponentName);
+namesEditBtn?.addEventListener("click", () => {
+  setNamesEditing(!namesEditing);
+});
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
   localStorage.setItem(LOCAL_NAME_KEY, localName);
