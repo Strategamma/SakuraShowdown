@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { GameConfig } from "./types.js";
 
 export const Vec2Schema = z.object({
   x: z.number().int(),
@@ -54,8 +55,6 @@ export const GameConfigSchema = z.object({
   handSize: z.number().int().min(1),
   mechanics: z.array(MechanicConfigSchema)
 });
-
-export type GameConfig = z.infer<typeof GameConfigSchema>;
 
 export function validateConfig(config: unknown): GameConfig {
   return GameConfigSchema.parse(config);
