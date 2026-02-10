@@ -289,7 +289,7 @@ export class GameRenderer {
       for (let x = 0; x < this.boardSize.width; x += 1) {
         const geom = new THREE.CircleGeometry(this.cellSize * 0.3, 36);
         const mat = new THREE.MeshBasicMaterial({
-          color: 0x7dd3fc,
+          color: 0x34d399,
           transparent: true,
           opacity: 0,
           depthWrite: false,
@@ -317,8 +317,8 @@ export class GameRenderer {
       const highlight = this.highlights[index];
       if (!highlight) continue;
       const mat = highlight.material as THREE.MeshBasicMaterial;
-      mat.color.set(move.capture ? 0xf59e0b : 0x7dd3fc);
-      const opacity = move.capture ? 0.75 : 0.5;
+      mat.color.set(move.capture ? 0xf97316 : 0x34d399);
+      const opacity = move.capture ? 0.8 : 0.55;
       mat.opacity = opacity;
       highlight.userData.baseOpacity = opacity;
     }

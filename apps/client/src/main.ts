@@ -46,6 +46,7 @@ const closeBtn = document.getElementById("customize-close") as HTMLButtonElement
 const cardListEl = document.getElementById("card-list") as HTMLElement;
 const cardNameInput = document.getElementById("card-name") as HTMLInputElement;
 const moveListEl = document.getElementById("move-list") as HTMLElement;
+const cardGridEl = document.getElementById("card-grid") as HTMLElement;
 const moveXInput = document.getElementById("move-x") as HTMLInputElement;
 const moveYInput = document.getElementById("move-y") as HTMLInputElement;
 const moveAddBtn = document.getElementById("move-add") as HTMLButtonElement;
@@ -311,7 +312,7 @@ function filterMoves(
 }
 
 function drawCardPattern(moves: { x: number; y: number }[]) {
-  const size = 64;
+  const size = 72;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -319,14 +320,15 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
 
-  const center = { x: 2, y: 2 };
-  const cell = size / 5;
+  const grid = 4;
+  const cell = size / grid;
+  const center = { x: 1.5, y: 1.5 };
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(220, 170, 200, 0.25)";
+  ctx.strokeStyle = "rgba(220, 170, 200, 0.3)";
   ctx.lineWidth = 1;
 
-  for (let i = 0; i <= 5; i += 1) {
+  for (let i = 0; i <= grid; i += 1) {
     ctx.beginPath();
     ctx.moveTo(0, i * cell);
     ctx.lineTo(size, i * cell);
@@ -337,16 +339,16 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
     ctx.stroke();
   }
 
-  ctx.fillStyle = "#7b4d3a";
+  ctx.fillStyle = "#f9c7d3";
   ctx.beginPath();
-  ctx.arc((center.x + 0.5) * cell, (center.y + 0.5) * cell, 5, 0, Math.PI * 2);
+  ctx.arc(size / 2, size / 2, 4.5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = "#c6463a";
   for (const move of moves) {
-    const x = center.x + move.x;
-    const y = center.y - move.y;
-    if (x < 0 || x > 4 || y < 0 || y > 4) continue;
+    const x = Math.round(center.x + move.x);
+    const y = Math.round(center.y - move.y);
+    if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
     ctx.beginPath();
     ctx.arc((x + 0.5) * cell, (y + 0.5) * cell, 4, 0, Math.PI * 2);
     ctx.fill();
@@ -400,6 +402,7 @@ function renderCardEditor() {
   if (!card) return;
   cardNameInput.value = card.name;
   moveListEl.innerHTML = "";
+  renderCardGrid(card);
 
   card.moves.forEach((move, index) => {
     const row = document.createElement("div");
@@ -415,6 +418,36 @@ function renderCardEditor() {
     row.appendChild(remove);
     moveListEl.appendChild(row);
   });
+}
+
+const GRID_VALUES = [-2, -1, 0, 1];
+
+function renderCardGrid(card: { moves: { x: number; y: number }[] }) {
+  cardGridEl.innerHTML = "";
+  const moveSet = new Set(card.moves.map((m) => `${m.x},${m.y}`));
+
+  for (let row = 0; row < 4; row += 1) {
+    for (let col = 0; col < 4; col += 1) {
+      const moveX = GRID_VALUES[col];
+      const moveY = GRID_VALUES[3 - row];
+      const key = `${moveX},${moveY}`;
+      const cell = document.createElement("div");
+      cell.className = "grid-cell";
+      if (moveSet.has(key)) {
+        cell.classList.add("active");
+      }
+      cell.addEventListener("click", () => {
+        const index = card.moves.findIndex((m) => m.x === moveX && m.y === moveY);
+        if (index >= 0) {
+          card.moves.splice(index, 1);
+        } else {
+          card.moves.push({ x: moveX, y: moveY });
+        }
+        renderCardEditor();
+      });
+      cardGridEl.appendChild(cell);
+    }
+  }
 }
 
 function addMove() {
