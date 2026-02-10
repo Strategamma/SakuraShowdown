@@ -1,8 +1,8 @@
 import http from "node:http";
 import express from "express";
 import cors from "cors";
-import { Server } from "colyseus";
-import { Room } from "colyseus";
+import colyseus from "colyseus";
+const { Server, Room } = colyseus;
 import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rules.mjs";
 
 const PORT = Number(process.env.PORT ?? 2567);
