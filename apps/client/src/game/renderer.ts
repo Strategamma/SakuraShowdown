@@ -200,8 +200,8 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x4f3d49,
-        roughness: 0.75,
+        color: 0x6b5a66,
+        roughness: 0.7,
         metalness: 0.05
       })
     );
@@ -210,19 +210,19 @@ export class GameRenderer {
     this.boardGroup.add(base);
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0x735d6c,
-      roughness: 0.65,
+      color: 0x9b8a95,
+      roughness: 0.6,
       map: this.woodTexture
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0x44313e,
-      roughness: 0.75,
+      color: 0x6d5865,
+      roughness: 0.7,
       map: this.woodTexture
     });
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
       for (let x = 0; x < this.boardSize.width; x += 1) {
-        const geom = new THREE.BoxGeometry(this.cellSize * 0.98, 0.12, this.cellSize * 0.98);
+        const geom = new THREE.BoxGeometry(this.cellSize * 0.94, 0.12, this.cellSize * 0.94);
         const mat = (x + y) % 2 === 0 ? lightMat : darkMat;
         const cell = new THREE.Mesh(geom, mat);
         cell.position.copy(this.gridToWorld(x, y, 0.06));
@@ -287,12 +287,13 @@ export class GameRenderer {
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
       for (let x = 0; x < this.boardSize.width; x += 1) {
-        const geom = new THREE.RingGeometry(this.cellSize * 0.18, this.cellSize * 0.32, 32);
+        const geom = new THREE.CircleGeometry(this.cellSize * 0.3, 36);
         const mat = new THREE.MeshBasicMaterial({
-          color: 0x2a9d8f,
+          color: 0x7dd3fc,
           transparent: true,
           opacity: 0,
-          depthWrite: false
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
         });
         const ring = new THREE.Mesh(geom, mat);
         ring.rotation.x = -Math.PI / 2;
@@ -316,8 +317,8 @@ export class GameRenderer {
       const highlight = this.highlights[index];
       if (!highlight) continue;
       const mat = highlight.material as THREE.MeshBasicMaterial;
-      mat.color.set(move.capture ? 0xe76f51 : 0x2a9d8f);
-      const opacity = move.capture ? 0.7 : 0.45;
+      mat.color.set(move.capture ? 0xf59e0b : 0x7dd3fc);
+      const opacity = move.capture ? 0.75 : 0.5;
       mat.opacity = opacity;
       highlight.userData.baseOpacity = opacity;
     }
@@ -871,7 +872,7 @@ export class GameRenderer {
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#5a4452";
+      ctx.fillStyle = "#7a6572";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < 120; i += 1) {
         const y = Math.random() * canvas.height;

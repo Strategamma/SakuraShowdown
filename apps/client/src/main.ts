@@ -33,6 +33,8 @@ const startingPlayerSelect = document.getElementById("starting-player") as HTMLS
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const playerNameEl = document.getElementById("player-name") as HTMLElement;
 const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
+const playerSection = document.getElementById("player-section") as HTMLElement;
+const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
@@ -210,6 +212,10 @@ function renderCards() {
   const opponentName = latestConfig.players.find((p) => p.id !== viewPlayerId)?.name ?? "Opponent";
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
+  const isPlayerActive = latestState.activePlayerId === viewPlayerId;
+  const hasWinner = Boolean(latestState.winnerId);
+  playerSection.classList.toggle("active", !hasWinner && isPlayerActive);
+  opponentSection.classList.toggle("active", !hasWinner && !isPlayerActive);
 
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
