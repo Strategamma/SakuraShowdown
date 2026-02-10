@@ -30,6 +30,10 @@
             <label class="label">You</label>
             <div id="player-label">-</div>
           </div>
+          <div class="panel-section">
+            <label class="label">Customize</label>
+            <button id="customize-cards">Customize Cards</button>
+          </div>
         </div>
       </main>
       <footer id="card-bar">
@@ -42,6 +46,41 @@
           <div id="pool" class="cards"></div>
         </div>
       </footer>
+    </div>
+    <div id="customize-overlay" class="overlay hidden">
+      <div class="overlay-card">
+        <header class="overlay-header">
+          <div>
+            <div class="overlay-title">Customize Cards</div>
+            <div class="overlay-subtitle">Edit names and moves. Changes are local to this browser.</div>
+          </div>
+          <button id="customize-close" class="ghost-button">Close</button>
+        </header>
+        <div class="overlay-body">
+          <div class="overlay-list" id="card-list"></div>
+          <div class="overlay-editor">
+            <div class="editor-title">Card Details</div>
+            <label class="label">Name</label>
+            <input id="card-name" type="text" placeholder="Card name" />
+            <label class="label">Moves (x,y)</label>
+            <div id="move-list" class="move-list"></div>
+            <div class="move-controls">
+              <input id="move-x" type="number" placeholder="x" />
+              <input id="move-y" type="number" placeholder="y" />
+              <button id="move-add" class="ghost-button">Add Move</button>
+            </div>
+            <div class="editor-actions">
+              <button id="card-add">Add Card</button>
+              <button id="card-remove" class="ghost-button">Remove Card</button>
+            </div>
+          </div>
+        </div>
+        <footer class="overlay-footer">
+          <button id="cards-reset" class="ghost-button">Reset</button>
+          <button id="cards-export" class="ghost-button">Export JSON</button>
+          <button id="cards-apply">Apply Changes</button>
+        </footer>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

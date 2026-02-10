@@ -1,6 +1,7 @@
-# Onitama-like
+# Sakura Showdown (Onitama-like)
 
 Production-ready, data-driven board game foundation inspired by Onitama.
+Includes a 3D client built with Three.js, animated cards, and procedural or GLTF-based pieces.
 
 ## Quick start (local dev)
 
@@ -43,7 +44,7 @@ https://<your-username>.github.io/<repo-name>/
 
 The game config is loaded from `/game.json`, so changes to:
 
-`/Users/farzan/Documents/Codex/apps/client/public/game.json`
+`/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/game.json`
 
 will be picked up after redeploying.
 
@@ -51,7 +52,7 @@ will be picked up after redeploying.
 
 All rules, cards, and board settings are defined in JSON. The server reads:
 
-`/Users/farzan/Documents/Codex/apps/server/config/game.json`
+`/Users/farzan/Documents/Codex/SakuraShowdown/apps/server/config/game.json`
 
 You can override it with:
 
@@ -62,6 +63,21 @@ GAME_CONFIG_PATH=/absolute/path/to/game.json npm run dev:server
 The client reads configuration from the server at `/config`.
 
 For GitHub Pages hosting, the client reads `/game.json` instead (in `apps/client/public`).
+
+## Customize cards (in browser)
+
+Open the **Customize Cards** panel in the client UI to edit card names and moves.
+Changes are saved to local browser storage and applied immediately to the local game.
+Use **Export JSON** to download a new config file.
+
+## 3D assets (optional)
+
+You can replace the procedural pieces with custom GLTF models:
+
+- `/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/models/master.glb`
+- `/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/models/student.glb`
+
+Models should be centered at origin and roughly fit within a 1x1x1 size.
 
 ### Editable values
 
@@ -76,7 +92,7 @@ For GitHub Pages hosting, the client reads `/game.json` instead (in `apps/client
 
 Mechanics are pluggable rule hooks. Add a new mechanic implementation in:
 
-`/Users/farzan/Documents/Codex/packages/rules/src/mechanics.ts`
+`/Users/farzan/Documents/Codex/SakuraShowdown/packages/rules/src/mechanics.ts`
 
 Then reference it in `game.json` under `mechanics`:
 

@@ -24,10 +24,23 @@ type PieceVisual = {
   start: THREE.Vector3;
   startTime: number;
   duration: number;
+  moveStyle?: MoveStyle;
+  moveStartTime?: number;
+  moveDuration?: number;
 };
 
 type ModelEntry = {
   group: THREE.Group;
+};
+
+type MoveStyle = {
+  leap?: number;
+  spin?: number;
+  tilt?: number;
+  sway?: number;
+  arc?: number;
+  roll?: number;
+  stomp?: number;
 };
 
 export class GameRenderer {
@@ -56,6 +69,25 @@ export class GameRenderer {
   private woodTexture = this.createWoodTexture();
   private fabricTexture = this.createFabricTexture();
   private accentTexture = this.createAccentTexture();
+  private lastMoveKey?: string;
+  private moveStyles: Record<string, MoveStyle> = {
+    tiger: { leap: 0.6, spin: 0.2, tilt: 0.25 },
+    dragon: { leap: 0.45, spin: 0.5, arc: 0.3, roll: 0.2 },
+    frog: { leap: 0.55, sway: 0.2 },
+    rabbit: { leap: 0.4, arc: 0.25 },
+    crab: { sway: 0.35, arc: 0.35 },
+    elephant: { stomp: 0.35, tilt: 0.1 },
+    goose: { sway: 0.2, spin: 0.15 },
+    rooster: { spin: 0.3, tilt: 0.2 },
+    monkey: { leap: 0.65, spin: 0.4 },
+    mantis: { leap: 0.4, tilt: 0.35 },
+    horse: { leap: 0.45, tilt: 0.1 },
+    ox: { leap: 0.45, tilt: 0.1, stomp: 0.2 },
+    crane: { leap: 0.5, spin: 0.25 },
+    boar: { stomp: 0.3, sway: 0.2 },
+    eel: { arc: 0.4, spin: 0.2 },
+    cobra: { arc: 0.35, tilt: 0.3 }
+  };
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -235,6 +267,11 @@ export class GameRenderer {
   private updatePieces(state: GameState, selection: RendererSelection) {
     if (!this.config) return;
 
+    const lastMove = state.lastMove;
+    const lastMoveKey = lastMove
+      ? `${state.turn}:${lastMove.pieceId}:${lastMove.cardId}`
+      : undefined;
+
     for (const piece of state.pieces) {
       const visual = this.getOrCreatePiece(piece.id, piece.ownerId === this.config.players[0].id);
       visual.alive = piece.alive;
@@ -246,6 +283,17 @@ export class GameRenderer {
         visual.target.copy(target);
         visual.startTime = performance.now();
         visual.duration = 240;
+      }
+
+      if (
+        lastMove &&
+        lastMoveKey !== this.lastMoveKey &&
+        lastMove.pieceId === piece.id
+      ) {
+        visual.moveStyle = this.getMoveStyle(lastMove.cardId);
+        visual.moveStartTime = performance.now();
+        visual.moveDuration = 520;
+        this.lastMoveKey = lastMoveKey;
       }
 
       const bodyMat = visual.body.material as THREE.MeshStandardMaterial;
@@ -473,18 +521,23 @@ export class GameRenderer {
   }
 
   private normalizeModel(group: THREE.Group) {
-    const box = new THREE.Box3().setFromObject(group);
+    let box = new THREE.Box3().setFromObject(group);
     const size = new THREE.Vector3();
     box.getSize(size);
     const maxAxis = Math.max(size.x, size.y, size.z);
     if (maxAxis > 0) {
       const scale = 0.85 / maxAxis;
       group.scale.setScalar(scale);
+      box = new THREE.Box3().setFromObject(group);
     }
     const center = new THREE.Vector3();
     box.getCenter(center);
     group.position.sub(center);
     group.position.y += 0.4;
+  }
+
+  private getMoveStyle(cardId: string): MoveStyle {
+    return this.moveStyles[cardId] ?? { leap: 0.35, spin: 0.15 };
   }
 
   private gridToWorld(x: number, y: number, height = 0) {
@@ -506,7 +559,9 @@ export class GameRenderer {
     const hits = this.raycaster.intersectObjects([this.pieceGroup, this.boardGroup], true);
 
     for (const hit of hits) {
-      const data = hit.object.userData;
+      const data = this.findUserData(hit.object) as
+        | { type?: string; pieceId?: string; x?: number; y?: number }
+        | undefined;
       if (data?.type === "piece" && data.pieceId) {
         this.callbacks.onPieceTap?.(data.pieceId as string);
         return;
@@ -517,6 +572,17 @@ export class GameRenderer {
       }
     }
   };
+
+  private findUserData(object: THREE.Object3D): Record<string, unknown> | undefined {
+    let current: THREE.Object3D | null = object;
+    while (current) {
+      if (current.userData && Object.keys(current.userData).length > 0) {
+        return current.userData as Record<string, unknown>;
+      }
+      current = current.parent;
+    }
+    return undefined;
+  }
 
   private onResize = () => {
     const width = this.container.clientWidth;
@@ -545,21 +611,66 @@ export class GameRenderer {
   private updateAnimations() {
     const now = performance.now();
     const time = now / 1000;
+    const up = new THREE.Vector3(0, 1, 0);
 
     for (const visual of this.pieces.values()) {
       if (!visual.alive) continue;
 
       const elapsed = now - visual.startTime;
       const t = visual.duration === 0 ? 1 : Math.min(elapsed / visual.duration, 1);
+      const basePosition = new THREE.Vector3();
       if (visual.duration > 0) {
-        visual.group.position.lerpVectors(visual.start, visual.target, this.easeOutCubic(t));
+        basePosition.lerpVectors(visual.start, visual.target, this.easeOutCubic(t));
       } else {
-        visual.group.position.copy(visual.target);
+        basePosition.copy(visual.target);
+      }
+
+      let extraY = 0;
+      let extraX = 0;
+      let extraZ = 0;
+      let spinY = 0;
+      let tiltZ = 0;
+      let rollX = 0;
+
+      if (visual.moveStyle && visual.moveStartTime !== undefined) {
+        const moveElapsed = now - visual.moveStartTime;
+        const moveDuration = visual.moveDuration ?? 400;
+        const mt = Math.min(Math.max(moveElapsed / moveDuration, 0), 1);
+        const style = visual.moveStyle;
+        const jump = (style.leap ?? 0) * Math.sin(Math.PI * mt);
+        const sway = (style.sway ?? 0) * Math.sin(Math.PI * mt);
+        const arc = (style.arc ?? 0) * Math.sin(Math.PI * mt);
+        const spin = (style.spin ?? 0) * Math.sin(Math.PI * mt);
+        const tilt = (style.tilt ?? 0) * Math.sin(Math.PI * mt);
+        const roll = (style.roll ?? 0) * Math.sin(Math.PI * mt);
+        const stomp = (style.stomp ?? 0) * Math.sin(Math.PI * mt) * (mt > 0.7 ? -1 : 1);
+
+        extraY += jump + stomp;
+        spinY += spin * Math.PI;
+        tiltZ += tilt;
+        rollX += roll;
+
+        const dir = new THREE.Vector3().subVectors(visual.target, visual.start);
+        if (dir.lengthSq() > 0.0001) {
+          dir.normalize();
+          const right = new THREE.Vector3().crossVectors(dir, up);
+          extraX += right.x * arc + dir.x * sway * 0.15;
+          extraZ += right.z * arc + dir.z * sway * 0.15;
+        }
+
+        if (mt >= 1) {
+          visual.moveStyle = undefined;
+        }
       }
 
       const bob = Math.sin(time * 2 + visual.target.x * 2.4) * 0.02;
-      visual.group.position.y = visual.target.y + bob + (visual.selected ? 0.06 : 0);
-      visual.group.rotation.y = Math.sin(time * 0.6 + visual.target.x) * 0.08;
+      basePosition.y += bob + (visual.selected ? 0.06 : 0) + extraY;
+      basePosition.x += extraX;
+      basePosition.z += extraZ;
+      visual.group.position.copy(basePosition);
+      visual.group.rotation.y = Math.sin(time * 0.6 + visual.target.x) * 0.08 + spinY;
+      visual.group.rotation.z = tiltZ;
+      visual.group.rotation.x = rollX;
 
       if (visual.ring.visible) {
         visual.ring.rotation.z = time * 0.8;

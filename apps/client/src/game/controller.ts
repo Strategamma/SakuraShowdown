@@ -43,6 +43,11 @@ export class GameController {
     this.callbacks.onConfig(config);
   }
 
+  setConfig(config: GameConfig) {
+    this.config = config;
+    this.callbacks.onConfig(config);
+  }
+
   startLocal(seed?: number) {
     if (!this.config) throw new Error("Config not loaded.");
     this.state = createInitialState(this.config, seed);
