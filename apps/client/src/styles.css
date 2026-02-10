@@ -524,8 +524,8 @@ button:hover {
 }
 
 #card-house .card-pattern {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
 }
 
 #card-house .card {
@@ -560,7 +560,20 @@ button:hover {
 
 .card.choice {
   border-color: rgba(249, 199, 211, 0.9);
-  box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.35);
+  box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.25);
+  animation: card-choice 1.6s ease-in-out infinite;
+}
+
+@keyframes card-choice {
+  0% {
+    box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(249, 199, 211, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.2);
+  }
 }
 
 .card.disabled {
@@ -605,8 +618,8 @@ button:hover {
 
 .card-pattern {
   margin-top: 6px;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.65);
   border: 1px solid rgba(200, 180, 150, 0.5);
@@ -641,13 +654,23 @@ button:hover {
 
 .victory-card {
   width: min(640px, 92vw);
+  background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.2), rgba(20, 12, 18, 0.96));
+  border: 1px solid rgba(226, 74, 127, 0.3);
+  box-shadow: 0 30px 70px rgba(20, 8, 16, 0.6);
+  animation: victory-pop 0.5s ease both;
+}
+
+.start-card {
+  width: min(520px, 90vw);
 }
 
 .victory-body {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 28px;
+  gap: 18px;
 }
 
 .victory-actions {
@@ -657,34 +680,102 @@ button:hover {
   justify-content: center;
 }
 
+.victory-emblem {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #f9c7d3 0%, #e0565b 45%, #7a2236 100%);
+  box-shadow: 0 0 24px rgba(226, 74, 127, 0.5), inset 0 0 18px rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.victory-emblem::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.victory-emblem::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#victory-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#victory-subtitle {
+  color: var(--muted);
+}
+
+@keyframes victory-pop {
+  0% {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .draft-card {
-  width: min(820px, 94vw);
+  width: min(880px, 94vw);
+  background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.18), rgba(20, 12, 18, 0.96));
+  border: 1px solid rgba(226, 74, 127, 0.3);
+  box-shadow: 0 30px 70px rgba(20, 8, 16, 0.6);
+}
+
+.draft-card .overlay-header {
+  background: rgba(26, 18, 24, 0.9);
+  border-bottom: 1px solid rgba(226, 74, 127, 0.25);
+}
+
+.draft-card .overlay-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.draft-card .overlay-subtitle {
+  color: rgba(243, 233, 239, 0.7);
 }
 
 .draft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
   width: 100%;
 }
 
 .draft-item {
   border-radius: 12px;
-  border: 1px solid #3a2732;
-  background: #1a1218;
-  padding: 10px;
+  border: 1px solid rgba(120, 90, 105, 0.6);
+  background: linear-gradient(160deg, #22141d 0%, #151017 100%);
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .draft-item.selected {
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 10px 18px rgba(226, 74, 127, 0.2);
+  box-shadow: 0 12px 22px rgba(226, 74, 127, 0.35);
 }
 
 .draft-footer {
@@ -696,6 +787,23 @@ button:hover {
 
 .draft-count {
   color: var(--muted);
+}
+
+.draft-item .card-pattern {
+  width: 76px;
+  height: 76px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.draft-item .card-title {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #f5e8ef;
+}
+
+.draft-footer button {
+  min-width: 160px;
 }
 
 .overlay-header {

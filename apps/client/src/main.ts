@@ -64,6 +64,9 @@ const victorySubtitle = document.getElementById("victory-subtitle") as HTMLEleme
 const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
 const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
 const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
+const startOverlay = document.getElementById("start-overlay") as HTMLElement;
+const startRandomBtn = document.getElementById("start-random") as HTMLButtonElement;
+const startChooseBtn = document.getElementById("start-choose") as HTMLButtonElement;
 const draftOverlay = document.getElementById("draft-overlay") as HTMLElement;
 const draftGrid = document.getElementById("draft-grid") as HTMLElement;
 const draftCount = document.getElementById("draft-count") as HTMLElement;
@@ -90,6 +93,7 @@ let lastWinnerId: string | undefined;
 let pendingMove:
   | { pieceId: string; to: { x: number; y: number }; cardIds: string[] }
   | undefined;
+let startChoiceResolved = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -125,19 +129,36 @@ function handleCellTap(x: number, y: number) {
   if (!latestState || !latestConfig) return;
   if (!controller.canAct()) return;
   const selection = controller.getSelection();
-  if (!selection.selectedPieceId) return;
-
   const movesForCell = latestMoves.filter(
     (move) =>
-      move.pieceId === selection.selectedPieceId &&
       move.to.x === x &&
       move.to.y === y &&
       move.playerId === latestState.activePlayerId
   );
   if (movesForCell.length === 0) return;
 
-  if (movesForCell.length === 1) {
-    const only = movesForCell[0];
+  if (!selection.selectedPieceId) {
+    if (movesForCell.length === 1) {
+      const only = movesForCell[0];
+      controller.selectPiece(only.pieceId);
+      controller.selectCard(only.cardId);
+      controller.tryMove(x, y);
+      controller.clearSelection();
+      pendingMove = undefined;
+      renderAll();
+      return;
+    }
+    statusEl.textContent = "Select a piece to play this move.";
+    return;
+  }
+
+  const filteredMoves = movesForCell.filter(
+    (move) => move.pieceId === selection.selectedPieceId
+  );
+  if (filteredMoves.length === 0) return;
+
+  if (filteredMoves.length === 1) {
+    const only = filteredMoves[0];
     controller.selectCard(only.cardId);
     controller.tryMove(x, y);
     controller.clearSelection();
@@ -149,7 +170,7 @@ function handleCellTap(x: number, y: number) {
   pendingMove = {
     pieceId: selection.selectedPieceId,
     to: { x, y },
-    cardIds: movesForCell.map((move) => move.cardId)
+    cardIds: filteredMoves.map((move) => move.cardId)
   };
   statusEl.textContent = "Choose a card to play this move.";
   renderAll();
@@ -232,6 +253,7 @@ function setMode(mode: "local" | "online") {
       latestConfig = withName;
       controller.setConfig(withName);
       renderer.setConfig(withName);
+      startChoiceResolved = false;
       startLocalMatch();
       playerLabel.textContent = localName || "You";
     }
@@ -251,6 +273,7 @@ function startLocalMatch() {
   const startingId = resolveStartingPlayer(latestConfig);
   controller.startLocal({ startingPlayerId: startingId });
   renderAll();
+  maybeShowStartOverlay();
 }
 
 function applyLocalName(config: GameConfig): GameConfig {
@@ -638,6 +661,7 @@ function applyCardChanges() {
     latestConfig = localConfig;
     controller.setConfig(localConfig);
     renderer.setConfig(localConfig);
+    startChoiceResolved = true;
     startLocalMatch();
     playerLabel.textContent = localName || "You";
     previousHand = [];
@@ -721,12 +745,14 @@ function startWithDeck(deck: string[]) {
     latestConfig = localConfig;
     controller.setConfig(localConfig);
     renderer.setConfig(localConfig);
+    startChoiceResolved = true;
     startLocalMatch();
     playerLabel.textContent = localName || "You";
     previousHand = [];
     previousPoolCard = undefined;
     hideVictory();
     draftOverlay.classList.add("hidden");
+    startOverlay.classList.add("hidden");
   } catch {
     statusEl.textContent = "Deck selection invalid.";
   }
@@ -738,6 +764,7 @@ function startRandomFive() {
     return;
   }
   if (!baseConfig) return;
+  startChoiceResolved = true;
   const candidates = [...baseConfig.cards];
   const selection: string[] = [];
   while (selection.length < 5 && candidates.length > 0) {
@@ -754,9 +781,16 @@ function openDraft() {
     return;
   }
   if (!baseConfig) return;
+  startChoiceResolved = true;
   draftSelection = new Set();
   renderDraft();
   draftOverlay.classList.remove("hidden");
+}
+
+function maybeShowStartOverlay() {
+  if (modeSelect.value !== "local") return;
+  if (startChoiceResolved) return;
+  startOverlay.classList.remove("hidden");
 }
 
 function renderDraft() {
@@ -805,6 +839,7 @@ async function bootstrap() {
       latestConfig = localParsed;
       controller.setConfig(localParsed);
       renderer.setConfig(localParsed);
+      startChoiceResolved = false;
       startLocalMatch();
       playerLabel.textContent = localName || "You";
     } else {
@@ -818,6 +853,7 @@ async function bootstrap() {
           controller.setConfig(localLoaded);
           renderer.setConfig(localLoaded);
           if (modeSelect.value === "local") {
+            startChoiceResolved = false;
             startLocalMatch();
             playerLabel.textContent = localName || "You";
           }
@@ -834,6 +870,11 @@ async function bootstrap() {
 modeSelect.addEventListener("change", () => {
   const mode = modeSelect.value === "online" ? "online" : "local";
   setMode(mode);
+  if (mode === "local") {
+    startChoiceResolved = false;
+  } else {
+    startOverlay.classList.add("hidden");
+  }
 });
 
 connectBtn.addEventListener("click", async () => {
@@ -866,6 +907,7 @@ copyRoomBtn.addEventListener("click", async () => {
 });
 
 restartLocalBtn.addEventListener("click", () => {
+  startChoiceResolved = false;
   startLocalMatch();
 });
 
@@ -939,6 +981,9 @@ victoryChooseBtn.addEventListener("click", openDraft);
 victoryOverlay.addEventListener("click", (event) => {
   if (event.target === victoryOverlay) hideVictory();
 });
+
+startRandomBtn.addEventListener("click", startRandomFive);
+startChooseBtn.addEventListener("click", openDraft);
 
 draftCloseBtn.addEventListener("click", () => {
   draftOverlay.classList.add("hidden");

@@ -140,9 +140,26 @@
           <button id="victory-close" class="ghost-button">Close</button>
         </header>
         <div class="overlay-body victory-body">
+          <div class="victory-emblem" aria-hidden="true"></div>
           <div class="victory-actions">
-            <button id="victory-random">Start Random 5</button>
-            <button id="victory-choose" class="ghost-button">Choose 5 Cards</button>
+            <button id="victory-random">Play Again (Random Cards)</button>
+            <button id="victory-choose" class="ghost-button">Pick 5 Cards</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="start-overlay" class="overlay hidden">
+      <div class="overlay-card start-card">
+        <header class="overlay-header">
+          <div>
+            <div class="overlay-title">Choose Your Cards</div>
+            <div class="overlay-subtitle">Start with a random set of 5 or hand-pick your own.</div>
+          </div>
+        </header>
+        <div class="overlay-body victory-body">
+          <div class="victory-actions">
+            <button id="start-random">Random 5</button>
+            <button id="start-choose" class="ghost-button">Choose 5 Cards</button>
           </div>
         </div>
       </div>
