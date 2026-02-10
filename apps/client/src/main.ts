@@ -228,6 +228,9 @@ function renderCards() {
       if (selection.selectedCardId === cardId) {
         cardEl.classList.add("active");
       }
+      if (previousPoolCard && previousPoolCard !== latestState.poolCard && cardId === previousPoolCard) {
+        cardEl.classList.add("swap-in");
+      }
       if (card) {
         const pattern = drawCardPattern(card.moves);
         cardEl.appendChild(pattern);
@@ -276,7 +279,7 @@ function renderCards() {
   poolTitle.textContent = poolCard?.name ?? latestState.poolCard;
   poolCardEl.appendChild(poolTitle);
   if (previousPoolCard && previousPoolCard !== latestState.poolCard) {
-    poolCardEl.classList.add("swap");
+    poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
     const pattern = drawCardPattern(poolCard.moves);

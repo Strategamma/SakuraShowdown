@@ -415,8 +415,8 @@ export class GameRenderer {
   private createProceduralPiece(typeId: string, isPrimary: boolean) {
     const group = new THREE.Group();
     const isMaster = typeId === "master";
-    const height = isMaster ? 0.65 : 0.48;
-    const baseRadius = isMaster ? 0.32 : 0.24;
+    const height = isMaster ? 0.75 : 0.52;
+    const baseRadius = isMaster ? 0.34 : 0.24;
 
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(baseRadius * 1.05, baseRadius * 1.2, 0.12, 48),
@@ -454,65 +454,85 @@ export class GameRenderer {
     head.position.y = height + 0.18;
     head.castShadow = true;
 
+    const sleeveMat = new THREE.MeshStandardMaterial({
+      map: this.fabricTexture,
+      color: robeColor,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+    const leftArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.2, 0.28, 18),
+      sleeveMat
+    );
+    leftArm.position.set(-baseRadius * 0.55, height * 0.45, 0);
+    leftArm.rotation.z = Math.PI / 2.5;
+    leftArm.castShadow = true;
+
+    const rightArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.2, 0.28, 18),
+      sleeveMat
+    );
+    rightArm.position.set(baseRadius * 0.55, height * 0.45, 0);
+    rightArm.rotation.z = -Math.PI / 2.5;
+    rightArm.castShadow = true;
+
     const ring = this.createSelectionRing();
 
-    group.add(base, body, head, ring);
+    group.add(base, body, head, leftArm, rightArm, ring);
 
     if (isMaster) {
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.32, 0.4, 24),
+        new THREE.ConeGeometry(baseRadius * 0.34, 0.55, 24),
         new THREE.MeshStandardMaterial({
           color: 0xe8d9c8,
           roughness: 0.6
         })
       );
-      beard.position.set(0, height + 0.02, baseRadius * 0.1);
+      beard.position.set(0, height - 0.05, baseRadius * 0.08);
       beard.rotation.x = Math.PI;
 
-      const hat = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.45, 0.28, 24),
+      const moustache = new THREE.Mesh(
+        new THREE.TorusGeometry(baseRadius * 0.22, 0.03, 12, 32, Math.PI),
         new THREE.MeshStandardMaterial({
-          color: 0x5b2b36,
+          color: 0xdfd2c2,
           roughness: 0.5
         })
       );
-      hat.position.y = height + 0.42;
+      moustache.position.set(0, height + 0.08, baseRadius * 0.22);
+      moustache.rotation.x = Math.PI / 2;
+
+      const topknot = new THREE.Mesh(
+        new THREE.SphereGeometry(baseRadius * 0.2, 20, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0x3b2a25,
+          roughness: 0.7
+        })
+      );
+      topknot.position.y = height + 0.5;
 
       const staff = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.03, 0.035, 0.9, 16),
+        new THREE.CylinderGeometry(0.03, 0.035, 1.1, 16),
         new THREE.MeshStandardMaterial({
           color: 0x8b6a4a,
           roughness: 0.7
         })
       );
-      staff.position.set(baseRadius * 0.55, 0.55, 0);
-      staff.rotation.z = Math.PI / 18;
+      staff.position.set(baseRadius * 0.6, 0.7, 0);
+      staff.rotation.z = Math.PI / 16;
       staff.castShadow = true;
 
-      group.add(beard, hat, staff);
+      const staffOrb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 12),
+        new THREE.MeshStandardMaterial({
+          color: 0xc84b58,
+          roughness: 0.4,
+          metalness: 0.3
+        })
+      );
+      staffOrb.position.set(baseRadius * 0.6, 1.25, 0);
+
+      group.add(beard, moustache, topknot, staff, staffOrb);
     } else {
-      const swordBlade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.45, 0.02),
-        new THREE.MeshStandardMaterial({
-          color: 0xd9dde2,
-          roughness: 0.25,
-          metalness: 0.6
-        })
-      );
-      swordBlade.position.set(baseRadius * 0.55, 0.45, 0);
-      swordBlade.rotation.z = Math.PI / 10;
-      swordBlade.castShadow = true;
-
-      const swordHandle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.02, 0.02, 0.14, 12),
-        new THREE.MeshStandardMaterial({
-          color: 0x4a2b1f,
-          roughness: 0.7
-        })
-      );
-      swordHandle.position.set(baseRadius * 0.55, 0.2, 0);
-      swordHandle.rotation.z = Math.PI / 10;
-
       const hair = new THREE.Mesh(
         new THREE.SphereGeometry(baseRadius * 0.35, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
         new THREE.MeshStandardMaterial({
@@ -520,9 +540,39 @@ export class GameRenderer {
           roughness: 0.8
         })
       );
-      hair.position.set(0, height + 0.26, 0);
+      hair.position.set(0, height + 0.28, 0);
 
-      group.add(swordBlade, swordHandle, hair);
+      const staff = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.03, 0.85, 14),
+        new THREE.MeshStandardMaterial({
+          color: 0x6a4a33,
+          roughness: 0.75
+        })
+      );
+      staff.position.set(baseRadius * 0.55, 0.45, 0);
+      staff.rotation.z = Math.PI / 12;
+      staff.castShadow = true;
+
+      const staffCap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 14, 12),
+        new THREE.MeshStandardMaterial({
+          color: 0xd6c4a6,
+          roughness: 0.6
+        })
+      );
+      staffCap.position.set(baseRadius * 0.55, 0.9, 0);
+
+      const belt = new THREE.Mesh(
+        new THREE.TorusGeometry(baseRadius * 0.55, 0.04, 12, 32),
+        new THREE.MeshStandardMaterial({
+          color: 0x32232c,
+          roughness: 0.8
+        })
+      );
+      belt.position.y = 0.36;
+      belt.rotation.x = Math.PI / 2;
+
+      group.add(hair, staff, staffCap, belt);
     }
 
     return { group, body, ring };

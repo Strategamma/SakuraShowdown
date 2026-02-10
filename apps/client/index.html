@@ -52,17 +52,19 @@
           </div>
         </div>
       </header>
-      <section id="opponent-bar">
-        <div class="player-row">
-          <div class="player-name" id="opponent-name">Opponent</div>
-          <div id="opponent-hand" class="cards"></div>
-        </div>
-      </section>
       <main id="game-area">
-        <aside id="pool-panel">
-          <div class="panel-section">
+        <aside id="card-house">
+          <div class="card-house-section">
+            <div class="player-name" id="opponent-name">Opponent</div>
+            <div id="opponent-hand" class="cards vertical"></div>
+          </div>
+          <div class="card-house-section">
             <label class="label">Pool</label>
-            <div id="pool" class="cards"></div>
+            <div id="pool" class="cards vertical"></div>
+          </div>
+          <div class="card-house-section">
+            <div class="player-name" id="player-name">You</div>
+            <div id="hand" class="cards vertical"></div>
           </div>
         </aside>
 
@@ -94,12 +96,6 @@
           </div>
         </aside>
       </main>
-      <section id="player-bar">
-        <div class="player-row">
-          <div class="player-name" id="player-name">You</div>
-          <div id="hand" class="cards"></div>
-        </div>
-      </section>
     </div>
     <div id="customize-overlay" class="overlay hidden">
       <div class="overlay-card">
