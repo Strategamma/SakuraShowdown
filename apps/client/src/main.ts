@@ -87,6 +87,9 @@ let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
+let pendingMove:
+  | { pieceId: string; to: { x: number; y: number }; cardIds: string[] }
+  | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -120,8 +123,36 @@ const controller = new GameController({
 
 const renderer = new GameRenderer(canvasContainer, {
   onCellTap: (x, y) => {
-    controller.tryMove(x, y);
-    controller.clearSelection();
+    if (!latestState || !latestConfig) return;
+    if (!controller.canAct()) return;
+    const selection = controller.getSelection();
+    if (!selection.selectedPieceId) return;
+
+    const movesForCell = latestMoves.filter(
+      (move) =>
+        move.pieceId === selection.selectedPieceId &&
+        move.to.x === x &&
+        move.to.y === y &&
+        move.playerId === latestState.activePlayerId
+    );
+    if (movesForCell.length === 0) return;
+
+    if (movesForCell.length === 1) {
+      const only = movesForCell[0];
+      controller.selectCard(only.cardId);
+      controller.tryMove(x, y);
+      controller.clearSelection();
+      pendingMove = undefined;
+      renderAll();
+      return;
+    }
+
+    pendingMove = {
+      pieceId: selection.selectedPieceId,
+      to: { x, y },
+      cardIds: movesForCell.map((move) => move.cardId)
+    };
+    statusEl.textContent = "Choose a card to play this move.";
     renderAll();
   },
   onPieceTap: (pieceId) => {
@@ -132,6 +163,7 @@ const renderer = new GameRenderer(canvasContainer, {
     if (!piece || !piece.alive) return;
     if (piece.ownerId !== latestState.activePlayerId) return;
 
+    pendingMove = undefined;
     controller.selectPiece(pieceId);
     renderAll();
   }
@@ -176,6 +208,9 @@ function renderAll() {
 function updateStartedUI() {
   const started = Boolean(latestState && !latestState.winnerId);
   appEl.dataset.started = started ? "true" : "false";
+  if (!started) {
+    pendingMove = undefined;
+  }
 }
 
 function setMode(mode: "local" | "online") {
@@ -234,6 +269,11 @@ function renderCards() {
   const opponentName = latestConfig.players.find((p) => p.id !== viewPlayerId)?.name ?? "Opponent";
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
+  const primaryId = latestConfig.players[0]?.id;
+  const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
+  const opponentId = latestConfig.players.find((p) => p.id !== viewPlayerId)?.id;
+  setNameClass(playerNameEl, playerId === primaryId ? "primary" : "secondary");
+  setNameClass(opponentNameEl, opponentId === primaryId ? "primary" : "secondary");
   const isPlayerActive = latestState.activePlayerId === viewPlayerId;
   const hasWinner = Boolean(latestState.winnerId);
   playerSection.classList.toggle("active", !hasWinner && isPlayerActive);
@@ -257,6 +297,13 @@ function renderCards() {
       if (selection.selectedCardId === cardId) {
         cardEl.classList.add("active");
       }
+      if (pendingMove) {
+        if (pendingMove.cardIds.includes(cardId)) {
+          cardEl.classList.add("choice");
+        } else {
+          cardEl.classList.add("disabled");
+        }
+      }
       if (previousPoolCard && previousPoolCard !== latestState.poolCard && cardId === previousPoolCard) {
         cardEl.classList.add("swap-in");
       }
@@ -265,7 +312,17 @@ function renderCards() {
         cardEl.appendChild(pattern);
       }
       cardEl.addEventListener("click", () => {
+        if (pendingMove && pendingMove.cardIds.includes(cardId)) {
+          controller.selectCard(cardId);
+          controller.tryMove(pendingMove.to.x, pendingMove.to.y);
+          controller.clearSelection();
+          pendingMove = undefined;
+          renderAll();
+          return;
+        }
+
         const next = selection.selectedCardId === cardId ? undefined : cardId;
+        pendingMove = undefined;
         controller.selectCard(next);
         renderAll();
       });
@@ -355,6 +412,11 @@ function renderCaptured(viewPlayerId: string) {
   }
 }
 
+function setNameClass(el: HTMLElement, role: "primary" | "secondary") {
+  el.classList.remove("primary", "secondary");
+  el.classList.add(role);
+}
+
 function filterMoves(
   moves: LegalMove[],
   selectedCardId?: string,
@@ -382,8 +444,8 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   const center = { x: 1.5, y: 1.5 };
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(220, 170, 200, 0.45)";
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "rgba(90, 70, 90, 0.4)";
+  ctx.lineWidth = 1.4;
 
   for (let i = 0; i <= grid; i += 1) {
     ctx.beginPath();
@@ -401,14 +463,12 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   ctx.arc(size / 2, size / 2, 4.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#c6463a";
+  ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
     const x = Math.round(center.x + move.x);
     const y = Math.round(center.y - move.y);
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
-    ctx.beginPath();
-    ctx.arc((x + 0.5) * cell, (y + 0.5) * cell, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(x * cell + cell * 0.18, y * cell + cell * 0.18, cell * 0.64, cell * 0.64);
   }
 
   return canvas;

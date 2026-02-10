@@ -199,10 +199,9 @@ export class GameRenderer {
     const base = new THREE.Mesh(
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
-        map: this.woodTexture,
-        color: 0x6b5a66,
-        roughness: 0.7,
-        metalness: 0.05
+        color: 0xd8d0c4,
+        roughness: 0.9,
+        metalness: 0.02
       })
     );
     base.position.y = -0.28;
@@ -210,14 +209,12 @@ export class GameRenderer {
     this.boardGroup.add(base);
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0x9b8a95,
-      roughness: 0.6,
-      map: this.woodTexture
+      color: 0xf3efe8,
+      roughness: 0.75
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0x6d5865,
-      roughness: 0.7,
-      map: this.woodTexture
+      color: 0xc9c0b2,
+      roughness: 0.8
     });
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
@@ -290,13 +287,13 @@ export class GameRenderer {
         const baseGeom = new THREE.CircleGeometry(this.cellSize * 0.26, 36);
         const ringGeom = new THREE.RingGeometry(this.cellSize * 0.28, this.cellSize * 0.38, 36);
         const baseMat = new THREE.MeshBasicMaterial({
-          color: 0x34d399,
+          color: 0x5873b6,
           transparent: true,
           opacity: 0,
           depthWrite: false
         });
         const ringMat = new THREE.MeshBasicMaterial({
-          color: 0x34d399,
+          color: 0x5873b6,
           transparent: true,
           opacity: 0,
           depthWrite: false
@@ -324,14 +321,20 @@ export class GameRenderer {
       highlight.base.userData.baseOpacity = 0;
     }
 
+    const primaryId = this.config?.players[0]?.id;
+    const secondaryId = this.config?.players[1]?.id;
+
     for (const move of legalMoves) {
       const index = move.to.y * this.boardSize.width + move.to.x;
       const highlight = this.highlights[index];
       if (!highlight) continue;
       const baseMat = highlight.base.material as THREE.MeshBasicMaterial;
       const ringMat = highlight.ring.material as THREE.MeshBasicMaterial;
-      const color = move.capture ? 0xf97316 : 0x34d399;
-      const opacity = move.capture ? 0.7 : 0.45;
+      let baseColor = 0x5873b6;
+      if (move.playerId === primaryId) baseColor = 0xcc4b4b;
+      if (move.playerId === secondaryId) baseColor = 0x4b7bd3;
+      const color = move.capture ? 0xd8a647 : baseColor;
+      const opacity = move.capture ? 0.65 : 0.38;
       baseMat.color.set(color);
       ringMat.color.set(color);
       baseMat.opacity = opacity;
