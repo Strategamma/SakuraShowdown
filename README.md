@@ -48,6 +48,10 @@ The game config is loaded from `/game.json`, so changes to:
 
 will be picked up after redeploying.
 
+Online play uses the Koyeb server URL configured in the GitHub Pages workflow:
+
+`/Users/farzan/Documents/Codex/SakuraShowdown/.github/workflows/deploy.yml`
+
 ## Config-first game logic
 
 All rules, cards, and board settings are defined in JSON. The server reads:
