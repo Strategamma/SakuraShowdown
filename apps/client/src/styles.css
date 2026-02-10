@@ -341,6 +341,7 @@ body {
   gap: 6px;
   padding: 6px 10px;
   font-size: 0.9rem;
+  min-height: 28px;
 }
 
 .icon-button.active {
@@ -353,6 +354,10 @@ body {
   height: 16px;
   fill: currentColor;
   flex-shrink: 0;
+}
+
+.panel-title-row .icon-button .icon-label {
+  display: none;
 }
 
 .local-name-block input:disabled,
@@ -1042,6 +1047,7 @@ button:hover {
 }
 
 .overlay-body.draft-body {
+  grid-template-columns: minmax(0, 1fr) 280px;
   overflow: hidden;
 }
 
