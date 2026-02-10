@@ -437,8 +437,9 @@ export class GameRenderer {
   private createProceduralPiece(typeId: string, isPrimary: boolean) {
     const group = new THREE.Group();
     const isMaster = typeId === "master";
-    const height = isMaster ? 0.75 : 0.52;
-    const baseRadius = isMaster ? 0.34 : 0.24;
+    const scale = isMaster ? 1.05 : 0.92;
+    const height = isMaster ? 0.82 : 0.62;
+    const baseRadius = isMaster ? 0.32 : 0.26;
 
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(baseRadius * 1.05, baseRadius * 1.2, 0.12, 48),
@@ -453,84 +454,133 @@ export class GameRenderer {
     base.position.y = 0.06;
 
     const robeColor = isPrimary ? 0xb43b46 : 0x2a64c7;
-    const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.85, baseRadius, height, 48),
-      new THREE.MeshStandardMaterial({
-        map: this.fabricTexture,
-        color: robeColor,
-        roughness: 0.35,
-        metalness: 0.2
-      })
-    );
-    body.castShadow = true;
-    body.position.y = height / 2 + 0.12;
-
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(baseRadius * 0.45, 32, 20),
-      new THREE.MeshStandardMaterial({
-        color: 0xf5e1c9,
-        roughness: 0.45,
-        metalness: 0.05
-      })
-    );
-    head.position.y = height + 0.18;
-    head.castShadow = true;
-
-    const sleeveMat = new THREE.MeshStandardMaterial({
+    const clothMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
       color: robeColor,
-      roughness: 0.4,
-      metalness: 0.1
+      roughness: 0.35,
+      metalness: 0.18
     });
-    const leftArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.2, 0.28, 18),
-      sleeveMat
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0xf5e1c9,
+      roughness: 0.45,
+      metalness: 0.05
+    });
+    const hairMat = new THREE.MeshStandardMaterial({
+      color: 0x3b2a25,
+      roughness: 0.7
+    });
+
+    const legHeight = 0.2 * scale;
+    const legRadius = 0.055 * scale;
+    const legOffset = 0.08 * scale;
+    const legLeft = new THREE.Mesh(
+      new THREE.CylinderGeometry(legRadius, legRadius * 1.1, legHeight, 16),
+      clothMat
     );
-    leftArm.position.set(-baseRadius * 0.55, height * 0.45, 0);
-    leftArm.rotation.z = Math.PI / 2.5;
+    legLeft.position.set(-legOffset, legHeight / 2 + 0.12, 0);
+    legLeft.castShadow = true;
+    const legRight = legLeft.clone();
+    legRight.position.set(legOffset, legHeight / 2 + 0.12, 0);
+
+    const footLeft = new THREE.Mesh(
+      new THREE.SphereGeometry(legRadius * 1.1, 14, 12),
+      clothMat
+    );
+    footLeft.position.set(-legOffset, 0.12 + legRadius * 0.8, legRadius * 0.6);
+    const footRight = footLeft.clone();
+    footRight.position.set(legOffset, 0.12 + legRadius * 0.8, legRadius * 0.6);
+
+    const torsoHeight = height * 0.55;
+    const torso = new THREE.Mesh(
+      new THREE.CylinderGeometry(baseRadius * 0.55, baseRadius * 0.7, torsoHeight, 32),
+      clothMat
+    );
+    torso.position.y = 0.12 + legHeight + torsoHeight / 2;
+    torso.castShadow = true;
+
+    const shoulders = new THREE.Mesh(
+      new THREE.SphereGeometry(baseRadius * 0.55, 24, 18),
+      clothMat
+    );
+    shoulders.position.y = torso.position.y + torsoHeight / 2 - 0.02;
+    shoulders.castShadow = true;
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(baseRadius * 0.33, 24, 18),
+      skinMat
+    );
+    head.position.y = shoulders.position.y + baseRadius * 0.4;
+    head.castShadow = true;
+
+    const leftArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
+      clothMat
+    );
+    leftArm.position.set(-baseRadius * 0.75, shoulders.position.y - 0.06, 0);
+    leftArm.rotation.z = Math.PI / 2.7;
     leftArm.castShadow = true;
 
     const rightArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.2, 0.28, 18),
-      sleeveMat
+      new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
+      clothMat
     );
-    rightArm.position.set(baseRadius * 0.55, height * 0.45, 0);
-    rightArm.rotation.z = -Math.PI / 2.5;
+    rightArm.position.set(baseRadius * 0.75, shoulders.position.y - 0.06, 0);
+    rightArm.rotation.z = -Math.PI / 2.7;
     rightArm.castShadow = true;
+
+    const cloak = new THREE.Mesh(
+      new THREE.ConeGeometry(baseRadius * 0.95, height * 0.75, 32, 1, true),
+      clothMat
+    );
+    cloak.position.y = 0.12 + legHeight + torsoHeight * 0.35;
+    cloak.rotation.y = Math.PI / 4;
+    cloak.castShadow = true;
 
     const ring = this.createSelectionRing();
 
-    group.add(base, body, head, leftArm, rightArm, ring);
+    group.add(
+      base,
+      legLeft,
+      legRight,
+      footLeft,
+      footRight,
+      torso,
+      shoulders,
+      head,
+      leftArm,
+      rightArm,
+      cloak,
+      ring
+    );
+
+    const body = torso;
 
     if (isMaster) {
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.34, 0.55, 24),
+        new THREE.ConeGeometry(baseRadius * 0.32, 0.5, 24),
         new THREE.MeshStandardMaterial({
           color: 0xe8d9c8,
           roughness: 0.6
         })
       );
-      beard.position.set(0, height - 0.05, baseRadius * 0.08);
+      beard.position.set(0, head.position.y - 0.05, baseRadius * 0.08);
       beard.rotation.x = Math.PI;
 
       const moustache = new THREE.Mesh(
-        new THREE.TorusGeometry(baseRadius * 0.22, 0.03, 12, 32, Math.PI),
+        new THREE.TorusGeometry(baseRadius * 0.2, 0.03, 12, 32, Math.PI),
         new THREE.MeshStandardMaterial({
           color: 0xdfd2c2,
           roughness: 0.5
         })
       );
-      moustache.position.set(0, height + 0.08, baseRadius * 0.22);
+      moustache.position.set(0, head.position.y + 0.02, baseRadius * 0.2);
       moustache.rotation.x = Math.PI / 2;
 
       const topknot = new THREE.Mesh(
-        new THREE.SphereGeometry(baseRadius * 0.2, 20, 16),
-        new THREE.MeshStandardMaterial({
-          color: 0x3b2a25,
-          roughness: 0.7
-        })
+        new THREE.SphereGeometry(baseRadius * 0.22, 20, 16),
+        hairMat
       );
-      topknot.position.y = height + 0.5;
+      topknot.position.y = head.position.y + 0.28;
 
       const staff = new THREE.Mesh(
         new THREE.CylinderGeometry(0.03, 0.035, 1.1, 16),
@@ -556,13 +606,10 @@ export class GameRenderer {
       group.add(beard, moustache, topknot, staff, staffOrb);
     } else {
       const hair = new THREE.Mesh(
-        new THREE.SphereGeometry(baseRadius * 0.35, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-        new THREE.MeshStandardMaterial({
-          color: 0x3b2a25,
-          roughness: 0.8
-        })
+        new THREE.SphereGeometry(baseRadius * 0.34, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+        hairMat
       );
-      hair.position.set(0, height + 0.28, 0);
+      hair.position.set(0, head.position.y + 0.12, 0);
 
       const staff = new THREE.Mesh(
         new THREE.CylinderGeometry(0.025, 0.03, 0.85, 14),

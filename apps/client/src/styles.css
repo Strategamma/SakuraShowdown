@@ -559,20 +559,42 @@ button:hover {
 }
 
 .card.choice {
-  border-color: rgba(249, 199, 211, 0.9);
-  box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.25);
-  animation: card-choice 1.6s ease-in-out infinite;
+  border-color: rgba(249, 199, 211, 0.95);
+  box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.35), 0 14px 26px rgba(226, 74, 127, 0.28);
+  animation: card-choice 1.4s ease-in-out infinite;
+}
+
+.card.choice::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: radial-gradient(circle at 50% 35%, rgba(249, 199, 211, 0.4), transparent 60%);
+  opacity: 0.2;
+  pointer-events: none;
+  animation: card-choice-glow 1.4s ease-in-out infinite;
 }
 
 @keyframes card-choice {
   0% {
-    box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.2);
+    transform: translateY(0);
   }
   50% {
-    box-shadow: 0 0 12px rgba(249, 199, 211, 0.35);
+    transform: translateY(-4px);
   }
   100% {
-    box-shadow: 0 0 0 2px rgba(249, 199, 211, 0.2);
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-choice-glow {
+  0% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0.18;
   }
 }
 
@@ -757,6 +779,9 @@ button:hover {
   grid-template-columns: minmax(0, 1fr) 240px;
   gap: 20px;
   align-items: start;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .draft-grid {
@@ -764,6 +789,9 @@ button:hover {
   grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 16px;
   width: 100%;
+  align-content: start;
+  overflow: auto;
+  padding-right: 6px;
 }
 
 .draft-side {
@@ -774,12 +802,17 @@ button:hover {
   border-radius: 14px;
   padding: 12px;
   border: 1px solid rgba(226, 74, 127, 0.2);
+  min-height: 0;
 }
 
 .draft-selected {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .draft-selected-item {
@@ -821,6 +854,9 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(18, 12, 16, 0) 0%, rgba(18, 12, 16, 0.9) 55%);
 }
 
 .draft-count {
@@ -870,6 +906,10 @@ button:hover {
   gap: 16px;
   padding: 16px 20px;
   overflow: auto;
+}
+
+.overlay-body.draft-body {
+  overflow: hidden;
 }
 
 .overlay-list {

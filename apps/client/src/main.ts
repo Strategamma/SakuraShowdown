@@ -312,7 +312,8 @@ function renderCards() {
   const playerName = playerMeta?.name ?? "You";
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
-  const patternFlip = Boolean(primaryId && viewPlayerId !== primaryId);
+  const playerOrientation = playerMeta?.forward ?? 1;
+  const opponentOrientation = opponentMeta?.forward ?? -1;
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
@@ -353,7 +354,7 @@ function renderCards() {
         cardEl.classList.add("swap-in");
       }
       if (card) {
-        const pattern = drawCardPattern(card.moves, patternFlip);
+        const pattern = drawCardPattern(card.moves, playerOrientation);
         cardEl.appendChild(pattern);
       }
       cardEl.addEventListener("click", () => {
@@ -393,7 +394,7 @@ function renderCards() {
         title.textContent = card?.name ?? cardId;
         cardEl.appendChild(title);
         if (card) {
-          const pattern = drawCardPattern(card.moves, patternFlip);
+          const pattern = drawCardPattern(card.moves, opponentOrientation);
           cardEl.appendChild(pattern);
         }
       }
@@ -413,7 +414,7 @@ function renderCards() {
     poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
-    const pattern = drawCardPattern(poolCard.moves, patternFlip);
+    const pattern = drawCardPattern(poolCard.moves, playerOrientation);
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);
@@ -475,7 +476,7 @@ function filterMoves(
   });
 }
 
-function drawCardPattern(moves: { x: number; y: number }[], flip = false) {
+function drawCardPattern(moves: { x: number; y: number }[], orientation: 1 | -1 = 1) {
   const size = 80;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -510,8 +511,8 @@ function drawCardPattern(moves: { x: number; y: number }[], flip = false) {
 
   ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
-    const mx = flip ? -move.x : move.x;
-    const my = flip ? -move.y : move.y;
+    const mx = move.x * orientation;
+    const my = move.y * orientation;
     const x = center.x + mx;
     const y = center.y - my;
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
