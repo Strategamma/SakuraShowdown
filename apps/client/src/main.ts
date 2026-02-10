@@ -76,7 +76,7 @@ const draftGrid = document.getElementById("draft-grid") as HTMLElement;
 const draftCount = document.getElementById("draft-count") as HTMLElement;
 const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElement;
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
-const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement;
+const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement | null;
 
 appEl.dataset.started = "false";
 
@@ -837,7 +837,9 @@ function maybeShowStartOverlay() {
 function renderDraft() {
   if (!baseConfig) return;
   draftGrid.innerHTML = "";
-  draftSelectedEl.innerHTML = "";
+  if (draftSelectedEl) {
+    draftSelectedEl.innerHTML = "";
+  }
   for (const card of baseConfig.cards) {
     const item = document.createElement("div");
     item.className = "draft-item";
@@ -861,18 +863,20 @@ function renderDraft() {
   draftCount.textContent = `${draftSelection.size} / 5 selected`;
   draftStartBtn.disabled = draftSelection.size !== 5;
 
-  for (const cardId of draftSelection) {
-    const card = baseConfig.cards.find((c) => c.id === cardId);
-    if (!card) continue;
-    const item = document.createElement("div");
-    item.className = "draft-selected-item";
-    const title = document.createElement("div");
-    title.className = "card-title";
-    title.textContent = card.name;
-    const pattern = drawCardPattern(card.moves);
-    item.appendChild(title);
-    item.appendChild(pattern);
-    draftSelectedEl.appendChild(item);
+  if (draftSelectedEl) {
+    for (const cardId of draftSelection) {
+      const card = baseConfig.cards.find((c) => c.id === cardId);
+      if (!card) continue;
+      const item = document.createElement("div");
+      item.className = "draft-selected-item";
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = card.name;
+      const pattern = drawCardPattern(card.moves);
+      item.appendChild(title);
+      item.appendChild(pattern);
+      draftSelectedEl.appendChild(item);
+    }
   }
 }
 
