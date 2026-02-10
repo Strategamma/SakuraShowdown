@@ -123,6 +123,7 @@ export class GameRenderer {
     this.templeGroup = new THREE.Group();
     this.pieceGroup = new THREE.Group();
     this.highlightGroup = new THREE.Group();
+    this.highlightGroup.renderOrder = 3;
     this.scene.add(this.boardGroup, this.templeGroup, this.highlightGroup, this.pieceGroup);
 
     this.setupLights();
@@ -287,22 +288,24 @@ export class GameRenderer {
         const planeGeom = new THREE.PlaneGeometry(this.cellSize * 0.88, this.cellSize * 0.88);
         const edgeGeom = new THREE.EdgesGeometry(planeGeom);
         const fillMat = new THREE.MeshBasicMaterial({
-          color: 0x5873b6,
+          color: 0x5aa8ff,
           transparent: true,
           opacity: 0,
-          depthWrite: false
+          depthWrite: false,
+          depthTest: false
         });
         const borderMat = new THREE.LineBasicMaterial({
-          color: 0x5873b6,
+          color: 0x5aa8ff,
           transparent: true,
-          opacity: 0
+          opacity: 0,
+          depthTest: false
         });
         const fill = new THREE.Mesh(planeGeom, fillMat);
         const border = new THREE.LineSegments(edgeGeom, borderMat);
         fill.rotation.x = -Math.PI / 2;
         border.rotation.x = -Math.PI / 2;
-        fill.position.copy(this.gridToWorld(x, y, 0.11));
-        border.position.copy(this.gridToWorld(x, y, 0.12));
+        fill.position.copy(this.gridToWorld(x, y, 0.145));
+        border.position.copy(this.gridToWorld(x, y, 0.155));
         fill.userData = { type: "highlight", x, y, baseOpacity: 0 };
         border.userData = fill.userData;
         this.highlightGroup.add(fill, border);
@@ -329,15 +332,15 @@ export class GameRenderer {
       if (!highlight) continue;
       const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
       const borderMat = highlight.border.material as THREE.LineBasicMaterial;
-      let baseColor = 0x4f7ccf;
-      if (move.playerId === primaryId) baseColor = 0xcc4b4b;
-      if (move.playerId === secondaryId) baseColor = 0x4f7ccf;
-      const color = move.capture ? 0xd8a647 : baseColor;
-      const opacity = move.capture ? 0.5 : 0.3;
+      let baseColor = 0x5aa8ff;
+      if (move.playerId === primaryId) baseColor = 0xe0565b;
+      if (move.playerId === secondaryId) baseColor = 0x5aa8ff;
+      const color = move.capture ? 0xf1c65a : baseColor;
+      const opacity = move.capture ? 0.6 : 0.4;
       fillMat.color.set(color);
       borderMat.color.set(color);
       fillMat.opacity = opacity;
-      borderMat.opacity = opacity + 0.25;
+      borderMat.opacity = opacity + 0.5;
       highlight.fill.userData.baseOpacity = opacity;
     }
   }

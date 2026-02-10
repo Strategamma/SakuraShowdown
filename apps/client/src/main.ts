@@ -121,39 +121,43 @@ const controller = new GameController({
   }
 });
 
+function handleCellTap(x: number, y: number) {
+  if (!latestState || !latestConfig) return;
+  if (!controller.canAct()) return;
+  const selection = controller.getSelection();
+  if (!selection.selectedPieceId) return;
+
+  const movesForCell = latestMoves.filter(
+    (move) =>
+      move.pieceId === selection.selectedPieceId &&
+      move.to.x === x &&
+      move.to.y === y &&
+      move.playerId === latestState.activePlayerId
+  );
+  if (movesForCell.length === 0) return;
+
+  if (movesForCell.length === 1) {
+    const only = movesForCell[0];
+    controller.selectCard(only.cardId);
+    controller.tryMove(x, y);
+    controller.clearSelection();
+    pendingMove = undefined;
+    renderAll();
+    return;
+  }
+
+  pendingMove = {
+    pieceId: selection.selectedPieceId,
+    to: { x, y },
+    cardIds: movesForCell.map((move) => move.cardId)
+  };
+  statusEl.textContent = "Choose a card to play this move.";
+  renderAll();
+}
+
 const renderer = new GameRenderer(canvasContainer, {
   onCellTap: (x, y) => {
-    if (!latestState || !latestConfig) return;
-    if (!controller.canAct()) return;
-    const selection = controller.getSelection();
-    if (!selection.selectedPieceId) return;
-
-    const movesForCell = latestMoves.filter(
-      (move) =>
-        move.pieceId === selection.selectedPieceId &&
-        move.to.x === x &&
-        move.to.y === y &&
-        move.playerId === latestState.activePlayerId
-    );
-    if (movesForCell.length === 0) return;
-
-    if (movesForCell.length === 1) {
-      const only = movesForCell[0];
-      controller.selectCard(only.cardId);
-      controller.tryMove(x, y);
-      controller.clearSelection();
-      pendingMove = undefined;
-      renderAll();
-      return;
-    }
-
-    pendingMove = {
-      pieceId: selection.selectedPieceId,
-      to: { x, y },
-      cardIds: movesForCell.map((move) => move.cardId)
-    };
-    statusEl.textContent = "Choose a card to play this move.";
-    renderAll();
+    handleCellTap(x, y);
   },
   onPieceTap: (pieceId) => {
     if (!latestState || !latestConfig) return;
@@ -161,7 +165,11 @@ const renderer = new GameRenderer(canvasContainer, {
 
     const piece = latestState.pieces.find((p) => p.id === pieceId);
     if (!piece || !piece.alive) return;
-    if (piece.ownerId !== latestState.activePlayerId) return;
+
+    if (piece.ownerId !== latestState.activePlayerId) {
+      handleCellTap(piece.x, piece.y);
+      return;
+    }
 
     pendingMove = undefined;
     controller.selectPiece(pieceId);
