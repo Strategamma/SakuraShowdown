@@ -317,8 +317,8 @@ function renderCards() {
   const playerName = playerMeta?.name ?? "You";
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
-  const playerOrientation = playerMeta?.forward ?? 1;
-  const opponentOrientation = opponentMeta?.forward ?? -1;
+  const activeId = latestState.activePlayerId;
+  const getCardOrientation = (ownerId?: string) => (ownerId === activeId ? 1 : -1);
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
@@ -334,6 +334,7 @@ function renderCards() {
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
   if (playerState) {
+    const playerOrientation = getCardOrientation(playerState.id);
     for (const cardId of playerState.hand) {
       const card = latestConfig.cards.find((c) => c.id === cardId);
       const cardEl = document.createElement("div");
@@ -382,26 +383,18 @@ function renderCards() {
   }
 
   if (opponentState) {
-    const revealOpponent = controller.getPlayerId() === undefined;
+    const opponentOrientation = getCardOrientation(opponentState.id);
     for (const cardId of opponentState.hand) {
       const card = latestConfig.cards.find((c) => c.id === cardId);
       const cardEl = document.createElement("div");
       cardEl.className = "card";
-      if (!revealOpponent) {
-        cardEl.classList.add("back");
-        const title = document.createElement("div");
-        title.className = "card-title";
-        title.textContent = "Hidden";
-        cardEl.appendChild(title);
-      } else {
-        const title = document.createElement("div");
-        title.className = "card-title";
-        title.textContent = card?.name ?? cardId;
-        cardEl.appendChild(title);
-        if (card) {
-          const pattern = drawCardPattern(card.moves, opponentOrientation);
-          cardEl.appendChild(pattern);
-        }
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = card?.name ?? cardId;
+      cardEl.appendChild(title);
+      if (card) {
+        const pattern = drawCardPattern(card.moves, opponentOrientation);
+        cardEl.appendChild(pattern);
       }
       opponentHandEl.appendChild(cardEl);
     }
@@ -419,7 +412,7 @@ function renderCards() {
     poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
-    const pattern = drawCardPattern(poolCard.moves, playerOrientation);
+    const pattern = drawCardPattern(poolCard.moves, getCardOrientation(activeId));
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);

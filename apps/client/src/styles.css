@@ -892,6 +892,7 @@ button:hover {
 
 .draft-card {
   width: min(880px, 94vw);
+  height: min(92vh, 900px);
   background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.18), rgba(20, 12, 18, 0.96));
   border: 1px solid rgba(226, 74, 127, 0.3);
   box-shadow: 0 30px 70px rgba(20, 8, 16, 0.6);
@@ -917,7 +918,6 @@ button:hover {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-right: 6px;
 }
 
 .draft-grid {
@@ -1007,7 +1007,7 @@ button:hover {
 
 .overlay-body.draft-body {
   grid-template-columns: minmax(0, 1fr);
-  overflow: hidden;
+  overflow: auto;
 }
 
 .overlay-list {
