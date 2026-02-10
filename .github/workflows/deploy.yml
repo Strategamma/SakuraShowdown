@@ -25,6 +25,8 @@ jobs:
         run: npm install
       - name: Install Rollup Linux Binary
         run: npm install --no-save @rollup/rollup-linux-x64-gnu@4.57.1
+      - name: Build rules
+        run: npm run build -w packages/rules
       - name: Build client
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
