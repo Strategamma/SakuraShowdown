@@ -3,11 +3,16 @@ import { validateConfig } from "@game/rules";
 import type { GameConfig, GameState, LegalMove } from "@game/rules";
 import { GameController } from "./game/controller";
 import { GameRenderer } from "./game/renderer";
+import defaultConfig from "./game/defaultConfig";
 
 const DEFAULT_CONFIG_URL = new URL("game.json", import.meta.env.BASE_URL).toString();
-const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DEFAULT_CONFIG_URL;
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "ws://localhost:2567";
+const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
+  ? `${SERVER_URL.replace(/^ws/, "http")}/config`
+  : undefined;
+const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DERIVED_CONFIG_URL ?? DEFAULT_CONFIG_URL;
 const STORAGE_KEY = "sakura.customConfig";
+const LOCAL_NAME_KEY = "sakura.localName";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
@@ -18,6 +23,7 @@ const roomInfoEl = document.getElementById("room-info") as HTMLElement;
 const copyRoomBtn = document.getElementById("copy-room") as HTMLButtonElement;
 const quickOnlineBtn = document.getElementById("quick-online") as HTMLButtonElement;
 const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonElement;
+const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
@@ -45,6 +51,8 @@ let previousPoolCard: string | undefined;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let currentRoomId: string | undefined;
+let baseConfig: GameConfig | undefined;
+let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 
 const controller = new GameController({
   onState: (state) => {
@@ -67,7 +75,12 @@ const controller = new GameController({
     statusEl.textContent = `Online match ready · Room ${roomId}`;
   },
   onPlayer: (playerId) => {
-    playerLabel.textContent = playerId ?? "Spectator";
+    if (!playerId) {
+      playerLabel.textContent = "Spectator";
+      return;
+    }
+    const label = latestConfig?.players.find((p) => p.id === playerId)?.name ?? playerId;
+    playerLabel.textContent = label;
   }
 });
 
@@ -99,9 +112,15 @@ function renderAll() {
   renderer.render(latestState, moves, selection);
 
   if (latestState.winnerId) {
-    statusEl.textContent = `Winner: ${latestState.winnerId}`;
+    const winnerName =
+      latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
+      latestState.winnerId;
+    statusEl.textContent = `Winner: ${winnerName}`;
   } else {
-    statusEl.textContent = `Turn ${latestState.turn} · ${latestState.activePlayerId}`;
+    const activeName =
+      latestConfig.players.find((p) => p.id === latestState.activePlayerId)?.name ??
+      latestState.activePlayerId;
+    statusEl.textContent = `Turn ${latestState.turn} · ${activeName}`;
   }
 }
 
@@ -111,10 +130,24 @@ function setMode(mode: "local" | "online") {
   if (mode === "local") {
     currentRoomId = undefined;
     roomInfoEl.textContent = "Not connected";
-    if (latestConfig) {
+    if (baseConfig) {
+      const withName = applyLocalName(baseConfig);
+      latestConfig = withName;
+      controller.setConfig(withName);
+      renderer.setConfig(withName);
       controller.startLocal();
+      playerLabel.textContent = localName || "You";
     }
   }
+}
+
+function applyLocalName(config: GameConfig): GameConfig {
+  const next = structuredClone(config) as GameConfig;
+  const displayName = localName.trim();
+  if (displayName && next.players[0]) {
+    next.players[0].name = displayName;
+  }
+  return next;
 }
 
 function renderCards() {
@@ -346,10 +379,13 @@ function applyCardChanges() {
     editableConfig.deck = editableConfig.cards.map((card) => card.id);
     const validated = validateConfig(editableConfig);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
-    latestConfig = validated;
-    controller.setConfig(validated);
-    renderer.setConfig(validated);
+    baseConfig = validated;
+    const localConfig = applyLocalName(validated);
+    latestConfig = localConfig;
+    controller.setConfig(localConfig);
+    renderer.setConfig(localConfig);
     controller.startLocal();
+    playerLabel.textContent = localName || "You";
     previousHand = [];
     previousPoolCard = undefined;
     closeCustomize();
@@ -381,17 +417,43 @@ function exportConfig() {
 
 async function bootstrap() {
   try {
+    const fallback = validateConfig(defaultConfig);
+    baseConfig = fallback;
+    const localFallback = applyLocalName(fallback);
+    latestConfig = localFallback;
+    controller.setConfig(localFallback);
+    renderer.setConfig(localFallback);
+    controller.startLocal();
+    playerLabel.textContent = localName || "You";
+
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = validateConfig(JSON.parse(stored));
-      latestConfig = parsed;
-      controller.setConfig(parsed);
-      renderer.setConfig(parsed);
+      baseConfig = parsed;
+      const localParsed = applyLocalName(parsed);
+      latestConfig = localParsed;
+      controller.setConfig(localParsed);
+      renderer.setConfig(localParsed);
       controller.startLocal();
+      playerLabel.textContent = localName || "You";
     } else {
-      await controller.loadConfig(CONFIG_URL);
-      renderer.setConfig(latestConfig!);
-      controller.startLocal();
+      try {
+        await controller.loadConfig(CONFIG_URL);
+        const loaded = controller.getConfig();
+        if (loaded) {
+          baseConfig = loaded;
+          const localLoaded = applyLocalName(loaded);
+          latestConfig = localLoaded;
+          controller.setConfig(localLoaded);
+          renderer.setConfig(localLoaded);
+          if (modeSelect.value === "local") {
+            controller.startLocal();
+            playerLabel.textContent = localName || "You";
+          }
+        }
+      } catch {
+        statusEl.textContent = "Using local defaults.";
+      }
     }
   } catch (error) {
     statusEl.textContent = "Failed to load config.";
@@ -434,6 +496,20 @@ copyRoomBtn.addEventListener("click", async () => {
 
 restartLocalBtn.addEventListener("click", () => {
   setMode("local");
+});
+
+localNameInput.value = localName;
+localNameInput.addEventListener("input", () => {
+  localName = localNameInput.value;
+  localStorage.setItem(LOCAL_NAME_KEY, localName);
+  if (modeSelect.value === "local" && baseConfig) {
+    const localConfig = applyLocalName(baseConfig);
+    latestConfig = localConfig;
+    controller.setConfig(localConfig);
+    renderer.setConfig(localConfig);
+    controller.startLocal();
+    playerLabel.textContent = localName || "You";
+  }
 });
 
 customizeBtn.addEventListener("click", openCustomize);

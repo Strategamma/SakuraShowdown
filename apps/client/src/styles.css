@@ -255,11 +255,17 @@ button:hover {
 }
 
 #app[data-mode="local"] .local-only {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 #app[data-mode="local"] .online-only {
   display: none;
+}
+
+.local-name-block input {
+  width: 100%;
 }
 
 .cards {
