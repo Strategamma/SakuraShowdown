@@ -13,10 +13,10 @@
     "@game/rules": "*",
     "colyseus": "^0.15.57",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "tsup": "^8.0.2"
   },
   "devDependencies": {
-    "tsup": "^8.0.2",
     "tsx": "^4.7.1",
     "typescript": "^5.4.5"
   }
