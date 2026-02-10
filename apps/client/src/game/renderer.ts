@@ -200,8 +200,8 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x241a22,
-        roughness: 0.8,
+        color: 0x4f3d49,
+        roughness: 0.75,
         metalness: 0.05
       })
     );
@@ -210,13 +210,13 @@ export class GameRenderer {
     this.boardGroup.add(base);
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0x3b2a35,
-      roughness: 0.75,
+      color: 0x735d6c,
+      roughness: 0.65,
       map: this.woodTexture
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0x241923,
-      roughness: 0.8,
+      color: 0x44313e,
+      roughness: 0.75,
       map: this.woodTexture
     });
 
@@ -821,12 +821,12 @@ export class GameRenderer {
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#3a2732";
+      ctx.fillStyle = "#5a4452";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < 120; i += 1) {
         const y = Math.random() * canvas.height;
-        const alpha = 0.04 + Math.random() * 0.08;
-        ctx.strokeStyle = `rgba(240, 170, 200, ${alpha})`;
+        const alpha = 0.05 + Math.random() * 0.1;
+        ctx.strokeStyle = `rgba(245, 200, 220, ${alpha})`;
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.bezierCurveTo(80, y + Math.random() * 6, 160, y - Math.random() * 6, 256, y);

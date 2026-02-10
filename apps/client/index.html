@@ -30,6 +30,21 @@
           <div class="brand-subtitle">Petal duels. Razor tactics.</div>
         </div>
         <div class="toolbar">
+          <div id="match-controls" class="match-controls">
+            <label class="label">Mode</label>
+            <select id="mode">
+              <option value="local" selected>Local</option>
+              <option value="online">Online</option>
+            </select>
+            <button id="restart-local" class="ghost-button local-only">Start Match</button>
+            <button id="quick-online" class="ghost-button online-only">Quick Online Match</button>
+            <div class="room-row online-only">
+              <input id="room" type="text" placeholder="Room code" />
+              <button id="connect">Go Online</button>
+              <button id="copy-room" class="ghost-button">Copy</button>
+            </div>
+            <div id="room-info" class="room-info online-only">Not connected</div>
+          </div>
           <button id="toggle-view" class="ghost-button">2D View</button>
           <div class="status-pill">
             <span class="status-dot"></span>
@@ -55,14 +70,8 @@
 
         <aside id="right-panel">
           <div class="panel-section">
-            <label class="label">Match Mode</label>
-            <select id="mode">
-              <option value="local" selected>Local</option>
-              <option value="online">Online</option>
-            </select>
-            <button id="restart-local" class="ghost-button local-only">Start Match</button>
-            <button id="quick-online" class="ghost-button online-only">Quick Online Match</button>
-            <div class="local-only local-name-block">
+            <label class="label">Names</label>
+            <div class="local-name-block">
               <label class="label">Player Name</label>
               <input id="local-name" type="text" placeholder="Your name" />
               <label class="label">Opponent Name</label>
@@ -74,15 +83,6 @@
                 <option value="p2">Player 2</option>
               </select>
             </div>
-          </div>
-          <div class="panel-section online-only">
-            <label class="label">Room Code</label>
-            <div class="room-row">
-              <input id="room" type="text" placeholder="Leave blank to host" />
-              <button id="copy-room" class="ghost-button">Copy</button>
-            </div>
-            <button id="connect">Go Online</button>
-            <div id="room-info" class="room-info">Not connected</div>
           </div>
           <div class="panel-section">
             <label class="label">You</label>

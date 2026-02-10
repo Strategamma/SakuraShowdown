@@ -53,6 +53,8 @@ const cardsApplyBtn = document.getElementById("cards-apply") as HTMLButtonElemen
 const cardsResetBtn = document.getElementById("cards-reset") as HTMLButtonElement;
 const cardsExportBtn = document.getElementById("cards-export") as HTMLButtonElement;
 
+appEl.dataset.started = "false";
+
 let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
@@ -143,6 +145,13 @@ function renderAll() {
       latestState.activePlayerId;
     statusEl.textContent = `Turn ${latestState.turn} · ${activeName}`;
   }
+
+  updateStartedUI();
+}
+
+function updateStartedUI() {
+  const started = Boolean(latestState && !latestState.winnerId);
+  appEl.dataset.started = started ? "true" : "false";
 }
 
 function setMode(mode: "local" | "online") {
