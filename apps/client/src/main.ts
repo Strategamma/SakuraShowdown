@@ -27,6 +27,7 @@ const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonEl
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const handEl = document.getElementById("hand") as HTMLElement;
+const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
@@ -157,8 +158,10 @@ function renderCards() {
   const selection = controller.getSelection();
   const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
   const playerState = latestState.players.find((p) => p.id === viewPlayerId);
+  const opponentState = latestState.players.find((p) => p.id !== viewPlayerId);
 
   handEl.innerHTML = "";
+  opponentHandEl.innerHTML = "";
   if (playerState) {
     for (const cardId of playerState.hand) {
       const card = latestConfig.cards.find((c) => c.id === cardId);
@@ -181,6 +184,26 @@ function renderCards() {
         renderAll();
       });
       handEl.appendChild(cardEl);
+    }
+  }
+
+  if (opponentState) {
+    const revealOpponent = controller.getPlayerId() === undefined;
+    for (const cardId of opponentState.hand) {
+      const card = latestConfig.cards.find((c) => c.id === cardId);
+      const cardEl = document.createElement("div");
+      cardEl.className = "card";
+      if (!revealOpponent) {
+        cardEl.classList.add("back");
+        cardEl.textContent = "Hidden";
+      } else {
+        cardEl.textContent = card?.name ?? cardId;
+        if (card) {
+          const pattern = drawCardPattern(card.moves);
+          cardEl.appendChild(pattern);
+        }
+      }
+      opponentHandEl.appendChild(cardEl);
     }
   }
 
@@ -503,13 +526,13 @@ localNameInput.value = localName;
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
   localStorage.setItem(LOCAL_NAME_KEY, localName);
-  if (modeSelect.value === "local" && baseConfig) {
+  if (baseConfig) {
     const localConfig = applyLocalName(baseConfig);
     latestConfig = localConfig;
     controller.setConfig(localConfig);
     renderer.setConfig(localConfig);
-    controller.startLocal();
     playerLabel.textContent = localName || "You";
+    renderAll();
   }
 });
 

@@ -48,6 +48,7 @@ export class GameRenderer {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private boardGroup: THREE.Group;
+  private templeGroup: THREE.Group;
   private pieceGroup: THREE.Group;
   private highlightGroup: THREE.Group;
   private raycaster = new THREE.Raycaster();
@@ -88,6 +89,7 @@ export class GameRenderer {
     eel: { arc: 0.4, spin: 0.2 },
     cobra: { arc: 0.35, tilt: 0.3 }
   };
+  private pieceBaseHeight = 0.12;
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -113,9 +115,10 @@ export class GameRenderer {
     container.appendChild(this.renderer.domElement);
 
     this.boardGroup = new THREE.Group();
+    this.templeGroup = new THREE.Group();
     this.pieceGroup = new THREE.Group();
     this.highlightGroup = new THREE.Group();
-    this.scene.add(this.boardGroup, this.highlightGroup, this.pieceGroup);
+    this.scene.add(this.boardGroup, this.templeGroup, this.highlightGroup, this.pieceGroup);
 
     this.setupLights();
 
@@ -130,6 +133,7 @@ export class GameRenderer {
     this.config = config;
     this.boardSize = { width: config.board.width, height: config.board.height };
     this.buildBoard();
+    this.buildTempleMarkers();
     this.buildHighlights();
     this.fitCamera();
     void this.loadModels();
@@ -222,6 +226,43 @@ export class GameRenderer {
     this.boardGroup.add(shadowCatcher);
   }
 
+  private buildTempleMarkers() {
+    this.templeGroup.clear();
+    if (!this.config) return;
+
+    const ringGeom = new THREE.TorusGeometry(0.42, 0.05, 16, 48);
+    const baseGeom = new THREE.CylinderGeometry(0.48, 0.52, 0.08, 48);
+
+    this.config.players.forEach((player, index) => {
+      const color = index === 0 ? 0xc23a49 : 0x1f6feb;
+      const ring = new THREE.Mesh(
+        ringGeom,
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.6,
+          roughness: 0.35
+        })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.13));
+      ring.castShadow = false;
+
+      const base = new THREE.Mesh(
+        baseGeom,
+        new THREE.MeshStandardMaterial({
+          color: 0xf1e2cb,
+          roughness: 0.8,
+          metalness: 0.05
+        })
+      );
+      base.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.04));
+      base.receiveShadow = true;
+
+      this.templeGroup.add(base, ring);
+    });
+  }
+
   private buildHighlights() {
     this.highlightGroup.clear();
     this.highlights = [];
@@ -277,7 +318,7 @@ export class GameRenderer {
       visual.alive = piece.alive;
       visual.selected = selection.selectedPieceId === piece.id;
 
-      const target = this.gridToWorld(piece.x, piece.y, 0.55);
+      const target = this.gridToWorld(piece.x, piece.y, this.pieceBaseHeight);
       if (!visual.target.equals(target)) {
         visual.start.copy(visual.group.position);
         visual.target.copy(target);
@@ -359,8 +400,8 @@ export class GameRenderer {
   private createProceduralPiece(typeId: string, isPrimary: boolean) {
     const group = new THREE.Group();
     const isMaster = typeId === "master";
-    const height = isMaster ? 0.75 : 0.6;
-    const baseRadius = isMaster ? 0.34 : 0.28;
+    const height = isMaster ? 0.65 : 0.48;
+    const baseRadius = isMaster ? 0.32 : 0.24;
 
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(baseRadius * 1.05, baseRadius * 1.2, 0.12, 48),
@@ -374,11 +415,12 @@ export class GameRenderer {
     base.castShadow = true;
     base.position.y = 0.06;
 
+    const robeColor = isPrimary ? 0xb43b46 : 0x2a64c7;
     const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.9, baseRadius, height, 48),
+      new THREE.CylinderGeometry(baseRadius * 0.85, baseRadius, height, 48),
       new THREE.MeshStandardMaterial({
         map: this.fabricTexture,
-        color: isPrimary ? 0xc0392b : 0x1f6feb,
+        color: robeColor,
         roughness: 0.35,
         metalness: 0.2
       })
@@ -386,35 +428,89 @@ export class GameRenderer {
     body.castShadow = true;
     body.position.y = height / 2 + 0.12;
 
-    const crown = new THREE.Mesh(
-      new THREE.SphereGeometry(baseRadius * 0.5, 32, 20),
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(baseRadius * 0.45, 32, 20),
       new THREE.MeshStandardMaterial({
-        map: this.accentTexture,
-        color: 0xf7f1e8,
-        roughness: 0.3,
-        metalness: 0.1
+        color: 0xf5e1c9,
+        roughness: 0.45,
+        metalness: 0.05
       })
     );
-    crown.position.y = height + 0.12;
-    crown.castShadow = true;
-
-    const crest = new THREE.Mesh(
-      new THREE.ConeGeometry(baseRadius * 0.3, 0.2, 24),
-      new THREE.MeshStandardMaterial({
-        color: 0xf2d0a4,
-        roughness: 0.4,
-        metalness: 0.3
-      })
-    );
-    crest.position.y = height + 0.32;
-    crest.castShadow = true;
+    head.position.y = height + 0.18;
+    head.castShadow = true;
 
     const ring = this.createSelectionRing();
-
     const label = this.createLabel(typeId.charAt(0).toUpperCase());
-    label.position.set(0, height + 0.48, 0);
+    label.position.set(0, height + 0.6, 0);
 
-    group.add(base, body, crown, crest, ring, label);
+    group.add(base, body, head, ring, label);
+
+    if (isMaster) {
+      const beard = new THREE.Mesh(
+        new THREE.ConeGeometry(baseRadius * 0.32, 0.4, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0xe8d9c8,
+          roughness: 0.6
+        })
+      );
+      beard.position.set(0, height + 0.02, baseRadius * 0.1);
+      beard.rotation.x = Math.PI;
+
+      const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(baseRadius * 0.45, 0.28, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0x5b2b36,
+          roughness: 0.5
+        })
+      );
+      hat.position.y = height + 0.42;
+
+      const staff = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.035, 0.9, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0x8b6a4a,
+          roughness: 0.7
+        })
+      );
+      staff.position.set(baseRadius * 0.55, 0.55, 0);
+      staff.rotation.z = Math.PI / 18;
+      staff.castShadow = true;
+
+      group.add(beard, hat, staff);
+    } else {
+      const swordBlade = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.45, 0.02),
+        new THREE.MeshStandardMaterial({
+          color: 0xd9dde2,
+          roughness: 0.25,
+          metalness: 0.6
+        })
+      );
+      swordBlade.position.set(baseRadius * 0.55, 0.45, 0);
+      swordBlade.rotation.z = Math.PI / 10;
+      swordBlade.castShadow = true;
+
+      const swordHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.14, 12),
+        new THREE.MeshStandardMaterial({
+          color: 0x4a2b1f,
+          roughness: 0.7
+        })
+      );
+      swordHandle.position.set(baseRadius * 0.55, 0.2, 0);
+      swordHandle.rotation.z = Math.PI / 10;
+
+      const hair = new THREE.Mesh(
+        new THREE.SphereGeometry(baseRadius * 0.35, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+        new THREE.MeshStandardMaterial({
+          color: 0x3b2a25,
+          roughness: 0.8
+        })
+      );
+      hair.position.set(0, height + 0.26, 0);
+
+      group.add(swordBlade, swordHandle, hair);
+    }
 
     return { group, body, ring, label };
   }
@@ -425,7 +521,7 @@ export class GameRenderer {
       new THREE.MeshBasicMaterial({ color: 0xf4a261, transparent: true, opacity: 0.7 })
     );
     ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.12;
+    ring.position.y = 0.08;
     ring.visible = false;
     return ring;
   }
@@ -442,7 +538,7 @@ export class GameRenderer {
       ctx.arc(64, 64, 40, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#2b2a27";
-      ctx.font = "bold 56px 'Space Grotesk'";
+      ctx.font = "bold 56px 'Cinzel'";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(text, 64, 70);
@@ -530,10 +626,13 @@ export class GameRenderer {
       group.scale.setScalar(scale);
       box = new THREE.Box3().setFromObject(group);
     }
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    group.position.sub(center);
-    group.position.y += 0.4;
+    const min = new THREE.Vector3();
+    const max = new THREE.Vector3();
+    box.getMin(min);
+    box.getMax(max);
+    group.position.x -= (min.x + max.x) / 2;
+    group.position.z -= (min.z + max.z) / 2;
+    group.position.y -= min.y;
   }
 
   private getMoveStyle(cardId: string): MoveStyle {

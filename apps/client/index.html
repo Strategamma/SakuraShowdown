@@ -37,8 +37,16 @@
         </div>
       </header>
       <main id="game-area">
+        <aside id="left-panel" class="hand-panel">
+          <div class="card-group">
+            <div class="group-label">Opponent Hand</div>
+            <div id="opponent-hand" class="cards vertical"></div>
+          </div>
+        </aside>
+
         <div id="canvas-container"></div>
-        <div id="side-panel">
+
+        <aside id="right-panel">
           <div class="panel-section">
             <label class="label">Match Mode</label>
             <select id="mode">
@@ -66,21 +74,19 @@
             <div id="player-label">-</div>
           </div>
           <div class="panel-section">
+            <label class="label">Your Hand</label>
+            <div id="hand" class="cards"></div>
+          </div>
+          <div class="panel-section">
+            <label class="label">Pool</label>
+            <div id="pool" class="cards"></div>
+          </div>
+          <div class="panel-section">
             <label class="label">Customize</label>
             <button id="customize-cards">Customize Cards</button>
           </div>
-        </div>
+        </aside>
       </main>
-      <footer id="card-bar">
-        <div class="card-group">
-          <div class="group-label">Your Hand</div>
-          <div id="hand" class="cards"></div>
-        </div>
-        <div class="card-group">
-          <div class="group-label">Pool</div>
-          <div id="pool" class="cards"></div>
-        </div>
-      </footer>
     </div>
     <div id="customize-overlay" class="overlay hidden">
       <div class="overlay-card">

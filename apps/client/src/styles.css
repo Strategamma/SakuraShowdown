@@ -111,7 +111,7 @@ body {
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 250px;
+  grid-template-columns: 200px minmax(0, 1fr) 280px;
   gap: 16px;
   padding: 16px;
 }
@@ -141,6 +141,18 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+#left-panel,
+#right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hand-panel .card-group {
+  position: sticky;
+  top: 88px;
 }
 
 .panel-section {
@@ -275,6 +287,11 @@ button:hover {
   perspective: 800px;
 }
 
+.cards.vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .card {
   padding: 8px 12px;
   border-radius: 10px;
@@ -288,6 +305,12 @@ button:hover {
   box-shadow: 0 6px 14px rgba(32, 31, 28, 0.12);
   position: relative;
   overflow: hidden;
+}
+
+.card.back {
+  background: linear-gradient(135deg, #5d2b35 0%, #9c4c5a 60%, #d47a87 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .card.active {
@@ -517,13 +540,14 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
-  #side-panel {
+  #left-panel,
+  #right-panel {
     flex-direction: row;
     flex-wrap: wrap;
   }
 
-  #card-bar {
-    grid-template-columns: 1fr;
+  .hand-panel .card-group {
+    position: static;
   }
 }
 
