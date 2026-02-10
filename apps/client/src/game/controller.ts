@@ -49,9 +49,15 @@ export class GameController {
     this.callbacks.onConfig(config);
   }
 
-  startLocal(seed?: number) {
+  startLocal(options?: { seed?: number; startingPlayerId?: string }) {
     if (!this.config) throw new Error("Config not loaded.");
-    this.state = createInitialState(this.config, seed);
+    this.state = createInitialState(this.config, options?.seed ?? Date.now());
+    if (options?.startingPlayerId) {
+      const exists = this.config.players.some((p) => p.id === options.startingPlayerId);
+      if (exists && this.state) {
+        this.state.activePlayerId = options.startingPlayerId;
+      }
+    }
     this.playerId = undefined;
     this.recalculateMoves();
     this.callbacks.onState(this.state);
@@ -107,6 +113,7 @@ export class GameController {
 
   tryMove(x: number, y: number) {
     if (!this.state || !this.config) return;
+    if (this.state.winnerId) return;
     if (!this.selectedCardId || !this.selectedPieceId) return;
     if (!this.canAct()) return;
 
@@ -144,6 +151,7 @@ export class GameController {
 
   canAct() {
     if (!this.state) return false;
+    if (this.state.winnerId) return false;
     if (this.mode === "local") return true;
     return this.playerId === this.state.activePlayerId;
   }

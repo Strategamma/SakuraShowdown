@@ -35,9 +35,9 @@ body {
 }
 
 #top-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 18px;
   background: linear-gradient(120deg, #1e151d 0%, #140d13 100%);
   box-shadow: 0 6px 18px var(--shadow);
@@ -60,6 +60,7 @@ body {
   place-items: center;
   background: radial-gradient(circle at 30% 20%, #f9c6d5 0%, #d67690 45%, #872944 100%);
   box-shadow: 0 8px 16px var(--glow);
+  justify-self: start;
 }
 
 .logo svg {
@@ -70,6 +71,12 @@ body {
 .brand-text {
   display: flex;
   flex-direction: column;
+}
+
+.brand-text.centered {
+  text-align: center;
+  align-items: center;
+  justify-self: center;
 }
 
 .brand-title {
@@ -83,6 +90,13 @@ body {
   font-size: 0.78rem;
   color: var(--muted);
   letter-spacing: 0.04em;
+}
+
+.toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: end;
 }
 
 .status {
@@ -213,6 +227,7 @@ button:hover {
   padding: 12px 16px;
   background: linear-gradient(120deg, #1b1219 0%, #130d12 100%);
   box-shadow: 0 12px 30px var(--shadow);
+  animation: panel-fade 0.6s ease both;
 }
 
 .player-row {
@@ -221,12 +236,48 @@ button:hover {
   gap: 16px;
 }
 
+.player-row .cards {
+  flex: 1;
+  justify-content: flex-end;
+}
+
 .player-name {
   min-width: 140px;
   font-family: var(--font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink);
+}
+
+#canvas-container {
+  animation: board-fade 0.7s ease both;
+}
+
+#pool-panel,
+#right-panel {
+  animation: panel-fade 0.6s ease both;
+}
+
+@keyframes panel-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes board-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card-group {
@@ -304,18 +355,28 @@ button:hover {
 }
 
 .card {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: linear-gradient(140deg, #241820 0%, #1a1118 100%);
   border: 1px solid #3c2732;
-  min-width: 80px;
+  min-width: 120px;
+  min-height: 72px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
   transform-style: preserve-3d;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 6px 14px rgba(5, 4, 6, 0.6);
   position: relative;
   overflow: hidden;
+}
+
+.card-title {
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .card.back {
@@ -337,7 +398,7 @@ button:hover {
 
 .card:hover {
   transform: translateY(-6px) rotateX(8deg);
-  box-shadow: 0 12px 22px rgba(32, 31, 28, 0.2);
+  box-shadow: 0 16px 28px rgba(5, 4, 6, 0.8);
 }
 
 .card::after {

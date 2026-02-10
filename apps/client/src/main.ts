@@ -14,6 +14,9 @@ const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
 const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DERIVED_CONFIG_URL ?? DEFAULT_CONFIG_URL;
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
+const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
+const LOCAL_START_KEY = "sakura.localStartingPlayer";
+const VIEW_MODE_KEY = "sakura.viewMode";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
@@ -25,9 +28,12 @@ const copyRoomBtn = document.getElementById("copy-room") as HTMLButtonElement;
 const quickOnlineBtn = document.getElementById("quick-online") as HTMLButtonElement;
 const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonElement;
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
+const localOpponentNameInput = document.getElementById("local-opponent-name") as HTMLInputElement;
+const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const playerNameEl = document.getElementById("player-name") as HTMLElement;
 const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
+const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
@@ -57,6 +63,9 @@ let selectedCardIndex = 0;
 let currentRoomId: string | undefined;
 let baseConfig: GameConfig | undefined;
 let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
+let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
+let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
+let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
 
 const controller = new GameController({
   onState: (state) => {
@@ -106,6 +115,7 @@ const renderer = new GameRenderer(canvasContainer, {
     renderAll();
   }
 });
+renderer.setViewMode(viewMode);
 
 function renderAll() {
   if (!latestConfig || !latestState) return;
@@ -146,17 +156,36 @@ function setMode(mode: "local" | "online") {
       latestConfig = withName;
       controller.setConfig(withName);
       renderer.setConfig(withName);
-      controller.startLocal();
+      startLocalMatch();
       playerLabel.textContent = localName || "You";
     }
   }
 }
 
+function resolveStartingPlayer(config: GameConfig): string | undefined {
+  if (!config.players.length) return undefined;
+  if (localStartingPlayer === "p1") return config.players[0]?.id;
+  if (localStartingPlayer === "p2") return config.players[1]?.id;
+  const index = Math.random() < 0.5 ? 0 : 1;
+  return config.players[index]?.id;
+}
+
+function startLocalMatch() {
+  if (!latestConfig) return;
+  const startingId = resolveStartingPlayer(latestConfig);
+  controller.startLocal({ startingPlayerId: startingId });
+  renderAll();
+}
+
 function applyLocalName(config: GameConfig): GameConfig {
   const next = structuredClone(config) as GameConfig;
   const displayName = localName.trim();
+  const displayOpponent = localOpponentName.trim();
   if (displayName && next.players[0]) {
     next.players[0].name = displayName;
+  }
+  if (displayOpponent && next.players[1]) {
+    next.players[1].name = displayOpponent;
   }
   return next;
 }
@@ -180,7 +209,10 @@ function renderCards() {
       const card = latestConfig.cards.find((c) => c.id === cardId);
       const cardEl = document.createElement("div");
       cardEl.className = "card";
-      cardEl.textContent = card?.name ?? cardId;
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = card?.name ?? cardId;
+      cardEl.appendChild(title);
       if (!previousHand.includes(cardId)) {
         cardEl.classList.add("reveal");
       }
@@ -208,9 +240,15 @@ function renderCards() {
       cardEl.className = "card";
       if (!revealOpponent) {
         cardEl.classList.add("back");
-        cardEl.textContent = "Hidden";
+        const title = document.createElement("div");
+        title.className = "card-title";
+        title.textContent = "Hidden";
+        cardEl.appendChild(title);
       } else {
-        cardEl.textContent = card?.name ?? cardId;
+        const title = document.createElement("div");
+        title.className = "card-title";
+        title.textContent = card?.name ?? cardId;
+        cardEl.appendChild(title);
         if (card) {
           const pattern = drawCardPattern(card.moves);
           cardEl.appendChild(pattern);
@@ -224,7 +262,10 @@ function renderCards() {
   const poolCard = latestConfig.cards.find((c) => c.id === latestState.poolCard);
   const poolCardEl = document.createElement("div");
   poolCardEl.className = "card disabled";
-  poolCardEl.textContent = poolCard?.name ?? latestState.poolCard;
+  const poolTitle = document.createElement("div");
+  poolTitle.className = "card-title";
+  poolTitle.textContent = poolCard?.name ?? latestState.poolCard;
+  poolCardEl.appendChild(poolTitle);
   if (previousPoolCard && previousPoolCard !== latestState.poolCard) {
     poolCardEl.classList.add("swap");
   }
@@ -264,7 +305,7 @@ function drawCardPattern(moves: { x: number; y: number }[]) {
   const cell = size / 5;
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(150, 120, 90, 0.25)";
+  ctx.strokeStyle = "rgba(220, 170, 200, 0.25)";
   ctx.lineWidth = 1;
 
   for (let i = 0; i <= 5; i += 1) {
@@ -421,7 +462,7 @@ function applyCardChanges() {
     latestConfig = localConfig;
     controller.setConfig(localConfig);
     renderer.setConfig(localConfig);
-    controller.startLocal();
+    startLocalMatch();
     playerLabel.textContent = localName || "You";
     previousHand = [];
     previousPoolCard = undefined;
@@ -460,7 +501,7 @@ async function bootstrap() {
     latestConfig = localFallback;
     controller.setConfig(localFallback);
     renderer.setConfig(localFallback);
-    controller.startLocal();
+    startLocalMatch();
     playerLabel.textContent = localName || "You";
 
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -471,7 +512,7 @@ async function bootstrap() {
       latestConfig = localParsed;
       controller.setConfig(localParsed);
       renderer.setConfig(localParsed);
-      controller.startLocal();
+      startLocalMatch();
       playerLabel.textContent = localName || "You";
     } else {
       try {
@@ -484,7 +525,7 @@ async function bootstrap() {
           controller.setConfig(localLoaded);
           renderer.setConfig(localLoaded);
           if (modeSelect.value === "local") {
-            controller.startLocal();
+            startLocalMatch();
             playerLabel.textContent = localName || "You";
           }
         }
@@ -504,7 +545,7 @@ modeSelect.addEventListener("change", () => {
 
 connectBtn.addEventListener("click", async () => {
   if (modeSelect.value === "local") {
-    controller.startLocal();
+    startLocalMatch();
     return;
   }
 
@@ -532,10 +573,20 @@ copyRoomBtn.addEventListener("click", async () => {
 });
 
 restartLocalBtn.addEventListener("click", () => {
-  setMode("local");
+  startLocalMatch();
+});
+
+toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
+toggleViewBtn.addEventListener("click", () => {
+  viewMode = viewMode === "3d" ? "2d" : "3d";
+  localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  renderer.setViewMode(viewMode);
+  toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
 });
 
 localNameInput.value = localName;
+playerNameEl.textContent = localName || "You";
+opponentNameEl.textContent = localOpponentName || "Opponent";
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
   localStorage.setItem(LOCAL_NAME_KEY, localName);
@@ -547,6 +598,26 @@ localNameInput.addEventListener("input", () => {
     playerLabel.textContent = localName || "You";
     renderAll();
   }
+});
+
+localOpponentNameInput.value = localOpponentName;
+opponentNameEl.textContent = localOpponentName || "Opponent";
+localOpponentNameInput.addEventListener("input", () => {
+  localOpponentName = localOpponentNameInput.value;
+  localStorage.setItem(LOCAL_OPPONENT_NAME_KEY, localOpponentName);
+  if (baseConfig) {
+    const localConfig = applyLocalName(baseConfig);
+    latestConfig = localConfig;
+    controller.setConfig(localConfig);
+    renderer.setConfig(localConfig);
+    renderAll();
+  }
+});
+
+startingPlayerSelect.value = localStartingPlayer;
+startingPlayerSelect.addEventListener("change", () => {
+  localStartingPlayer = startingPlayerSelect.value;
+  localStorage.setItem(LOCAL_START_KEY, localStartingPlayer);
 });
 
 customizeBtn.addEventListener("click", openCustomize);

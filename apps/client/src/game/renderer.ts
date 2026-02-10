@@ -90,6 +90,11 @@ export class GameRenderer {
   };
   private pieceBaseHeight = 0.12;
   private isFlipped = false;
+  private currentFlip = 0;
+  private targetFlip = 0;
+  private flipStart = 0;
+  private flipDuration = 600;
+  private viewMode: "3d" | "2d" = "3d";
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -152,11 +157,14 @@ export class GameRenderer {
   setBoardFlip(flipped: boolean) {
     if (this.isFlipped === flipped) return;
     this.isFlipped = flipped;
-    const angle = flipped ? Math.PI : 0;
-    this.boardGroup.rotation.y = angle;
-    this.templeGroup.rotation.y = angle;
-    this.highlightGroup.rotation.y = angle;
-    this.pieceGroup.rotation.y = angle;
+    this.targetFlip = flipped ? Math.PI : 0;
+    this.flipStart = performance.now();
+  }
+
+  setViewMode(mode: "3d" | "2d") {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    this.fitCamera();
   }
 
   private setupLights() {
@@ -192,8 +200,8 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x1a1218,
-        roughness: 0.85,
+        color: 0x241a22,
+        roughness: 0.8,
         metalness: 0.05
       })
     );
@@ -202,13 +210,13 @@ export class GameRenderer {
     this.boardGroup.add(base);
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0x2a1c25,
-      roughness: 0.8,
+      color: 0x3b2a35,
+      roughness: 0.75,
       map: this.woodTexture
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1218,
-      roughness: 0.85,
+      color: 0x241923,
+      roughness: 0.8,
       map: this.woodTexture
     });
 
@@ -692,6 +700,20 @@ export class GameRenderer {
     const time = now / 1000;
     const up = new THREE.Vector3(0, 1, 0);
 
+    if (this.currentFlip !== this.targetFlip) {
+      const elapsed = now - this.flipStart;
+      const t = Math.min(elapsed / this.flipDuration, 1);
+      const eased = this.easeInOutCubic(t);
+      this.currentFlip = THREE.MathUtils.lerp(this.currentFlip, this.targetFlip, eased);
+      if (t >= 1) {
+        this.currentFlip = this.targetFlip;
+      }
+      this.boardGroup.rotation.y = this.currentFlip;
+      this.templeGroup.rotation.y = this.currentFlip;
+      this.highlightGroup.rotation.y = this.currentFlip;
+      this.pieceGroup.rotation.y = this.currentFlip;
+    }
+
     for (const visual of this.pieces.values()) {
       if (!visual.alive) continue;
 
@@ -724,17 +746,18 @@ export class GameRenderer {
         const roll = (style.roll ?? 0) * Math.sin(Math.PI * mt);
         const stomp = (style.stomp ?? 0) * Math.sin(Math.PI * mt) * (mt > 0.7 ? -1 : 1);
 
-        extraY += jump + stomp;
-        spinY += spin * Math.PI;
-        tiltZ += tilt;
-        rollX += roll;
+        const motionScale = 0.35;
+        extraY += (jump + stomp) * motionScale;
+        spinY += spin * Math.PI * motionScale;
+        tiltZ += tilt * motionScale;
+        rollX += roll * motionScale;
 
         const dir = new THREE.Vector3().subVectors(visual.target, visual.start);
         if (dir.lengthSq() > 0.0001) {
           dir.normalize();
           const right = new THREE.Vector3().crossVectors(dir, up);
-          extraX += right.x * arc + dir.x * sway * 0.15;
-          extraZ += right.z * arc + dir.z * sway * 0.15;
+          extraX += (right.x * arc + dir.x * sway * 0.15) * motionScale;
+          extraZ += (right.z * arc + dir.z * sway * 0.15) * motionScale;
         }
 
         if (mt >= 1) {
@@ -742,12 +765,11 @@ export class GameRenderer {
         }
       }
 
-      const bob = Math.sin(time * 2 + visual.target.x * 2.4) * 0.02;
-      basePosition.y += bob + (visual.selected ? 0.06 : 0) + extraY;
+      basePosition.y += (visual.selected ? 0.04 : 0) + extraY;
       basePosition.x += extraX;
       basePosition.z += extraZ;
       visual.group.position.copy(basePosition);
-      visual.group.rotation.y = Math.sin(time * 0.6 + visual.target.x) * 0.08 + spinY;
+      visual.group.rotation.y = spinY;
       visual.group.rotation.z = tiltZ;
       visual.group.rotation.x = rollX;
 
@@ -764,8 +786,6 @@ export class GameRenderer {
       }
     }
 
-    const drift = Math.sin(time * 0.2) * 0.25;
-    this.camera.position.x = drift;
     this.camera.lookAt(0, 0, 0);
   }
 
@@ -776,12 +796,23 @@ export class GameRenderer {
     const fov = (this.camera.fov * Math.PI) / 180;
     const distance = boardRadius / Math.tan(fov / 2) + 2.5;
 
-    this.camera.position.set(0, distance * 0.6, distance * 0.8);
+    if (this.viewMode === "2d") {
+      this.camera.fov = 35;
+      this.camera.position.set(0, distance * 1.1, 0.01);
+    } else {
+      this.camera.fov = 40;
+      this.camera.position.set(0, distance * 0.6, distance * 0.8);
+    }
     this.camera.lookAt(0, 0, 0);
+    this.camera.updateProjectionMatrix();
   }
 
   private easeOutCubic(t: number) {
     return 1 - Math.pow(1 - t, 3);
+  }
+
+  private easeInOutCubic(t: number) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
   private createWoodTexture() {
@@ -790,12 +821,12 @@ export class GameRenderer {
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#eddcc2";
+      ctx.fillStyle = "#3a2732";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < 120; i += 1) {
         const y = Math.random() * canvas.height;
-        const alpha = 0.05 + Math.random() * 0.08;
-        ctx.strokeStyle = `rgba(120, 90, 50, ${alpha})`;
+        const alpha = 0.04 + Math.random() * 0.08;
+        ctx.strokeStyle = `rgba(240, 170, 200, ${alpha})`;
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.bezierCurveTo(80, y + Math.random() * 6, 160, y - Math.random() * 6, 256, y);

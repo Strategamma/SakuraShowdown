@@ -8,8 +8,7 @@
   <body>
     <div id="app">
       <header id="top-bar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true">
+        <div class="logo" aria-hidden="true">
             <svg viewBox="0 0 64 64" role="img">
               <path
                 d="M32 6c3 8-1 14-6 18 7 0 13 3 16 9 2-7 8-10 15-10-5-4-8-10-6-17-6 4-13 4-19 0z"
@@ -25,15 +24,17 @@
               />
               <circle cx="32" cy="32" r="4.5" fill="#c84b58" />
             </svg>
-          </div>
-          <div class="brand-text">
-            <div class="brand-title">Sakura Showdown</div>
-            <div class="brand-subtitle">Petal duels. Razor tactics.</div>
-          </div>
         </div>
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <div class="status" id="status">Ready</div>
+        <div class="brand-text centered">
+          <div class="brand-title">Sakura Showdown</div>
+          <div class="brand-subtitle">Petal duels. Razor tactics.</div>
+        </div>
+        <div class="toolbar">
+          <button id="toggle-view" class="ghost-button">2D View</button>
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            <div class="status" id="status">Ready</div>
+          </div>
         </div>
       </header>
       <section id="opponent-bar">
@@ -59,11 +60,19 @@
               <option value="local" selected>Local</option>
               <option value="online">Online</option>
             </select>
-            <button id="restart-local" class="ghost-button local-only">Restart Local Match</button>
+            <button id="restart-local" class="ghost-button local-only">Start Match</button>
             <button id="quick-online" class="ghost-button online-only">Quick Online Match</button>
             <div class="local-only local-name-block">
               <label class="label">Player Name</label>
               <input id="local-name" type="text" placeholder="Your name" />
+              <label class="label">Opponent Name</label>
+              <input id="local-opponent-name" type="text" placeholder="Opponent name" />
+              <label class="label">Starting Player</label>
+              <select id="starting-player">
+                <option value="random" selected>Random</option>
+                <option value="p1">Player 1</option>
+                <option value="p2">Player 2</option>
+              </select>
             </div>
           </div>
           <div class="panel-section online-only">
