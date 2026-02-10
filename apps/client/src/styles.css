@@ -163,7 +163,50 @@ body {
 
 @media (max-width: 1200px) {
   #game-area {
-    grid-template-columns: minmax(170px, 22vw) minmax(0, 1fr) minmax(170px, 20vw);
+    grid-template-columns: minmax(160px, 22vw) minmax(0, 1fr) minmax(160px, 20vw);
+    gap: 10px;
+  }
+
+  #canvas-container {
+    min-height: 520px;
+    height: min(88vh, 88vw);
+  }
+
+  #card-house {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  #right-panel {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1024px) {
+  #top-bar {
+    padding: 10px 14px;
+    min-height: 68px;
+  }
+
+  .toolbar {
+    gap: 8px;
+  }
+
+  #game-area {
+    grid-template-columns: minmax(150px, 24vw) minmax(0, 1fr) minmax(150px, 20vw);
+  }
+
+  #canvas-container {
+    min-height: 480px;
+  }
+
+  #card-house .card {
+    min-height: 76px;
+  }
+
+  #card-house .card-pattern {
+    width: 64px;
+    height: 64px;
   }
 }
 
@@ -1207,6 +1250,11 @@ button:hover {
       "right";
   }
 
+  #canvas-container {
+    height: min(72vh, 92vw);
+    min-height: 360px;
+  }
+
   #card-house {
     display: grid;
     grid-template-rows: minmax(160px, 1fr) auto minmax(160px, 1fr);
@@ -1217,8 +1265,50 @@ button:hover {
   }
 
   #right-panel {
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  #card-house {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+
+  #opponent-hand,
+  #hand {
+    grid-template-columns: 1fr;
+  }
+
+  #card-house .card {
+    min-height: 70px;
+  }
+
+  #card-house .card-pattern {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-height: 720px) {
+  #top-bar {
+    min-height: 60px;
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  #game-area {
+    gap: 8px;
+    padding: 6px;
+  }
+
+  #canvas-container {
+    height: min(68vh, 92vw);
+    min-height: 300px;
   }
 }
 
