@@ -5,7 +5,8 @@ import { GameController } from "./game/controller";
 import { GameRenderer } from "./game/renderer";
 import defaultConfig from "./game/defaultConfig";
 
-const DEFAULT_CONFIG_URL = new URL("game.json", import.meta.env.BASE_URL).toString();
+const BASE_URL = import.meta.env.BASE_URL || "/";
+const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "ws://localhost:2567";
 const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
   ? `${SERVER_URL.replace(/^ws/, "http")}/config`
