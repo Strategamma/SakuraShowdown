@@ -212,6 +212,15 @@ body {
   align-items: stretch;
 }
 
+#game-area.board-layout {
+  justify-items: center;
+}
+
+#game-area.board-layout #canvas-container,
+#game-area.board-layout .card-rail {
+  width: min(96vw, 1080px);
+}
+
 @media (max-width: 1200px) {
   #game-area {
     gap: 10px;
@@ -342,11 +351,16 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  justify-items: stretch;
 }
 
 .pool-rail .rail-cards {
   grid-template-columns: minmax(0, 1fr);
   justify-items: center;
+}
+
+.rail-cards .card {
+  width: 100%;
 }
 
 #opponent-hand .card {
