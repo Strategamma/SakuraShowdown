@@ -446,6 +446,7 @@ button:hover {
   border: 1px solid rgba(226, 74, 127, 0.45);
   color: #f6e9ef;
   box-shadow: 0 6px 16px rgba(226, 74, 127, 0.18);
+  opacity: 1;
 }
 
 .player-name-row .icon-button:hover {

@@ -2,7 +2,7 @@ import http from "node:http";
 import express from "express";
 import cors from "cors";
 import colyseus from "colyseus";
-const { Server, Room } = colyseus;
+const { Server, Room, matchMaker } = colyseus;
 import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rules.mjs";
 
 const PORT = Number(process.env.PORT ?? 2567);
@@ -67,6 +67,22 @@ app.get("/config", (_req, res) => {
     res.json(config);
   } catch {
     res.status(500).json({ error: "Failed to load config." });
+  }
+});
+
+app.get("/lobby", async (_req, res) => {
+  try {
+    const rooms = await matchMaker.query({ name: "onitama" });
+    const openRooms = rooms.filter((room) => room.clients < room.maxClients);
+    res.json({
+      rooms: openRooms.map((room) => ({
+        roomId: room.roomId,
+        clients: room.clients,
+        maxClients: room.maxClients
+      }))
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch lobby." });
   }
 });
 

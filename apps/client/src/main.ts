@@ -12,6 +12,9 @@ const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
   ? `${SERVER_URL.replace(/^ws/, "http")}/config`
   : undefined;
 const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DERIVED_CONFIG_URL ?? DEFAULT_CONFIG_URL;
+const LOBBY_URL = SERVER_URL.startsWith("ws")
+  ? `${SERVER_URL.replace(/^ws/, "http")}/lobby`
+  : `${SERVER_URL.replace(/\/$/, "")}/lobby`;
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
@@ -78,6 +81,15 @@ const draftCount = document.getElementById("draft-count") as HTMLElement;
 const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElement;
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
 const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement | null;
+const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
+const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonElement;
+const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
+const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
+const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
+const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
+const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
+const lobbyQuickBtn = document.getElementById("lobby-quick") as HTMLButtonElement;
+const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElement;
 
 appEl.dataset.started = "false";
 
@@ -101,6 +113,7 @@ let pendingMove:
   | undefined;
 let startChoiceResolved = false;
 let namesEditing = false;
+let lobbyTimer: number | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -259,6 +272,70 @@ function updateStartedUI() {
   }
 }
 
+function showLanding() {
+  landingOverlay.classList.remove("hidden");
+  refreshLobby();
+  if (lobbyTimer) window.clearInterval(lobbyTimer);
+  lobbyTimer = window.setInterval(refreshLobby, 8000);
+}
+
+function hideLanding() {
+  landingOverlay.classList.add("hidden");
+  if (lobbyTimer) window.clearInterval(lobbyTimer);
+  lobbyTimer = undefined;
+}
+
+async function refreshLobby() {
+  if (!lobbyListEl) return;
+  lobbyListEl.innerHTML = "";
+  try {
+    const response = await fetch(LOBBY_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Failed");
+    const payload = (await response.json()) as {
+      rooms?: { roomId: string; clients: number; maxClients: number }[];
+    };
+    const rooms = payload.rooms ?? [];
+    if (!rooms.length) {
+      const empty = document.createElement("div");
+      empty.className = "lobby-empty";
+      empty.textContent = "No public rooms yet. Start a quick match.";
+      lobbyListEl.appendChild(empty);
+      return;
+    }
+    for (const room of rooms) {
+      const row = document.createElement("div");
+      row.className = "lobby-item";
+      const meta = document.createElement("div");
+      meta.className = "room-meta";
+      const id = document.createElement("div");
+      id.className = "room-id";
+      id.textContent = `Room ${room.roomId.slice(0, 6)}`;
+      const count = document.createElement("div");
+      count.className = "room-count";
+      count.textContent = `${room.clients}/${room.maxClients} players`;
+      meta.appendChild(id);
+      meta.appendChild(count);
+      const join = document.createElement("button");
+      join.className = "ghost-button";
+      join.textContent = "Join";
+      join.addEventListener("click", async () => {
+        modeSelect.value = "online";
+        setMode("online");
+        await controller.connectOnline(SERVER_URL, room.roomId);
+        hideLanding();
+      });
+      row.appendChild(meta);
+      row.appendChild(join);
+      lobbyListEl.appendChild(row);
+    }
+  } catch {
+    const empty = document.createElement("div");
+    empty.className = "lobby-empty";
+    empty.textContent = "Lobby unavailable. Try again.";
+    lobbyListEl.appendChild(empty);
+  }
+}
+
 function setMode(mode: "local" | "online") {
   appEl.dataset.mode = mode;
   controller.setMode(mode);
@@ -271,7 +348,6 @@ function setMode(mode: "local" | "online") {
       controller.setConfig(withName);
       renderer.setConfig(withName);
       startChoiceResolved = false;
-      startLocalMatch();
       playerLabel.textContent = localName || "You";
     }
   }
@@ -318,9 +394,12 @@ function renderCards() {
   const playerName = playerMeta?.name ?? "You";
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
-  const activeId = latestState.activePlayerId;
-  const getCardOrientation = (ownerId?: string) =>
-    ownerId === activeId ? { xMul: 1, yMul: 1 } : { xMul: -1, yMul: -1 };
+  const viewerId = viewPlayerId;
+  const getCardOrientation = (ownerId?: string) => {
+    const ownerForward = latestConfig.players.find((p) => p.id === ownerId)?.forward ?? 1;
+    const flip = ownerId === viewerId ? 1 : -1;
+    return { xMul: flip, yMul: ownerForward * flip };
+  };
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
@@ -414,8 +493,8 @@ function renderCards() {
     poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
-    const activeOrientation = getCardOrientation(activeId);
-    const pattern = drawCardPattern(poolCard.moves, activeOrientation.xMul, activeOrientation.yMul);
+    const viewerOrientation = getCardOrientation(viewerId);
+    const pattern = drawCardPattern(poolCard.moves, viewerOrientation.xMul, viewerOrientation.yMul);
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);
@@ -890,7 +969,6 @@ async function bootstrap() {
     latestConfig = localFallback;
     controller.setConfig(localFallback);
     renderer.setConfig(localFallback);
-    startLocalMatch();
     playerLabel.textContent = localName || "You";
 
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -902,7 +980,6 @@ async function bootstrap() {
       controller.setConfig(localParsed);
       renderer.setConfig(localParsed);
       startChoiceResolved = false;
-      startLocalMatch();
       playerLabel.textContent = localName || "You";
     } else {
       try {
@@ -916,7 +993,6 @@ async function bootstrap() {
           renderer.setConfig(localLoaded);
           if (modeSelect.value === "local") {
             startChoiceResolved = false;
-            startLocalMatch();
             playerLabel.textContent = localName || "You";
           }
         }
@@ -941,11 +1017,13 @@ modeSelect.addEventListener("change", () => {
 
 connectBtn.addEventListener("click", async () => {
   if (modeSelect.value === "local") {
-    startLocalMatch();
+    startChoiceResolved = false;
+    startOverlay.classList.remove("hidden");
     return;
   }
 
   await controller.connectOnline(SERVER_URL, roomInput.value.trim() || undefined);
+  hideLanding();
 });
 
 quickOnlineBtn.addEventListener("click", async () => {
@@ -953,6 +1031,7 @@ quickOnlineBtn.addEventListener("click", async () => {
   setMode("online");
   roomInput.value = "";
   await controller.connectOnline(SERVER_URL);
+  hideLanding();
 });
 
 copyRoomBtn.addEventListener("click", async () => {
@@ -970,7 +1049,7 @@ copyRoomBtn.addEventListener("click", async () => {
 
 restartLocalBtn.addEventListener("click", () => {
   startChoiceResolved = false;
-  startLocalMatch();
+  startOverlay.classList.remove("hidden");
 });
 
 newGameBtn.addEventListener("click", () => {
@@ -983,6 +1062,37 @@ newGameBtn.addEventListener("click", () => {
     controller.disconnectOnline();
     statusEl.textContent = "Start a new online match when ready.";
   }
+});
+
+landingCloseBtn.addEventListener("click", hideLanding);
+landingLocalBtn.addEventListener("click", () => {
+  modeSelect.value = "local";
+  setMode("local");
+  startChoiceResolved = false;
+  startOverlay.classList.remove("hidden");
+  hideLanding();
+});
+landingOnlineBtn.addEventListener("click", () => {
+  modeSelect.value = "online";
+  setMode("online");
+  refreshLobby();
+});
+landingCustomizeBtn.addEventListener("click", () => {
+  hideLanding();
+  openCustomize();
+});
+lobbyRefreshBtn.addEventListener("click", refreshLobby);
+lobbyQuickBtn.addEventListener("click", async () => {
+  modeSelect.value = "online";
+  setMode("online");
+  await controller.connectOnline(SERVER_URL);
+  hideLanding();
+});
+lobbyCreateBtn.addEventListener("click", async () => {
+  modeSelect.value = "online";
+  setMode("online");
+  await controller.connectOnline(SERVER_URL);
+  hideLanding();
 });
 
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
@@ -1079,3 +1189,4 @@ draftStartBtn.addEventListener("click", () => {
 
 appEl.dataset.mode = "local";
 bootstrap();
+showLanding();
