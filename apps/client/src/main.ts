@@ -86,6 +86,10 @@ const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonEl
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
+const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
+const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
+const landingPanelPlay = document.getElementById("landing-panel-play") as HTMLElement | null;
+const landingPanelRules = document.getElementById("landing-panel-rules") as HTMLElement | null;
 const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
 const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
 const lobbyQuickBtn = document.getElementById("lobby-quick") as HTMLButtonElement;
@@ -272,8 +276,18 @@ function updateStartedUI() {
   }
 }
 
+function setLandingTab(tab: "play" | "rules") {
+  if (!landingTabPlay || !landingTabRules || !landingPanelPlay || !landingPanelRules) return;
+  const playActive = tab === "play";
+  landingTabPlay.classList.toggle("active", playActive);
+  landingTabRules.classList.toggle("active", !playActive);
+  landingPanelPlay.classList.toggle("hidden", !playActive);
+  landingPanelRules.classList.toggle("hidden", playActive);
+}
+
 function showLanding() {
   landingOverlay.classList.remove("hidden");
+  setLandingTab("play");
   refreshLobby();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
@@ -395,10 +409,13 @@ function renderCards() {
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
   const viewerId = viewPlayerId;
+  const viewerFlip = primaryId && viewerId && viewerId !== primaryId ? -1 : 1;
   const getCardOrientation = (ownerId?: string) => {
+    // Card moves are defined in player-local coords (x right, y forward).
+    // Render from viewer perspective: own cards unflipped, opponent rotated 180.
     const ownerForward = latestConfig.players.find((p) => p.id === ownerId)?.forward ?? 1;
-    const flip = ownerId === viewerId ? 1 : -1;
-    return { xMul: flip, yMul: ownerForward * flip };
+    const mul = -ownerForward * viewerFlip;
+    return { xMul: mul, yMul: mul };
   };
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
@@ -1065,6 +1082,8 @@ newGameBtn.addEventListener("click", () => {
 });
 
 landingCloseBtn.addEventListener("click", hideLanding);
+landingTabPlay?.addEventListener("click", () => setLandingTab("play"));
+landingTabRules?.addEventListener("click", () => setLandingTab("rules"));
 landingLocalBtn.addEventListener("click", () => {
   modeSelect.value = "local";
   setMode("local");

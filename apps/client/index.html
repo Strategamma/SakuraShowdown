@@ -6,128 +6,146 @@
     <title>Sakura Showdown</title>
   </head>
   <body>
-    <div id="app">
+    <div id="app" data-mode="local" data-started="false">
       <header id="top-bar">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 64 64" role="img">
-            <rect x="10" y="14" width="44" height="6" rx="3" fill="#f7c1c6" />
-            <rect x="18" y="20" width="28" height="6" rx="3" fill="#f0a0a9" />
-            <rect x="16" y="26" width="6" height="26" rx="3" fill="#f4a4ad" />
-            <rect x="42" y="26" width="6" height="26" rx="3" fill="#f4a4ad" />
-            <rect x="12" y="50" width="40" height="6" rx="3" fill="#c84b58" />
-            <circle cx="32" cy="40" r="4" fill="#fbe1e6" />
-          </svg>
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <defs>
+                <linearGradient id="sigil-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#fbe1ea" />
+                  <stop offset="1" stop-color="#d15a7b" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="22" fill="url(#sigil-grad)" opacity="0.9" />
+              <circle cx="24" cy="26" r="6" fill="#fff" opacity="0.7" />
+              <circle cx="40" cy="24" r="5" fill="#fff" opacity="0.6" />
+              <circle cx="36" cy="40" r="7" fill="#fff" opacity="0.55" />
+            </svg>
+          </div>
         </div>
         <div class="brand-text centered">
           <div class="brand-title">Sakura Showdown</div>
           <div class="brand-subtitle">Petal duels. Razor tactics.</div>
         </div>
         <div class="toolbar">
-          <div id="match-controls" class="match-controls">
-            <label class="label">Mode</label>
-            <select id="mode">
-              <option value="local" selected>Local</option>
-              <option value="online">Online</option>
-            </select>
-            <button id="restart-local" class="ghost-button local-only">Start Match</button>
-            <button id="quick-online" class="ghost-button online-only">Quick Online Match</button>
+          <div class="match-controls" id="match-controls">
+            <div class="room-row">
+              <select id="mode" aria-label="Match mode">
+                <option value="local">Local</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
             <div class="room-row online-only">
-              <input id="room" type="text" placeholder="Room code" />
-              <button id="connect">Go Online</button>
-              <button id="copy-room" class="ghost-button">Copy</button>
+              <input id="room" type="text" placeholder="Room ID (optional)" />
+              <button id="connect" class="ghost-button">Connect</button>
             </div>
             <div id="room-info" class="room-info online-only">Not connected</div>
+            <button id="copy-room" class="ghost-button online-only">Copy Code</button>
+            <button id="quick-online" class="ghost-button online-only">Quick Match</button>
+            <button id="restart-local" class="ghost-button local-only">Start Match</button>
           </div>
-          <button id="new-game" class="ghost-button">New Game</button>
           <button id="open-customize" class="ghost-button">Customize</button>
-          <button id="toggle-view" class="ghost-button">2D View</button>
+          <button id="toggle-view" class="ghost-button">3D View</button>
+          <button id="new-game" class="ghost-button">New Game</button>
           <div class="status-pill">
             <span class="status-dot"></span>
-            <div class="status" id="status">Ready</div>
+            <span id="status">Ready</span>
           </div>
+          <div class="status" id="player-label">You</div>
         </div>
       </header>
+
       <main id="game-area">
         <aside id="card-house">
-          <div class="card-house-section" id="opponent-section">
-            <div class="player-name" id="opponent-name">Opponent</div>
-            <div class="captured-row" id="opponent-captured"></div>
-            <div id="opponent-hand" class="cards vertical"></div>
-          </div>
-          <div class="card-house-section" id="pool-section">
-            <label class="label">Pool</label>
-            <div id="pool" class="cards vertical"></div>
-          </div>
-          <div class="card-house-section" id="player-section">
+          <section id="opponent-section" class="card-house-section">
             <div class="player-name-row">
-              <div class="player-name" id="player-name">You</div>
-              <button id="player-name-edit" class="icon-button ghost-button compact" type="button" aria-pressed="false" title="Edit names">
+              <div id="opponent-name" class="player-name">Opponent</div>
+            </div>
+            <div id="opponent-captured" class="captured-row"></div>
+            <div id="opponent-hand" class="cards" aria-label="Opponent cards"></div>
+          </section>
+
+          <section class="card-house-section">
+            <div class="group-label">Pool</div>
+            <div id="pool" class="cards" aria-label="Pool card"></div>
+          </section>
+
+          <section id="player-section" class="card-house-section">
+            <div class="player-name-row">
+              <div id="player-name" class="player-name">You</div>
+              <button id="player-name-edit" class="icon-button compact" aria-label="Edit names">
                 <svg class="icon-sword" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 3l7 7-2.2 2.2-7-7L14 3zM10.8 6.2L4 13l3 3 6.8-6.8-3-3zM6 17l-2 2 3 3 2-2-3-3z" />
+                  <path
+                    d="M14.5 3l6.5 6.5-1.8 1.8-2.1-2.1-6.4 6.4 1.1 1.1-1.6 1.6-3.8-3.8 1.6-1.6 1.1 1.1 6.4-6.4-2.1-2.1L14.5 3zM5 19l2 2-2.5.5L5 19z"
+                  />
                 </svg>
               </button>
             </div>
-            <div class="captured-row" id="player-captured"></div>
+            <div id="player-captured" class="captured-row"></div>
             <div id="card-choice-hint" class="card-hint hidden">Choose card to discard</div>
-            <div id="hand" class="cards vertical"></div>
-          </div>
+            <div id="hand" class="cards" aria-label="Your cards"></div>
+          </section>
         </aside>
 
-        <div id="canvas-container"></div>
+        <div id="canvas-container" aria-label="Game board"></div>
 
         <aside id="right-panel">
-          <div class="panel-section">
+          <section class="panel-section">
             <div class="panel-title-row">
-              <label class="label">Names</label>
-              <button id="names-edit" class="icon-button ghost-button" type="button" aria-pressed="false" title="Edit names">
+              <div class="label">Names</div>
+              <button id="names-edit" class="icon-button ghost-button" aria-label="Edit names">
                 <svg class="icon-sword" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 3l7 7-2.2 2.2-7-7L14 3zM10.8 6.2L4 13l3 3 6.8-6.8-3-3zM6 17l-2 2 3 3 2-2-3-3z" />
+                  <path
+                    d="M14.5 3l6.5 6.5-1.8 1.8-2.1-2.1-6.4 6.4 1.1 1.1-1.6 1.6-3.8-3.8 1.6-1.6 1.1 1.1 6.4-6.4-2.1-2.1L14.5 3zM5 19l2 2-2.5.5L5 19z"
+                  />
                 </svg>
                 <span class="icon-label">Edit</span>
               </button>
             </div>
             <div class="local-name-block">
-              <label class="label">Player Name</label>
-              <input id="local-name" type="text" placeholder="Your name" maxlength="30" />
-              <label class="label">Opponent Name</label>
-              <input id="local-opponent-name" type="text" placeholder="Opponent name" maxlength="30" />
-              <label class="label">Starting Player</label>
+              <label class="label" for="local-name">Player Name</label>
+              <input id="local-name" type="text" maxlength="30" />
+            </div>
+            <div class="local-name-block">
+              <label class="label" for="local-opponent-name">Opponent Name</label>
+              <input id="local-opponent-name" type="text" maxlength="30" />
+            </div>
+            <div class="local-name-block local-only">
+              <label class="label" for="starting-player">Starting Player</label>
               <select id="starting-player">
-                <option value="random" selected>Random</option>
+                <option value="random">Random</option>
                 <option value="p1">Player 1</option>
                 <option value="p2">Player 2</option>
               </select>
             </div>
-          </div>
-          <div class="panel-section">
-            <label class="label">You</label>
-            <div id="player-label">-</div>
-          </div>
-          <div class="panel-section">
-            <label class="label">Customize</label>
+          </section>
+
+          <section class="panel-section">
+            <div class="label">Customize</div>
             <button id="customize-cards">Customize Cards</button>
-          </div>
+          </section>
         </aside>
       </main>
     </div>
+
     <div id="customize-overlay" class="overlay hidden">
       <div class="overlay-card">
-        <header class="overlay-header">
+        <div class="overlay-header">
           <div>
             <div class="overlay-title">Customize Cards</div>
             <div class="overlay-subtitle">Edit names and moves. Changes are local to this browser.</div>
           </div>
           <button id="customize-close" class="ghost-button">Close</button>
-        </header>
+        </div>
         <div class="overlay-body">
-          <div class="overlay-list" id="card-list"></div>
+          <div id="card-list" class="overlay-list"></div>
           <div class="overlay-editor">
             <div class="editor-title">Card Details</div>
-            <label class="label">Name</label>
-            <input id="card-name" type="text" placeholder="Card name" />
-            <label class="label">Move Grid (5x5)</label>
+            <label class="label" for="card-name">Name</label>
+            <input id="card-name" type="text" />
+            <div class="label">Move Grid (5x5)</div>
             <div id="card-grid" class="card-grid"></div>
-            <label class="label">Moves (x,y)</label>
             <div id="move-list" class="move-list"></div>
             <div class="move-controls">
               <input id="move-x" type="number" placeholder="x" />
@@ -139,95 +157,125 @@
             </div>
           </div>
         </div>
-        <footer class="overlay-footer">
-          <button id="card-add">Add Card</button>
+        <div class="overlay-footer">
+          <button id="card-add" class="ghost-button">Add Card</button>
           <button id="cards-reset" class="ghost-button">Reset</button>
           <button id="cards-export" class="ghost-button">Export JSON</button>
           <button id="cards-apply">Apply Changes</button>
-        </footer>
+        </div>
       </div>
     </div>
+
     <div id="victory-overlay" class="overlay hidden">
       <div class="overlay-card victory-card">
-        <header class="overlay-header">
+        <div class="overlay-header">
           <div>
-            <div class="overlay-title" id="victory-title">Victory!</div>
-            <div class="overlay-subtitle" id="victory-subtitle">Well played.</div>
+            <div id="victory-title" class="overlay-title">Victory</div>
+            <div id="victory-subtitle" class="overlay-subtitle">Well played.</div>
           </div>
           <button id="victory-close" class="ghost-button">Close</button>
-        </header>
-        <div class="overlay-body victory-body">
+        </div>
+        <div class="victory-body">
           <div class="victory-emblem" aria-hidden="true"></div>
           <div class="victory-actions">
-            <button id="victory-random">Play Again (Random Cards)</button>
-            <button id="victory-choose" class="ghost-button">Pick 5 Cards</button>
+            <button id="victory-random">Start Random Match</button>
+            <button id="victory-choose" class="ghost-button">Choose 5 Cards</button>
           </div>
         </div>
       </div>
     </div>
-    <div id="landing-overlay" class="overlay landing-overlay">
-      <div class="overlay-card landing-card">
-        <header class="overlay-header">
-          <div>
-            <div class="overlay-title">Sakura Showdown</div>
-            <div class="overlay-subtitle">Choose your path and join a duel.</div>
-          </div>
-          <button id="landing-close" class="ghost-button">Close</button>
-        </header>
-        <div class="landing-body">
-          <div class="landing-actions">
-            <button id="landing-local">Play Local</button>
-            <button id="landing-online" class="ghost-button">Online Multiplayer</button>
-            <button id="landing-customize" class="ghost-button">New Cards</button>
-          </div>
-          <div class="landing-lobby">
-            <div class="landing-lobby-header">
-              <div class="label">Public Lobby</div>
-              <button id="lobby-refresh" class="ghost-button">Refresh</button>
-            </div>
-            <div id="lobby-list" class="lobby-list"></div>
-            <div class="lobby-footer">
-              <button id="lobby-quick">Quick Match</button>
-              <button id="lobby-create" class="ghost-button">Create Room</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
     <div id="start-overlay" class="overlay hidden">
       <div class="overlay-card start-card">
-        <header class="overlay-header">
+        <div class="overlay-header">
           <div>
-            <div class="overlay-title">Choose Your Cards</div>
-            <div class="overlay-subtitle">Start with a random set of 5 or hand-pick your own.</div>
+            <div class="overlay-title">Start a Match</div>
+            <div class="overlay-subtitle">Pick how you want to start.</div>
           </div>
-        </header>
-        <div class="overlay-body start-body">
+        </div>
+        <div class="start-body">
           <div class="start-actions">
-            <button id="start-random">Random 5</button>
+            <button id="start-random">Random 5 Cards</button>
             <button id="start-choose" class="ghost-button">Choose 5 Cards</button>
           </div>
         </div>
       </div>
     </div>
+
     <div id="draft-overlay" class="overlay hidden">
       <div class="overlay-card draft-card">
-        <header class="overlay-header">
+        <div class="overlay-header">
           <div>
             <div class="overlay-title">Select 5 Cards</div>
             <div class="overlay-subtitle">Pick any five cards for the next match.</div>
           </div>
           <button id="draft-close" class="ghost-button">Close</button>
-        </header>
+        </div>
         <div class="overlay-body draft-body">
-          <div class="draft-grid" id="draft-grid"></div>
+          <div id="draft-grid" class="draft-grid"></div>
         </div>
         <div class="draft-footer">
-          <div class="draft-count" id="draft-count">0 / 5 selected</div>
+          <div id="draft-count" class="draft-count">0/5 selected</div>
           <button id="draft-start">Start Match</button>
         </div>
       </div>
     </div>
+
+    <div id="landing-overlay" class="overlay landing-overlay hidden">
+      <div class="overlay-card landing-card">
+        <div class="overlay-header">
+          <div>
+            <div class="overlay-title">Sakura Showdown</div>
+            <div class="overlay-subtitle">Choose how you want to play.</div>
+          </div>
+          <button id="landing-close" class="ghost-button">Close</button>
+        </div>
+        <div class="landing-body">
+          <div class="landing-tabs">
+            <button id="landing-tab-play" class="ghost-button tab-button active">Play</button>
+            <button id="landing-tab-rules" class="ghost-button tab-button">Rules</button>
+          </div>
+          <div id="landing-panel-play" class="landing-panel">
+            <div class="landing-actions">
+              <button id="landing-local">Local Pass & Play</button>
+              <button id="landing-online" class="ghost-button">Online Multiplayer</button>
+              <button id="landing-customize" class="ghost-button">New Cards</button>
+            </div>
+            <div class="landing-lobby">
+              <div class="landing-lobby-header">
+                <div>
+                  <div class="label">Open Lobbies</div>
+                  <div class="room-info">Join a public room without a code.</div>
+                </div>
+                <button id="lobby-refresh" class="ghost-button">Refresh</button>
+              </div>
+              <div id="lobby-list" class="lobby-list"></div>
+              <div class="lobby-footer">
+                <button id="lobby-quick" class="ghost-button">Quick Match</button>
+                <button id="lobby-create">Create Room</button>
+              </div>
+            </div>
+          </div>
+          <div id="landing-panel-rules" class="landing-panel hidden">
+            <div class="rules-card">
+              <div class="overlay-title">Rules of Sakura Showdown</div>
+              <ul class="rules-list">
+                <li>Each player has a Master and four Students on a 5x5 board.</li>
+                <li>Win by capturing the opposing Master or by moving your Master onto their temple.</li>
+                <li>You hold two move cards; a fifth card sits in the pool.</li>
+                <li>On your turn, choose a piece and move using one of your cards.</li>
+                <li>Moves are measured from your piece using the card’s 5x5 grid.</li>
+                <li>After moving, the used card swaps with the pool card.</li>
+                <li>Captures happen by landing on an opposing piece.</li>
+                <li>Local mode is pass-and-play with a board flip each turn.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="confetti"></canvas>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

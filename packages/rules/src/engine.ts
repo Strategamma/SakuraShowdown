@@ -189,8 +189,9 @@ export function isOnBoard(position: Vec2, config: GameConfig): boolean {
 }
 
 export function resolveMove(piece: Piece, offset: Vec2, forward: 1 | -1): Vec2 {
+  const xMul = -forward;
   return {
-    x: piece.x + offset.x,
+    x: piece.x + offset.x * xMul,
     y: piece.y + offset.y * forward
   };
 }

@@ -946,10 +946,50 @@ button:hover {
 
 .landing-body {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   gap: 18px;
   padding: 18px 22px 22px;
   min-height: 0;
+}
+
+.landing-tabs {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.landing-tabs .tab-button.active {
+  border-color: rgba(226, 74, 127, 0.75);
+  box-shadow: 0 0 14px rgba(226, 74, 127, 0.35);
+}
+
+.landing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.landing-panel.hidden {
+  display: none;
+}
+
+.rules-card {
+  background: rgba(16, 12, 18, 0.75);
+  border: 1px solid rgba(226, 74, 127, 0.25);
+  border-radius: 16px;
+  padding: 18px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.rules-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+  line-height: 1.5;
 }
 
 .landing-actions {

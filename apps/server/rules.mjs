@@ -209,8 +209,9 @@ function isOnBoard(position, config) {
 }
 
 function resolveMove(piece, offset, forward) {
+  const xMul = -forward;
   return {
-    x: piece.x + offset.x,
+    x: piece.x + offset.x * xMul,
     y: piece.y + offset.y * forward
   };
 }
