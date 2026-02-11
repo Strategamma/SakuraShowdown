@@ -22,6 +22,8 @@ class GameRoom extends Room {
   isPrivate = false;
   ownerId;
   rematchTimer;
+  sandboxName;
+  isSandbox = false;
 
   updateMetadata() {
     const active = new Set();
@@ -36,18 +38,32 @@ class GameRoom extends Room {
       maxPlayers: this.maxPlayers,
       open: !this.seatsLocked && total.size < this.maxPlayers,
       public: !this.isPrivate,
-      code: this.isPrivate ? undefined : this.roomCode
+      code: this.isPrivate ? undefined : this.roomCode,
+      sandbox: this.isSandbox || undefined,
+      sandboxName: this.sandboxName
     });
   }
 
   onCreate(options = {}) {
     this.isPrivate = Boolean(options?.private);
-    this.roomCode = generateRoomCode();
+    this.roomCode = generateRoomCode().toLowerCase();
     ACTIVE_CODES.add(this.roomCode);
     if (this.isPrivate) {
       PRIVATE_CODES.set(this.roomCode, this.roomId);
     }
-    this.config = loadConfig();
+    const rawSandboxName = typeof options?.sandboxName === "string" ? options.sandboxName : "";
+    const trimmedSandboxName = rawSandboxName.trim().slice(0, 30);
+    if (trimmedSandboxName) {
+      this.sandboxName = trimmedSandboxName;
+    }
+    const customConfig = normalizeCustomConfig(options?.config);
+    if (customConfig) {
+      this.config = customConfig;
+      this.isSandbox = true;
+    } else {
+      this.config = loadConfig();
+      this.isSandbox = false;
+    }
     this.stateData = createInitialState(this.config);
     this.maxPlayers = this.config.players.length;
     this.updateMetadata();
@@ -255,120 +271,114 @@ class GameRoom extends Room {
   }
 }
 
-const ROOM_WORDS = [
+const ROOM_WORDS_6 = [
   "sakura",
-  "garden",
   "temple",
-  "crimson",
-  "embered",
+  "garden",
   "shadow",
-  "blossom",
-  "misty",
+  "blossm",
   "harmony",
   "lantern",
-  "cascade",
-  "dawnlight",
-  "silkroad",
-  "rainbow",
-  "meadow",
-  "starlit",
-  "citadel",
-  "orchard",
-  "harvest",
-  "thunder",
-  "crescent",
-  "rubyred",
-  "topaz",
+  "orchid",
   "cobalt",
-  "ivory",
-  "onyx",
+  "onyxie",
   "zephyr",
   "voyage",
-  "harbor",
   "summit",
-  "prairie",
   "monarch",
-  "valiant",
   "serene",
-  "silent",
   "glimmer",
-  "embers",
-  "mistveil",
-  "drifted",
-  "feather",
   "cinder",
   "jasmine",
-  "maple",
   "redwood",
-  "everest",
-  "morning",
-  "twilight",
-  "marigold",
-  "onyxstone",
-  "luminous",
-  "saffron",
-  "cascade",
-  "tempest",
+  "saffrn",
   "aurora",
-  "solstice",
-  "alloyed",
-  "mezzina",
-  "seaborn",
-  "verdant",
-  "mythic",
-  "citrine",
-  "orchid",
-  "gravity",
-  "sapphire",
+  "solstc",
+  "verdnt",
   "tundra",
-  "embered",
-  "glacier",
-  "sunrise",
-  "seaglass",
-  "constel",
-  "opaline",
-  "silvers",
-  "midnight",
-  "horizon",
-  "seraph",
-  "tangram",
-  "mariner",
-  "isotope",
-  "crystal",
+  "glacir",
+  "sunris",
+  "marner",
+  "crystl",
   "citron",
-  "embered",
-  "harvest",
-  "snowfall",
-  "tangelo",
-  "bonfire",
-  "wisteria",
+  "bonfir",
   "zenith",
-  "sandbar",
-  "sundial",
+  "sundal",
   "sequoia",
-  "vintage",
-  "lullaby",
-  "mariner",
-  "opaline",
-  "silvana",
-  "veritas",
-  "whisper",
-  "windmill",
-  "moonrise"
-].filter((word) => word.length >= 6);
+  "vintag",
+  "lullby",
+  "verita",
+  "whispr",
+  "moonrs"
+].map((word) => word.replace(/[^a-z]/g, "").slice(0, 6));
+
+const ROOM_WORDS_3 = [
+  "sun",
+  "fox",
+  "owl",
+  "zen",
+  "sky",
+  "ash",
+  "kai",
+  "red",
+  "ink",
+  "gem",
+  "ivy",
+  "oak",
+  "map",
+  "fog",
+  "run",
+  "sea",
+  "bay",
+  "lot",
+  "hay",
+  "rim",
+  "den",
+  "mar",
+  "sil",
+  "leo",
+  "rio",
+  "aur",
+  "glo",
+  "pet",
+  "daw",
+  "mir",
+  "san",
+  "rai",
+  "ame",
+  "obi",
+  "kim",
+  "tor"
+];
 
 function generateRoomCode() {
-  if (!ROOM_WORDS.length) return `room-${Math.random().toString(36).slice(2, 8)}`;
+  const useSix = Math.random() < 0.5 && ROOM_WORDS_6.length > 0;
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const index = Math.floor(Math.random() * ROOM_WORDS.length);
-    const candidate = ROOM_WORDS[index];
-    if (!ACTIVE_CODES.has(candidate)) return candidate;
+    const candidate = useSix
+      ? ROOM_WORDS_6[Math.floor(Math.random() * ROOM_WORDS_6.length)]
+      : `${ROOM_WORDS_3[Math.floor(Math.random() * ROOM_WORDS_3.length)]}${
+          ROOM_WORDS_3[Math.floor(Math.random() * ROOM_WORDS_3.length)]
+        }`;
+    if (candidate && candidate.length === 6 && !ACTIVE_CODES.has(candidate)) {
+      return candidate;
+    }
   }
-  let fallback = `room-${Math.random().toString(36).slice(2, 10)}`;
+  let fallback = `room-${Math.random().toString(36).slice(2, 8)}`;
   while (ACTIVE_CODES.has(fallback)) {
-    fallback = `room-${Math.random().toString(36).slice(2, 10)}`;
+    fallback = `room-${Math.random().toString(36).slice(2, 8)}`;
   }
   return fallback;
+}
+
+function normalizeCustomConfig(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  try {
+    const cloned = structuredClone(raw);
+    createInitialState(cloned, Date.now());
+    return cloned;
+  } catch {
+    return null;
+  }
 }
 
 const app = express();
@@ -401,7 +411,9 @@ app.get("/lobby", async (_req, res) => {
         open:
           room.metadata?.open ??
           (room.metadata?.players ?? 0) < (room.metadata?.maxPlayers ?? 2),
-        code: room.metadata?.code
+        code: room.metadata?.code,
+        sandbox: room.metadata?.sandbox,
+        sandboxName: room.metadata?.sandboxName
       }))
     });
   } catch {

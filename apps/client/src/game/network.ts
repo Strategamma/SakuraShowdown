@@ -132,11 +132,20 @@ export class OnlineSession {
     }
   }
 
-  async create(name?: string, options?: { spectator?: boolean; private?: boolean }) {
+  async create(
+    name?: string,
+    options?: { spectator?: boolean; private?: boolean; config?: GameConfig; sandboxName?: string }
+  ) {
     try {
       const joinOptions = {
         ...(options ?? {})
-      } as { spectator?: boolean; name?: string; private?: boolean };
+      } as {
+        spectator?: boolean;
+        name?: string;
+        private?: boolean;
+        config?: GameConfig;
+        sandboxName?: string;
+      };
       if (name) joinOptions.name = name;
       this.room = await this.client.create("onitama", joinOptions);
 

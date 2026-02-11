@@ -33,6 +33,7 @@ const localOpponentNameInput = document.getElementById("local-opponent-name") as
 const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
 const namesEditBtn = document.getElementById("names-edit") as HTMLButtonElement;
 const namesEditLabel = namesEditBtn?.querySelector(".icon-label") as HTMLElement;
+const namesSaveBtn = document.getElementById("names-save") as HTMLButtonElement | null;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
 const roomCodeEl = document.getElementById("room-code") as HTMLElement;
 const playerNameEl = document.getElementById("player-name") as HTMLElement;
@@ -41,6 +42,7 @@ const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
 const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
+const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
@@ -86,7 +88,6 @@ const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement
 const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
 const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
-const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
@@ -94,9 +95,11 @@ const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButton
 const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
 const spectatorCloseBtn = document.getElementById("spectator-close") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
-const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
-const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
-const landingPanelPlay = document.getElementById("landing-panel-play") as HTMLElement | null;
+const landingTabLocal = document.getElementById("landing-tab-local") as HTMLButtonElement | null;
+const landingTabOnline = document.getElementById("landing-tab-online") as HTMLButtonElement | null;
+const landingRulesBtn = document.getElementById("landing-rules") as HTMLButtonElement | null;
+const landingPanelLocal = document.getElementById("landing-panel-local") as HTMLElement | null;
+const landingPanelOnline = document.getElementById("landing-panel-online") as HTMLElement | null;
 const landingPanelRules = document.getElementById("landing-panel-rules") as HTMLElement | null;
 const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
 const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
@@ -105,6 +108,9 @@ const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElem
 const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
 const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
+const sandboxToggle = document.getElementById("sandbox-toggle") as HTMLInputElement | null;
+const sandboxNameWrap = document.getElementById("sandbox-name-wrap") as HTMLElement | null;
+const sandboxNameInput = document.getElementById("sandbox-name") as HTMLInputElement | null;
 
 appEl.dataset.started = "false";
 
@@ -141,6 +147,8 @@ let rematchPending = false;
 let isSpectator = false;
 let lobbyBusy = false;
 let spectatorNoticeHidden = false;
+let landingTab: "local" | "online" = "local";
+let rulesVisible = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -363,14 +371,35 @@ function updateStartedUI() {
   }
   if (namesEditBtn) namesEditBtn.disabled = started;
   if (playerNameEditBtn) playerNameEditBtn.disabled = started;
+  if (namesSaveBtn) namesSaveBtn.disabled = started;
+  if (playerNameSaveBtn) playerNameSaveBtn.disabled = started;
 }
-function setLandingTab(tab: "play" | "rules") {
-  if (!landingTabPlay || !landingTabRules || !landingPanelPlay || !landingPanelRules) return;
-  const playActive = tab === "play";
-  landingTabPlay.classList.toggle("active", playActive);
-  landingTabRules.classList.toggle("active", !playActive);
-  landingPanelPlay.classList.toggle("hidden", !playActive);
-  landingPanelRules.classList.toggle("hidden", playActive);
+function applyLandingView() {
+  if (!landingTabLocal || !landingTabOnline || !landingPanelLocal || !landingPanelOnline) return;
+  landingTabLocal.classList.toggle("active", landingTab === "local");
+  landingTabOnline.classList.toggle("active", landingTab === "online");
+  landingPanelLocal.classList.toggle("hidden", rulesVisible || landingTab !== "local");
+  landingPanelOnline.classList.toggle("hidden", rulesVisible || landingTab !== "online");
+  if (landingPanelRules) {
+    landingPanelRules.classList.toggle("hidden", !rulesVisible);
+  }
+  if (landingRulesBtn) {
+    landingRulesBtn.classList.toggle("active", rulesVisible);
+  }
+}
+
+function setLandingTab(tab: "local" | "online") {
+  landingTab = tab;
+  rulesVisible = false;
+  applyLandingView();
+  if (tab === "online") {
+    refreshLobby();
+  }
+}
+
+function toggleRules() {
+  rulesVisible = !rulesVisible;
+  applyLandingView();
 }
 
 function syncOnlineNameInput() {
@@ -416,11 +445,13 @@ function setLobbyBusy(busy: boolean) {
   lobbyRefreshBtn.disabled = busy;
   lobbyQuickBtn.disabled = busy;
   lobbyCreateBtn.disabled = busy;
-  landingOnlineBtn.disabled = busy;
+  if (landingTabOnline) landingTabOnline.disabled = busy;
   if (landingResumeBtn) landingResumeBtn.disabled = busy;
   if (privateJoinBtn) privateJoinBtn.disabled = busy;
   if (privateCreateBtn) privateCreateBtn.disabled = busy;
   if (privateKeyInput) privateKeyInput.disabled = busy;
+  if (sandboxToggle) sandboxToggle.disabled = busy;
+  if (sandboxNameInput) sandboxNameInput.disabled = busy || !sandboxToggle?.checked;
   if (busy) {
     lobbyQuickBtn.textContent = "Connecting...";
     lobbyCreateBtn.textContent = "Creating...";
@@ -455,7 +486,7 @@ function showNotice(message: string) {
 
 function showLanding() {
   landingOverlay.classList.remove("hidden");
-  setLandingTab("play");
+  setLandingTab("local");
   syncOnlineNameInput();
   updateResumeButton();
   setLobbyBusy(false);
@@ -477,6 +508,7 @@ async function refreshLobby() {
   if (!lobbyListEl) return;
   if (lobbyBusy) return;
   lobbyListEl.innerHTML = "";
+  lobbyRefreshBtn.classList.add("loading");
   try {
     const response = await fetch(LOBBY_URL, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed");
@@ -488,6 +520,8 @@ async function refreshLobby() {
         players?: number;
         maxPlayers?: number;
         open?: boolean;
+        sandbox?: boolean;
+        sandboxName?: string;
       }[];
     };
     const rooms = payload.rooms ?? [];
@@ -506,12 +540,20 @@ async function refreshLobby() {
       const id = document.createElement("div");
       id.className = "room-id";
       const code = (room as { code?: string }).code;
-      id.textContent = code ? code.toUpperCase() : `Room ${room.roomId.slice(0, 6)}`;
+      const name = (room as { sandboxName?: string }).sandboxName;
+      id.textContent = name
+        ? name
+        : code
+          ? code.toUpperCase()
+          : `Room ${room.roomId.slice(0, 6)}`;
       const count = document.createElement("div");
       count.className = "room-count";
       const players = room.players ?? room.clients;
       const maxPlayers = room.maxPlayers ?? room.maxClients;
-      count.textContent = `${players}/${maxPlayers} players`;
+      const sandbox = Boolean((room as { sandbox?: boolean }).sandbox);
+      count.textContent = sandbox
+        ? `${players}/${maxPlayers} players · Sandbox`
+        : `${players}/${maxPlayers} players`;
       meta.appendChild(id);
       meta.appendChild(count);
       const actions = document.createElement("div");
@@ -569,6 +611,8 @@ async function refreshLobby() {
     empty.className = "lobby-empty";
     empty.textContent = "Lobby unavailable. Try again.";
     lobbyListEl.appendChild(empty);
+  } finally {
+    lobbyRefreshBtn.classList.remove("loading");
   }
 }
 
@@ -597,6 +641,7 @@ function setMode(mode: "local" | "online") {
   updateRoomCode();
   if (mode === "local") {
     currentRoomId = undefined;
+    currentRoomPrivate = false;
     if (baseConfig) {
       const withName = applyLocalName(baseConfig);
       latestConfig = withName;
@@ -613,6 +658,29 @@ function setMode(mode: "local" | "online") {
 function getOnlineName() {
   const candidate = onlineName.trim() || localName.trim();
   return candidate || "Player";
+}
+
+function getSandboxConfig(): GameConfig | undefined {
+  if (!sandboxToggle?.checked) return undefined;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    statusEl.textContent = "No custom cards found. Create cards first.";
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return validateConfig(parsed);
+  } catch {
+    statusEl.textContent = "Custom cards are invalid. Please re-save them.";
+    return undefined;
+  }
+}
+
+function getSandboxName() {
+  if (!sandboxToggle?.checked) return undefined;
+  const raw = sandboxNameInput?.value ?? "";
+  const name = raw.trim().slice(0, 30);
+  return name || undefined;
 }
 
 function resolveStartingPlayer(config: GameConfig): string | undefined {
@@ -1364,8 +1432,9 @@ newGameBtn.addEventListener("click", () => {
 });
 
 landingCloseBtn.addEventListener("click", hideLanding);
-landingTabPlay?.addEventListener("click", () => setLandingTab("play"));
-landingTabRules?.addEventListener("click", () => setLandingTab("rules"));
+landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
+landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
+landingRulesBtn?.addEventListener("click", toggleRules);
 landingResumeBtn?.addEventListener("click", async () => {
   if (!reconnectToken) return;
   setMode("online");
@@ -1391,10 +1460,6 @@ landingLocalBtn.addEventListener("click", () => {
   setSpectatorMode(false);
   hideLanding();
 });
-landingOnlineBtn.addEventListener("click", () => {
-  setMode("online");
-  refreshLobby();
-});
 landingCustomizeBtn.addEventListener("click", () => {
   returnToLandingOnCustomizeClose = true;
   hideLanding();
@@ -1414,7 +1479,15 @@ lobbyQuickBtn.addEventListener("click", async () => {
 lobbyCreateBtn.addEventListener("click", async () => {
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(SERVER_URL, getOnlineName());
+  const sandboxConfig = getSandboxConfig();
+  if (sandboxToggle?.checked && !sandboxConfig) {
+    setLobbyBusy(false);
+    return;
+  }
+  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), {
+    config: sandboxConfig,
+    sandboxName: getSandboxName()
+  });
   setLobbyBusy(false);
   if (ok) {
     setSpectatorMode(false);
@@ -1425,7 +1498,16 @@ privateCreateBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), { private: true });
+  const sandboxConfig = getSandboxConfig();
+  if (sandboxToggle?.checked && !sandboxConfig) {
+    setLobbyBusy(false);
+    return;
+  }
+  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), {
+    private: true,
+    config: sandboxConfig,
+    sandboxName: getSandboxName()
+  });
   setLobbyBusy(false);
   if (ok) {
     setSpectatorMode(false);
@@ -1481,9 +1563,17 @@ namesEditBtn?.addEventListener("click", () => {
   if (appEl.dataset.started === "true") return;
   setNamesEditing(!namesEditing);
 });
+namesSaveBtn?.addEventListener("click", () => {
+  if (appEl.dataset.started === "true") return;
+  setNamesEditing(false);
+});
 playerNameEditBtn?.addEventListener("click", () => {
   if (appEl.dataset.started === "true") return;
   setNamesEditing(!namesEditing);
+});
+playerNameSaveBtn?.addEventListener("click", () => {
+  if (appEl.dataset.started === "true") return;
+  setNamesEditing(false);
 });
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
@@ -1506,6 +1596,26 @@ if (onlineNameInput) {
   onlineNameInput.addEventListener("input", () => {
     onlineName = onlineNameInput.value;
     localStorage.setItem(ONLINE_NAME_KEY, onlineName);
+  });
+}
+
+if (sandboxToggle) {
+  const updateSandboxUI = () => {
+    const enabled = sandboxToggle.checked;
+    if (sandboxNameWrap) sandboxNameWrap.classList.toggle("hidden", !enabled);
+    if (sandboxNameInput) sandboxNameInput.disabled = !enabled || lobbyBusy;
+  };
+  sandboxToggle.addEventListener("change", updateSandboxUI);
+  updateSandboxUI();
+}
+
+if (privateKeyInput) {
+  privateKeyInput.addEventListener("input", () => {
+    const sanitized = privateKeyInput.value
+      .toLowerCase()
+      .replace(/[^a-z]/g, "")
+      .slice(0, 6);
+    privateKeyInput.value = sanitized;
   });
 }
 

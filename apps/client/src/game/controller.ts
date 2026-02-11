@@ -166,7 +166,12 @@ export class GameController {
   async createOnline(
     endpoint: string,
     name?: string,
-    options?: { spectator?: boolean; private?: boolean }
+    options?: {
+      spectator?: boolean;
+      private?: boolean;
+      config?: GameConfig;
+      sandboxName?: string;
+    }
   ): Promise<boolean> {
     if (!this.config) throw new Error("Config not loaded.");
 

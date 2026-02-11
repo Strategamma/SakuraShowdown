@@ -386,6 +386,12 @@ body {
   gap: 8px;
 }
 
+.name-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .icon-button {
   display: inline-flex;
   align-items: center;
@@ -405,6 +411,26 @@ body {
   height: 16px;
   fill: currentColor;
   flex-shrink: 0;
+}
+
+.icon-check {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.save-button {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+[data-editing="true"] .save-button {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .panel-title-row .icon-button .icon-label {
@@ -1330,6 +1356,12 @@ button:active {
   min-height: 0;
 }
 
+.overlay-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .landing-tabs {
   display: inline-flex;
   gap: 10px;
@@ -1359,6 +1391,25 @@ button:active {
 
 .landing-name input {
   width: 100%;
+}
+
+.landing-sandbox {
+  background: rgba(16, 12, 18, 0.75);
+  border: 1px solid rgba(226, 74, 127, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.landing-sandbox label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sandbox-name.hidden {
+  display: none;
 }
 
 .landing-panel.hidden {
@@ -1437,6 +1488,34 @@ button:active {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.sakura-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 74, 127, 0.3);
+  border-top-color: rgba(226, 74, 127, 0.9);
+  display: inline-block;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  margin-left: 8px;
+}
+
+#lobby-refresh.loading .sakura-spinner {
+  opacity: 1;
+  transform: scale(1);
+  animation: sakura-spin 1s linear infinite;
+}
+
+@keyframes sakura-spin {
+  from {
+    transform: scale(1) rotate(0deg);
+  }
+  to {
+    transform: scale(1) rotate(360deg);
+  }
 }
 
 .lobby-list {
@@ -1976,6 +2055,10 @@ button:active {
   }
 
   .landing-private {
+    padding: 12px;
+  }
+
+  .landing-sandbox {
     padding: 12px;
   }
 
