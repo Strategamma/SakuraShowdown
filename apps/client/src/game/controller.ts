@@ -64,7 +64,7 @@ export class GameController {
     this.callbacks.onStatus("Local match ready.");
   }
 
-  async connectOnline(endpoint: string, roomId?: string) {
+  async connectOnline(endpoint: string, roomId?: string, name?: string) {
     if (!this.config) throw new Error("Config not loaded.");
 
     this.callbacks.onStatus("Connecting...");
@@ -89,7 +89,7 @@ export class GameController {
       onError: (message) => this.callbacks.onStatus(message)
     });
 
-    await this.online.connect(roomId);
+    await this.online.connect(roomId, name);
     this.callbacks.onStatus("Connected.");
   }
 

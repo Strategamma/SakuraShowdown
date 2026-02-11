@@ -19,7 +19,7 @@ export class OnlineSession {
     this.handlers = handlers;
   }
 
-  async connect(roomId?: string) {
+  async connect(roomId?: string, name?: string) {
     try {
       this.room = roomId
         ? await this.client.joinById(roomId)
@@ -34,6 +34,9 @@ export class OnlineSession {
       this.room.onMessage("error", (payload: { message: string }) =>
         this.handlers.onError(payload.message)
       );
+      if (name) {
+        this.room.send("set_name", { name });
+      }
     } catch (error) {
       this.handlers.onError("Failed to connect.");
     }

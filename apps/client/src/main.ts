@@ -20,6 +20,7 @@ const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
 const LOCAL_START_KEY = "sakura.localStartingPlayer";
 const VIEW_MODE_KEY = "sakura.viewMode";
+const ONLINE_NAME_KEY = "sakura.onlineName";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
@@ -86,6 +87,7 @@ const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonEl
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
+const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
 const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
 const landingPanelPlay = document.getElementById("landing-panel-play") as HTMLElement | null;
@@ -110,6 +112,7 @@ let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
 let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
+let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
 let pendingMove:
@@ -287,9 +290,15 @@ function setLandingTab(tab: "play" | "rules") {
   landingPanelRules.classList.toggle("hidden", playActive);
 }
 
+function syncOnlineNameInput() {
+  if (!onlineNameInput) return;
+  onlineNameInput.value = onlineName || localName;
+}
+
 function showLanding() {
   landingOverlay.classList.remove("hidden");
   setLandingTab("play");
+  syncOnlineNameInput();
   refreshLobby();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
@@ -337,7 +346,7 @@ async function refreshLobby() {
       join.addEventListener("click", async () => {
         modeSelect.value = "online";
         setMode("online");
-        await controller.connectOnline(SERVER_URL, room.roomId);
+        await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
         hideLanding();
       });
       row.appendChild(meta);
@@ -367,6 +376,11 @@ function setMode(mode: "local" | "online") {
       playerLabel.textContent = localName || "You";
     }
   }
+}
+
+function getOnlineName() {
+  const candidate = onlineName.trim() || localName.trim();
+  return candidate || "Player";
 }
 
 function resolveStartingPlayer(config: GameConfig): string | undefined {
@@ -1105,7 +1119,7 @@ connectBtn.addEventListener("click", async () => {
     return;
   }
 
-  await controller.connectOnline(SERVER_URL, roomInput.value.trim() || undefined);
+  await controller.connectOnline(SERVER_URL, roomInput.value.trim() || undefined, getOnlineName());
   hideLanding();
 });
 
@@ -1113,7 +1127,7 @@ quickOnlineBtn.addEventListener("click", async () => {
   modeSelect.value = "online";
   setMode("online");
   roomInput.value = "";
-  await controller.connectOnline(SERVER_URL);
+  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
   hideLanding();
 });
 
@@ -1171,13 +1185,13 @@ lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyQuickBtn.addEventListener("click", async () => {
   modeSelect.value = "online";
   setMode("online");
-  await controller.connectOnline(SERVER_URL);
+  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
   hideLanding();
 });
 lobbyCreateBtn.addEventListener("click", async () => {
   modeSelect.value = "online";
   setMode("online");
-  await controller.connectOnline(SERVER_URL);
+  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
   hideLanding();
 });
 
@@ -1202,6 +1216,9 @@ playerNameEditBtn?.addEventListener("click", () => {
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
   localStorage.setItem(LOCAL_NAME_KEY, localName);
+  if (!onlineName.trim()) {
+    syncOnlineNameInput();
+  }
   if (baseConfig) {
     const localConfig = applyLocalName(baseConfig);
     latestConfig = localConfig;
@@ -1211,6 +1228,14 @@ localNameInput.addEventListener("input", () => {
     renderAll();
   }
 });
+
+if (onlineNameInput) {
+  syncOnlineNameInput();
+  onlineNameInput.addEventListener("input", () => {
+    onlineName = onlineNameInput.value;
+    localStorage.setItem(ONLINE_NAME_KEY, onlineName);
+  });
+}
 
 localOpponentNameInput.value = localOpponentName;
 opponentNameEl.textContent = localOpponentName || "Opponent";

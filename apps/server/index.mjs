@@ -38,6 +38,20 @@ class GameRoom extends Room {
       const moves = listLegalMoves(this.stateData, this.config);
       client.send("legal_moves", moves);
     });
+
+    this.onMessage("set_name", (client, payload) => {
+      const playerId = this.playerByClient.get(client.sessionId);
+      if (!playerId) return;
+      const rawName = typeof payload === "string" ? payload : payload?.name;
+      if (typeof rawName !== "string") return;
+      const name = rawName.trim().slice(0, 30);
+      if (!name) return;
+      const player = this.config.players.find((p) => p.id === playerId);
+      if (!player) return;
+      if (player.name === name) return;
+      player.name = name;
+      this.broadcast("config", this.config);
+    });
   }
 
   onJoin(client) {
