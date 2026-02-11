@@ -15,6 +15,9 @@ const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DERIVED_CONFIG_URL ?? DEFA
 const LOBBY_URL = SERVER_URL.startsWith("ws")
   ? `${SERVER_URL.replace(/^ws/, "http")}/lobby`
   : `${SERVER_URL.replace(/\/$/, "")}/lobby`;
+const PRIVATE_URL = SERVER_URL.startsWith("ws")
+  ? `${SERVER_URL.replace(/^ws/, "http")}/private`
+  : `${SERVER_URL.replace(/\/$/, "")}/private`;
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
@@ -88,6 +91,8 @@ const landingCustomizeBtn = document.getElementById("landing-customize") as HTML
 const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
+const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
+const spectatorCloseBtn = document.getElementById("spectator-close") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
 const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
@@ -97,6 +102,9 @@ const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
 const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
 const lobbyQuickBtn = document.getElementById("lobby-quick") as HTMLButtonElement;
 const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElement;
+const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
+const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
+const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
 
 appEl.dataset.started = "false";
 
@@ -109,6 +117,7 @@ let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let currentRoomId: string | undefined;
 let currentRoomCode: string | undefined;
+let currentRoomPrivate = false;
 let baseConfig: GameConfig | undefined;
 let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
@@ -131,6 +140,7 @@ let noticeTimeout: number | undefined;
 let rematchPending = false;
 let isSpectator = false;
 let lobbyBusy = false;
+let spectatorNoticeHidden = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -154,8 +164,11 @@ const controller = new GameController({
   onRoomInfo: (info) => {
     currentRoomId = info.roomId;
     currentRoomCode = info.code;
+    currentRoomPrivate = Boolean(info.private);
     if (info.code) {
       statusEl.textContent = `Online match ready · ${info.code}`;
+    } else {
+      statusEl.textContent = "Online match ready.";
     }
     updateRoomCode();
   },
@@ -188,6 +201,7 @@ const controller = new GameController({
     setSpectatorMode(false);
     currentRoomId = undefined;
     currentRoomCode = undefined;
+    currentRoomPrivate = false;
     updateRoomCode();
     showLanding();
   },
@@ -202,6 +216,7 @@ const controller = new GameController({
     setSpectatorMode(false);
     currentRoomId = undefined;
     currentRoomCode = undefined;
+    currentRoomPrivate = false;
     updateRoomCode();
     showLanding();
   },
@@ -388,7 +403,12 @@ function setReconnectToken(token?: string) {
 
 function setSpectatorMode(enabled: boolean) {
   isSpectator = enabled;
-  spectatorOverlay.classList.toggle("hidden", !enabled);
+  if (!enabled) {
+    spectatorNoticeHidden = false;
+    spectatorOverlay.classList.add("hidden");
+    return;
+  }
+  spectatorOverlay.classList.toggle("hidden", spectatorNoticeHidden);
 }
 
 function setLobbyBusy(busy: boolean) {
@@ -398,22 +418,29 @@ function setLobbyBusy(busy: boolean) {
   lobbyCreateBtn.disabled = busy;
   landingOnlineBtn.disabled = busy;
   if (landingResumeBtn) landingResumeBtn.disabled = busy;
+  if (privateJoinBtn) privateJoinBtn.disabled = busy;
+  if (privateCreateBtn) privateCreateBtn.disabled = busy;
+  if (privateKeyInput) privateKeyInput.disabled = busy;
   if (busy) {
     lobbyQuickBtn.textContent = "Connecting...";
     lobbyCreateBtn.textContent = "Creating...";
+    if (privateJoinBtn) privateJoinBtn.textContent = "Joining...";
+    if (privateCreateBtn) privateCreateBtn.textContent = "Creating...";
   } else {
     lobbyQuickBtn.textContent = "Quick Match";
-    lobbyCreateBtn.textContent = "Create Room";
+    lobbyCreateBtn.textContent = "Create Public Room";
+    if (privateJoinBtn) privateJoinBtn.textContent = "Join Private";
+    if (privateCreateBtn) privateCreateBtn.textContent = "Create Private Room";
   }
 }
 
 function updateRoomCode() {
   if (!roomCodeEl) return;
-  const code = currentRoomCode || currentRoomId;
-  const show = currentMode === "online" && Boolean(code);
+  const code = currentRoomCode;
+  const show = currentMode === "online" && (Boolean(code) || currentRoomPrivate);
   roomCodeEl.classList.toggle("hidden", !show);
   if (show) {
-    roomCodeEl.textContent = code ? `Room ${code.toUpperCase()}` : "Room";
+    roomCodeEl.textContent = code ? `Room ${code.toUpperCase()}` : "Private Lobby";
   }
 }
 
@@ -543,6 +570,24 @@ async function refreshLobby() {
     empty.textContent = "Lobby unavailable. Try again.";
     lobbyListEl.appendChild(empty);
   }
+}
+
+async function lookupPrivateRoom(code: string) {
+  const response = await fetch(`${PRIVATE_URL}?code=${encodeURIComponent(code)}`, {
+    cache: "no-store"
+  });
+  if (response.status === 404) {
+    throw new Error("not_found");
+  }
+  if (response.status === 409) {
+    throw new Error("full");
+  }
+  if (!response.ok) {
+    throw new Error("failed");
+  }
+  const payload = (await response.json()) as { roomId?: string };
+  if (!payload.roomId) throw new Error("failed");
+  return payload.roomId;
 }
 
 function setMode(mode: "local" | "online") {
@@ -1313,6 +1358,7 @@ newGameBtn.addEventListener("click", () => {
   setSpectatorMode(false);
   currentRoomId = undefined;
   currentRoomCode = undefined;
+  currentRoomPrivate = false;
   updateRoomCode();
   showLanding();
 });
@@ -1375,6 +1421,49 @@ lobbyCreateBtn.addEventListener("click", async () => {
     hideLanding();
   }
 });
+privateCreateBtn?.addEventListener("click", async () => {
+  if (lobbyBusy) return;
+  setMode("online");
+  setLobbyBusy(true);
+  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), { private: true });
+  setLobbyBusy(false);
+  if (ok) {
+    setSpectatorMode(false);
+    hideLanding();
+  } else {
+    statusEl.textContent = "Failed to create private lobby.";
+  }
+});
+privateJoinBtn?.addEventListener("click", async () => {
+  if (lobbyBusy) return;
+  const code = privateKeyInput?.value.trim().toLowerCase() ?? "";
+  if (!code) {
+    statusEl.textContent = "Enter a private lobby key.";
+    return;
+  }
+  setMode("online");
+  setLobbyBusy(true);
+  try {
+    const roomId = await lookupPrivateRoom(code);
+    const ok = await controller.connectOnline(SERVER_URL, roomId, getOnlineName());
+    if (ok) {
+      setSpectatorMode(false);
+      hideLanding();
+      return;
+    }
+    statusEl.textContent = "Private lobby unavailable. Try again.";
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message === "full"
+        ? "Private lobby is full."
+        : error instanceof Error && error.message === "not_found"
+          ? "Private lobby not found."
+          : "Private lobby unavailable.";
+    statusEl.textContent = message;
+  } finally {
+    setLobbyBusy(false);
+  }
+});
 
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
 toggleViewBtn.addEventListener("click", () => {
@@ -1426,9 +1515,18 @@ spectatorBackBtn?.addEventListener("click", () => {
   setSpectatorMode(false);
   currentRoomId = undefined;
   currentRoomCode = undefined;
+  currentRoomPrivate = false;
   updateRoomCode();
   showLanding();
 });
+
+function hideSpectatorNotice() {
+  spectatorNoticeHidden = true;
+  spectatorOverlay.classList.add("hidden");
+}
+
+spectatorContinueBtn?.addEventListener("click", hideSpectatorNotice);
+spectatorCloseBtn?.addEventListener("click", hideSpectatorNotice);
 
 localOpponentNameInput.value = localOpponentName;
 opponentNameEl.textContent = localOpponentName || "Opponent";

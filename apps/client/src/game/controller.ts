@@ -10,7 +10,7 @@ export type ControllerCallbacks = {
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean }) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
@@ -166,7 +166,7 @@ export class GameController {
   async createOnline(
     endpoint: string,
     name?: string,
-    options?: { spectator?: boolean }
+    options?: { spectator?: boolean; private?: boolean }
   ): Promise<boolean> {
     if (!this.config) throw new Error("Config not loaded.");
 

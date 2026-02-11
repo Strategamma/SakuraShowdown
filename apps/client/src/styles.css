@@ -1087,6 +1087,13 @@ button:active {
   padding: 18px 20px 26px;
 }
 
+.spectator-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .overlay-card {
   width: min(960px, 95vw);
   max-height: 90vh;
@@ -1392,6 +1399,37 @@ button:active {
   gap: 12px;
   min-height: 0;
   overflow: hidden;
+}
+
+.landing-private {
+  background: rgba(16, 12, 18, 0.78);
+  border: 1px solid rgba(226, 74, 127, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.landing-private-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.private-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.private-actions input {
+  width: 100%;
+}
+
+.private-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
 }
 
 .landing-lobby-header {
@@ -1935,6 +1973,14 @@ button:active {
 
   .landing-lobby {
     padding: 12px;
+  }
+
+  .landing-private {
+    padding: 12px;
+  }
+
+  .private-buttons {
+    grid-template-columns: 1fr;
   }
 
   .lobby-item {

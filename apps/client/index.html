@@ -235,7 +235,7 @@
             <div class="landing-name">
               <label class="label" for="online-name">Display name for online lobbies</label>
               <input id="online-name" type="text" maxlength="30" placeholder="Enter your name" />
-              <div class="room-info">Used when you create or join a public lobby.</div>
+              <div class="room-info">Used when you create or join an online lobby.</div>
             </div>
             <div class="landing-actions">
               <button id="landing-local">Local Pass & Play</button>
@@ -246,7 +246,7 @@
             <div class="landing-lobby">
               <div class="landing-lobby-header">
                 <div>
-                  <div class="label">Open Lobbies</div>
+                  <div class="label">Public Lobby</div>
                   <div class="room-info">Join a public room without a code.</div>
                 </div>
                 <button id="lobby-refresh" class="ghost-button">Refresh</button>
@@ -254,8 +254,25 @@
               <div id="lobby-list" class="lobby-list"></div>
               <div class="lobby-footer">
                 <button id="lobby-quick" class="ghost-button">Quick Match</button>
-                <button id="lobby-create">Create Room</button>
+                <button id="lobby-create">Create Public Room</button>
               </div>
+            </div>
+            <div class="landing-private">
+              <div class="landing-private-header">
+                <div>
+                  <div class="label">Private Lobby</div>
+                  <div class="room-info">Create a private room or join with a key.</div>
+                </div>
+              </div>
+              <div class="private-actions">
+                <label class="label" for="private-key">Private lobby key</label>
+                <input id="private-key" type="text" placeholder="Enter private key" />
+                <div class="private-buttons">
+                  <button id="private-join" class="ghost-button">Join Private</button>
+                  <button id="private-create">Create Private Room</button>
+                </div>
+              </div>
+              <div class="room-info">Key is shown only to the creator on the game screen.</div>
             </div>
           </div>
           <div id="landing-panel-rules" class="landing-panel hidden">
@@ -284,10 +301,14 @@
             <div class="overlay-title">Spectator Mode</div>
             <div class="overlay-subtitle">You are watching this match.</div>
           </div>
+          <button id="spectator-close" class="ghost-button close-button" aria-label="Close">X</button>
         </div>
         <div class="spectator-body">
           <p class="room-info">Only players can make moves. Return to the lobby to join another game.</p>
-          <button id="spectator-back">Back to Lobby</button>
+          <div class="spectator-actions">
+            <button id="spectator-continue" class="ghost-button">Continue Watching</button>
+            <button id="spectator-back">Back to Lobby</button>
+          </div>
         </div>
       </div>
     </div>

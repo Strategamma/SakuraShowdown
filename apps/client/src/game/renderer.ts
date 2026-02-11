@@ -216,24 +216,26 @@ export class GameRenderer {
       roughness: 0.6,
       metalness: 0.05
     });
-    const blossomGeom = this.createBlossomGeometry(0.19, 5);
+    const blossomGeom = this.createBlossomGeometry(0.16, 5);
     const halfW = width / 2;
     const halfH = height / 2;
-    const edgeOffset = 0.6;
+    const inset = this.cellSize * 0.35;
+    const y = 0.125;
     const blossomPositions: Array<[number, number, number]> = [
-      [-halfW - edgeOffset, 0.01, -halfH - edgeOffset],
-      [halfW + edgeOffset, 0.01, -halfH - edgeOffset],
-      [-halfW - edgeOffset, 0.01, halfH + edgeOffset],
-      [halfW + edgeOffset, 0.01, halfH + edgeOffset],
-      [0, 0.01, -halfH - edgeOffset - 0.1],
-      [0, 0.01, halfH + edgeOffset + 0.1],
-      [-halfW - edgeOffset - 0.1, 0.01, 0],
-      [halfW + edgeOffset + 0.1, 0.01, 0]
+      [-halfW + inset, y, -halfH + inset],
+      [halfW - inset, y, -halfH + inset],
+      [-halfW + inset, y, halfH - inset],
+      [halfW - inset, y, halfH - inset],
+      [0, y, -halfH + inset],
+      [0, y, halfH - inset],
+      [-halfW + inset, y, 0],
+      [halfW - inset, y, 0]
     ];
     blossomPositions.forEach(([x, y, z], index) => {
       const blossom = new THREE.Mesh(blossomGeom, blossomMat);
       blossom.position.set(x, y, z);
       blossom.rotation.y = (index * Math.PI) / 6;
+      blossom.userData = { type: "decor" };
       blossom.receiveShadow = false;
       blossom.castShadow = false;
       this.boardGroup.add(blossom);

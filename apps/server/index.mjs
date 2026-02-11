@@ -6,6 +6,8 @@ const { Server, Room, matchMaker } = colyseus;
 import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rules.mjs";
 
 const PORT = Number(process.env.PORT ?? 2567);
+const ACTIVE_CODES = new Set();
+const PRIVATE_CODES = new Map();
 
 class GameRoom extends Room {
   maxClients = 20;
@@ -17,6 +19,8 @@ class GameRoom extends Room {
   seatsLocked = false;
   rematchVotes = new Set();
   roomCode = "";
+  isPrivate = false;
+  ownerId;
   rematchTimer;
 
   updateMetadata() {
@@ -31,12 +35,18 @@ class GameRoom extends Room {
       players: total.size,
       maxPlayers: this.maxPlayers,
       open: !this.seatsLocked && total.size < this.maxPlayers,
-      code: this.roomCode
+      public: !this.isPrivate,
+      code: this.isPrivate ? undefined : this.roomCode
     });
   }
 
-  onCreate() {
+  onCreate(options = {}) {
+    this.isPrivate = Boolean(options?.private);
     this.roomCode = generateRoomCode();
+    ACTIVE_CODES.add(this.roomCode);
+    if (this.isPrivate) {
+      PRIVATE_CODES.set(this.roomCode, this.roomId);
+    }
     this.config = loadConfig();
     this.stateData = createInitialState(this.config);
     this.maxPlayers = this.config.players.length;
@@ -110,6 +120,15 @@ class GameRoom extends Room {
     });
   }
 
+  onDispose() {
+    if (this.roomCode) {
+      ACTIVE_CODES.delete(this.roomCode);
+      if (this.isPrivate && PRIVATE_CODES.get(this.roomCode) === this.roomId) {
+        PRIVATE_CODES.delete(this.roomCode);
+      }
+    }
+  }
+
   onJoin(client, options = {}) {
     let assigned = this.playerByClient.get(client.sessionId);
     const wantsSpectate = Boolean(options?.spectator);
@@ -129,6 +148,10 @@ class GameRoom extends Room {
       }
     }
 
+    if (!this.ownerId && assigned) {
+      this.ownerId = assigned;
+    }
+
     if (assigned && !this.seatsLocked) {
       const rawName = typeof options?.name === "string" ? options.name : "";
       const name = rawName.trim().slice(0, 30);
@@ -141,7 +164,12 @@ class GameRoom extends Room {
     }
 
     client.send("player", { playerId: assigned, spectator: !assigned });
-    client.send("room_info", { roomId: this.roomId, code: this.roomCode });
+    const showCode = !this.isPrivate || assigned === this.ownerId;
+    client.send("room_info", {
+      roomId: this.roomId,
+      code: showCode ? this.roomCode : undefined,
+      private: this.isPrivate
+    });
     client.send("config", this.config);
     client.send("state", this.stateData);
     this.updateMetadata();
@@ -331,8 +359,16 @@ const ROOM_WORDS = [
 
 function generateRoomCode() {
   if (!ROOM_WORDS.length) return `room-${Math.random().toString(36).slice(2, 8)}`;
-  const index = Math.floor(Math.random() * ROOM_WORDS.length);
-  return ROOM_WORDS[index];
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const index = Math.floor(Math.random() * ROOM_WORDS.length);
+    const candidate = ROOM_WORDS[index];
+    if (!ACTIVE_CODES.has(candidate)) return candidate;
+  }
+  let fallback = `room-${Math.random().toString(36).slice(2, 10)}`;
+  while (ACTIVE_CODES.has(fallback)) {
+    fallback = `room-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  return fallback;
 }
 
 const app = express();
@@ -354,8 +390,9 @@ app.get("/config", (_req, res) => {
 app.get("/lobby", async (_req, res) => {
   try {
     const rooms = await matchMaker.query({ name: "onitama" });
+    const publicRooms = rooms.filter((room) => room.metadata?.public !== false);
     res.json({
-      rooms: rooms.map((room) => ({
+      rooms: publicRooms.map((room) => ({
         roomId: room.roomId,
         clients: room.clients,
         maxClients: room.maxClients,
@@ -369,6 +406,41 @@ app.get("/lobby", async (_req, res) => {
     });
   } catch {
     res.status(500).json({ error: "Failed to fetch lobby." });
+  }
+});
+
+app.get("/private", async (req, res) => {
+  const rawCode = typeof req.query.code === "string" ? req.query.code : "";
+  const code = rawCode.trim().toLowerCase();
+  if (!code) {
+    res.status(400).json({ error: "Missing code." });
+    return;
+  }
+  const roomId = PRIVATE_CODES.get(code);
+  if (!roomId) {
+    res.status(404).json({ error: "Private room not found." });
+    return;
+  }
+  try {
+    const rooms = await matchMaker.query({ name: "onitama" });
+    const room = rooms.find((entry) => entry.roomId === roomId);
+    if (!room) {
+      PRIVATE_CODES.delete(code);
+      res.status(404).json({ error: "Private room not found." });
+      return;
+    }
+    const players = room.metadata?.players ?? room.clients;
+    const maxPlayers = room.metadata?.maxPlayers ?? room.maxClients ?? 2;
+    const open =
+      room.metadata?.open ??
+      (room.metadata?.players ?? players) < (room.metadata?.maxPlayers ?? maxPlayers);
+    if (!open) {
+      res.status(409).json({ error: "Room is full." });
+      return;
+    }
+    res.json({ roomId, open, players, maxPlayers });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch private room." });
   }
 });
 

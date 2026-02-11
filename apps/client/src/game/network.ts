@@ -5,7 +5,7 @@ export type OnlineHandlers = {
   onState: (state: GameState) => void;
   onConfig: (config: GameConfig) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean }) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
   onReconnectToken?: (token?: string) => void;
@@ -40,7 +40,9 @@ export class OnlineSession {
       this.room.onMessage("player", (payload: { playerId?: string }) =>
         this.handlers.onPlayer(payload.playerId)
       );
-      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+      this.room.onMessage(
+        "room_info",
+        (payload: { roomId: string; code?: string; private?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
@@ -89,7 +91,9 @@ export class OnlineSession {
       this.room.onMessage("player", (payload: { playerId?: string }) =>
         this.handlers.onPlayer(payload.playerId)
       );
-      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+      this.room.onMessage(
+        "room_info",
+        (payload: { roomId: string; code?: string; private?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
@@ -128,9 +132,11 @@ export class OnlineSession {
     }
   }
 
-  async create(name?: string, options?: { spectator?: boolean }) {
+  async create(name?: string, options?: { spectator?: boolean; private?: boolean }) {
     try {
-      const joinOptions = { ...(options ?? {}) } as { spectator?: boolean; name?: string };
+      const joinOptions = {
+        ...(options ?? {})
+      } as { spectator?: boolean; name?: string; private?: boolean };
       if (name) joinOptions.name = name;
       this.room = await this.client.create("onitama", joinOptions);
 
@@ -141,7 +147,9 @@ export class OnlineSession {
       this.room.onMessage("player", (payload: { playerId?: string }) =>
         this.handlers.onPlayer(payload.playerId)
       );
-      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+      this.room.onMessage(
+        "room_info",
+        (payload: { roomId: string; code?: string; private?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
