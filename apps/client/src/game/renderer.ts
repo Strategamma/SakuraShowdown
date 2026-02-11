@@ -95,6 +95,13 @@ export class GameRenderer {
   private flipStart = 0;
   private flipDuration = 600;
   private viewMode: "3d" | "2d" = "3d";
+  private dragActive = false;
+  private dragStart = { x: 0, y: 0 };
+  private dragLast = { x: 0, y: 0 };
+  private dragYaw = 0;
+  private dragPitch = 0;
+  private baseYaw = 0;
+  private isPointerDown = false;
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -129,6 +136,8 @@ export class GameRenderer {
     this.setupLights();
 
     this.renderer.domElement.addEventListener("pointerdown", this.onPointerDown);
+    window.addEventListener("pointermove", this.onPointerMove);
+    window.addEventListener("pointerup", this.onPointerUp);
     window.addEventListener("resize", this.onResize);
 
     this.onResize();
@@ -165,7 +174,24 @@ export class GameRenderer {
   setViewMode(mode: "3d" | "2d") {
     if (this.viewMode === mode) return;
     this.viewMode = mode;
+    if (mode === "2d") {
+      this.dragYaw = 0;
+      this.dragPitch = 0;
+    }
+    this.updateBaseYaw();
     this.fitCamera();
+  }
+
+  private updateBaseYaw() {
+    if (this.viewMode !== "3d") {
+      this.baseYaw = 0;
+      return;
+    }
+    const isCoarse =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(pointer: coarse)").matches;
+    this.baseYaw = isCoarse ? Math.PI / 2 : 0;
   }
 
   private setupLights() {
@@ -817,6 +843,48 @@ export class GameRenderer {
   }
 
   private onPointerDown = (event: PointerEvent) => {
+    this.isPointerDown = true;
+    this.dragActive = false;
+    this.dragStart = { x: event.clientX, y: event.clientY };
+    this.dragLast = { x: event.clientX, y: event.clientY };
+    if (event.pointerType === "mouse" && event.button === 0) {
+      this.renderer.domElement.setPointerCapture(event.pointerId);
+    }
+  };
+
+  private onPointerMove = (event: PointerEvent) => {
+    if (!this.isPointerDown) return;
+    if (this.viewMode !== "3d") return;
+    if (event.pointerType !== "mouse") return;
+    const dx = event.clientX - this.dragStart.x;
+    const dy = event.clientY - this.dragStart.y;
+    if (!this.dragActive) {
+      const distance = Math.hypot(dx, dy);
+      if (distance < 6) return;
+      this.dragActive = true;
+    }
+    const deltaX = event.clientX - this.dragLast.x;
+    const deltaY = event.clientY - this.dragLast.y;
+    this.dragYaw += deltaX * 0.004;
+    this.dragPitch += deltaY * 0.003;
+    this.dragPitch = Math.max(-0.6, Math.min(0.25, this.dragPitch));
+    this.dragLast = { x: event.clientX, y: event.clientY };
+  };
+
+  private onPointerUp = (event: PointerEvent) => {
+    if (!this.isPointerDown) return;
+    const wasDrag = this.dragActive;
+    this.isPointerDown = false;
+    this.dragActive = false;
+    if (event.pointerType === "mouse") {
+      this.renderer.domElement.releasePointerCapture(event.pointerId);
+    }
+    if (!wasDrag) {
+      this.handleClick(event);
+    }
+  };
+
+  private handleClick(event: PointerEvent) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -837,7 +905,7 @@ export class GameRenderer {
         return;
       }
     }
-  };
+  }
 
   private findUserData(object: THREE.Object3D): Record<string, unknown> | undefined {
     let current: THREE.Object3D | null = object;
@@ -858,6 +926,7 @@ export class GameRenderer {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    this.updateBaseYaw();
     this.fitCamera();
 
     if (this.lastState && this.config) {
@@ -887,11 +956,16 @@ export class GameRenderer {
       if (t >= 1) {
         this.currentFlip = this.targetFlip;
       }
-      this.boardGroup.rotation.y = this.currentFlip;
-      this.templeGroup.rotation.y = this.currentFlip;
-      this.highlightGroup.rotation.y = this.currentFlip;
-      this.pieceGroup.rotation.y = this.currentFlip;
     }
+    const combinedYaw = this.currentFlip + this.baseYaw + this.dragYaw;
+    this.boardGroup.rotation.y = combinedYaw;
+    this.templeGroup.rotation.y = combinedYaw;
+    this.highlightGroup.rotation.y = combinedYaw;
+    this.pieceGroup.rotation.y = combinedYaw;
+    this.boardGroup.rotation.x = this.dragPitch;
+    this.templeGroup.rotation.x = this.dragPitch;
+    this.highlightGroup.rotation.x = this.dragPitch;
+    this.pieceGroup.rotation.x = this.dragPitch;
 
     for (const visual of this.pieces.values()) {
       if (!visual.alive) continue;

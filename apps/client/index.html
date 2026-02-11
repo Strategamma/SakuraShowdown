@@ -41,22 +41,26 @@
         </div>
       </header>
 
-      <main id="game-area">
-        <aside id="card-house">
-          <section id="opponent-section" class="card-house-section">
+      <main id="game-area" class="board-layout">
+        <section id="opponent-section" class="card-rail opponent-rail">
+          <div class="rail-header">
             <div class="player-name-row">
               <div id="opponent-name" class="player-name">Opponent</div>
             </div>
             <div id="opponent-captured" class="captured-row"></div>
-            <div id="opponent-hand" class="cards" aria-label="Opponent cards"></div>
-          </section>
+          </div>
+          <div id="opponent-hand" class="cards rail-cards" aria-label="Opponent cards"></div>
+        </section>
 
-          <section class="card-house-section">
-            <div class="group-label">Pool</div>
-            <div id="pool" class="cards" aria-label="Pool card"></div>
-          </section>
+        <div id="canvas-container" aria-label="Game board"></div>
 
-          <section id="player-section" class="card-house-section">
+        <section class="card-rail pool-rail">
+          <div class="group-label">Pool</div>
+          <div id="pool" class="cards rail-cards" aria-label="Pool card"></div>
+        </section>
+
+        <section id="player-section" class="card-rail player-rail">
+          <div class="rail-header">
             <div class="player-name-row">
               <div id="player-name" class="player-name">You</div>
               <button id="player-name-edit" class="icon-button compact" aria-label="Edit names">
@@ -78,11 +82,9 @@
             </div>
             <div id="player-captured" class="captured-row"></div>
             <div id="card-choice-hint" class="card-hint hidden">Choose card to discard</div>
-            <div id="hand" class="cards" aria-label="Your cards"></div>
-          </section>
-        </aside>
-
-        <div id="canvas-container" aria-label="Game board"></div>
+          </div>
+          <div id="hand" class="cards rail-cards" aria-label="Your cards"></div>
+        </section>
 
         <aside id="right-panel">
           <section class="panel-section">

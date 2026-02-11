@@ -146,14 +146,14 @@ body {
   display: flex !important;
 }
 
-#app[data-started="true"][data-editing="true"] #game-area {
-  grid-template-columns: minmax(220px, 22vw) minmax(0, 1fr) minmax(200px, 18vw) !important;
-  grid-template-areas: "cards board right" !important;
-}
-
+#app[data-started="true"][data-editing="true"] #game-area,
 #app[data-started="true"] #game-area {
-  grid-template-columns: minmax(240px, 24vw) minmax(0, 1fr) !important;
-  grid-template-areas: "cards board" !important;
+  grid-template-columns: 1fr !important;
+  grid-template-areas:
+    "opponent"
+    "board"
+    "pool"
+    "player" !important;
 }
 
 .status {
@@ -199,32 +199,27 @@ body {
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(220px, 22vw) minmax(0, 1fr) minmax(200px, 18vw);
-  grid-template-areas: "cards board right";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "opponent"
+    "board"
+    "pool"
+    "player";
   gap: 14px;
-  padding: 10px 14px 14px;
+  padding: 10px 16px 16px;
   min-height: 0;
   align-items: stretch;
 }
 
 @media (max-width: 1200px) {
   #game-area {
-    grid-template-columns: minmax(160px, 22vw) minmax(0, 1fr) minmax(160px, 20vw);
     gap: 10px;
   }
 
   #canvas-container {
-    min-height: 520px;
-    height: min(88vh, 88vw);
-  }
-
-  #card-house {
-    gap: 12px;
-    padding: 12px;
-  }
-
-  #right-panel {
-    gap: 12px;
+    min-height: 480px;
+    height: min(78vh, 92vw);
   }
 }
 
@@ -238,21 +233,34 @@ body {
     gap: 8px;
   }
 
-  #game-area {
-    grid-template-columns: minmax(150px, 24vw) minmax(0, 1fr) minmax(150px, 20vw);
-  }
-
   #canvas-container {
     min-height: 480px;
   }
+}
 
-  #card-house .card {
-    min-height: 76px;
+@media (max-width: 900px) {
+  #player-section .card {
+    min-height: 120px;
   }
 
-  #card-house .card-pattern {
-    width: 64px;
-    height: 64px;
+  #opponent-hand .card {
+    min-height: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  #game-area {
+    gap: 10px;
+    padding: 8px 10px 12px;
+  }
+
+  #canvas-container {
+    min-height: 360px;
+    height: min(62vh, 96vw);
+  }
+
+  #player-section .card {
+    min-height: 110px;
   }
 }
 
@@ -264,8 +272,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 560px;
-  height: min(92vh, 92vw);
+  min-height: 520px;
+  height: min(74vh, 92vw);
   max-height: 1100px;
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -281,27 +289,72 @@ body {
 }
 
 #right-panel {
-  grid-area: right;
-  display: flex;
+  position: fixed;
+  top: 96px;
+  right: 16px;
+  width: 280px;
+  max-height: calc(100vh - 120px);
+  display: none;
   flex-direction: column;
   gap: 16px;
-  min-height: 0;
   overflow-y: auto;
   padding-right: 2px;
+  z-index: 12;
 }
 
-#card-house {
-  grid-area: cards;
-  background: linear-gradient(160deg, rgba(30, 20, 28, 0.95) 0%, rgba(18, 12, 18, 0.98) 100%);
+#app[data-editing="true"] #right-panel {
+  display: flex;
+}
+
+.card-rail {
+  background: linear-gradient(160deg, rgba(30, 20, 28, 0.9) 0%, rgba(18, 12, 18, 0.95) 100%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--panel-border);
-  box-shadow: 0 20px 38px var(--shadow);
-  display: grid;
-  grid-template-rows: minmax(200px, 1fr) auto minmax(200px, 1fr);
-  gap: 14px;
-  padding: 14px;
+  box-shadow: 0 18px 32px var(--shadow);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   min-height: 0;
-  overflow: hidden;
+}
+
+.opponent-rail {
+  grid-area: opponent;
+}
+
+.player-rail {
+  grid-area: player;
+}
+
+.pool-rail {
+  grid-area: pool;
+  align-items: center;
+}
+
+.rail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rail-cards {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pool-rail .rail-cards {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+#opponent-hand .card {
+  min-height: 90px;
+}
+
+#player-section .card {
+  min-height: 140px;
 }
 
 .card-house-section {
@@ -330,6 +383,12 @@ body {
 .card-house-section.active .card {
   border-color: rgba(226, 74, 127, 0.65);
   box-shadow: 0 8px 18px rgba(226, 74, 127, 0.2);
+}
+
+.card-rail.active {
+  background: rgba(227, 86, 130, 0.14);
+  border-color: rgba(227, 86, 130, 0.5);
+  box-shadow: 0 0 0 1px rgba(227, 86, 130, 0.4), 0 16px 28px rgba(227, 86, 130, 0.25);
 }
 
 #opponent-hand,
@@ -899,13 +958,12 @@ body[data-mode="local"] .online-only {
 
 @media (max-width: 1200px) {
   #game-area {
-    grid-template-columns: minmax(190px, 24vw) minmax(0, 1fr) minmax(180px, 18vw);
     gap: 12px;
   }
 
   #canvas-container {
-    min-height: 520px;
-    height: min(86vh, 86vw);
+    min-height: 480px;
+    height: min(78vh, 92vw);
   }
 }
 
@@ -933,34 +991,14 @@ body[data-mode="local"] .online-only {
   }
 
   #game-area {
-    grid-template-columns: minmax(180px, 28vw) minmax(0, 1fr);
-    grid-template-areas:
-      "board board"
-      "cards right";
-  }
-
-  #card-house {
-    grid-template-rows: minmax(180px, 1fr) auto minmax(180px, 1fr);
+    gap: 12px;
   }
 }
 
 @media (max-width: 900px) {
-  #game-area {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "board"
-      "cards"
-      "right";
-  }
-
   #canvas-container {
     min-height: 460px;
     height: min(80vh, 92vw);
-  }
-
-  #card-house {
-    grid-template-rows: auto auto auto;
-    overflow: auto;
   }
 
   #right-panel {
@@ -985,10 +1023,6 @@ body[data-mode="local"] .online-only {
 
   #canvas-container {
     min-height: 400px;
-  }
-
-  #card-house {
-    padding: 10px;
   }
 
   #opponent-hand,
@@ -1024,12 +1058,6 @@ body[data-mode="local"] .online-only {
   #canvas-container {
     min-height: 340px;
     height: min(72vh, 92vw);
-  }
-
-  #card-house {
-    grid-template-rows: auto auto auto;
-    gap: 10px;
-    overflow: auto;
   }
 
   #opponent-hand,
@@ -1967,26 +1995,9 @@ body[data-mode="local"] .online-only {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 
-  #game-area {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "board"
-      "cards"
-      "right";
-  }
-
   #canvas-container {
     height: min(72vh, 92vw);
     min-height: 360px;
-  }
-
-  #card-house {
-    display: grid;
-    grid-template-rows: minmax(160px, 1fr) auto minmax(160px, 1fr);
-  }
-
-  .card-house-section {
-    min-width: 0;
   }
 
   #right-panel {
@@ -2001,23 +2012,9 @@ body[data-mode="local"] .online-only {
 }
 
 @media (max-width: 900px) and (orientation: landscape) {
-  #card-house {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto;
-  }
-
   #opponent-hand,
   #hand {
-    grid-template-columns: 1fr;
-  }
-
-  #card-house .card {
-    min-height: 70px;
-  }
-
-  #card-house .card-pattern {
-    width: 56px;
-    height: 56px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2111,22 +2108,5 @@ body[data-mode="local"] .online-only {
   #canvas-container {
     height: min(80vh, 92vw);
     min-height: 300px;
-  }
-
-  #card-house {
-    gap: 12px;
-  }
-
-  .card-house-section {
-    min-width: 0;
-  }
-
-  #card-house .card {
-    min-height: 80px;
-  }
-
-  #card-house .card-pattern {
-    width: 56px;
-    height: 56px;
   }
 }
