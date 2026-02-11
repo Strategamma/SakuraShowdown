@@ -319,17 +319,8 @@ function renderCards() {
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
   const activeId = latestState.activePlayerId;
-  const getCardOrientation = (ownerId?: string) => {
-    const meta = latestConfig.players.find((p) => p.id === ownerId);
-    const forward = meta?.forward ?? 1;
-    let xMul = 1;
-    let yMul = forward;
-    if (ownerId && ownerId !== activeId) {
-      xMul *= -1;
-      yMul *= -1;
-    }
-    return { xMul, yMul };
-  };
+  const getCardOrientation = (ownerId?: string) =>
+    ownerId === activeId ? { xMul: 1, yMul: 1 } : { xMul: -1, yMul: -1 };
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;

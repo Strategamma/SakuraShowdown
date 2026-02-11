@@ -441,6 +441,18 @@ button:hover {
   gap: 8px;
 }
 
+.player-name-row .icon-button {
+  background: rgba(226, 74, 127, 0.12);
+  border: 1px solid rgba(226, 74, 127, 0.45);
+  color: #f6e9ef;
+  box-shadow: 0 6px 16px rgba(226, 74, 127, 0.18);
+}
+
+.player-name-row .icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(226, 74, 127, 0.25);
+}
+
 .icon-button.compact {
   padding: 4px 6px;
   min-height: 24px;
@@ -798,6 +810,10 @@ button:hover {
   z-index: 50;
 }
 
+.landing-overlay {
+  background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.18), rgba(10, 8, 12, 0.92));
+}
+
 .overlay.hidden {
   display: none;
 }
@@ -917,6 +933,98 @@ button:hover {
   background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.18), rgba(20, 12, 18, 0.96));
   border: 1px solid rgba(226, 74, 127, 0.3);
   box-shadow: 0 30px 70px rgba(20, 8, 16, 0.6);
+}
+
+.landing-card {
+  width: min(980px, 96vw);
+  height: min(92vh, 860px);
+  background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.2), rgba(20, 12, 18, 0.97));
+  border: 1px solid rgba(226, 74, 127, 0.35);
+  box-shadow: 0 30px 70px rgba(20, 8, 16, 0.6);
+}
+
+.landing-body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 18px;
+  padding: 18px 22px 22px;
+  min-height: 0;
+}
+
+.landing-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.landing-lobby {
+  background: rgba(16, 12, 18, 0.75);
+  border: 1px solid rgba(226, 74, 127, 0.25);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.landing-lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lobby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.lobby-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 90, 105, 0.5);
+  background: linear-gradient(160deg, #22141d 0%, #151017 100%);
+}
+
+.lobby-item .room-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lobby-item .room-id {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.lobby-item .room-count {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.lobby-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  padding: 18px 0;
+}
+
+.lobby-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid rgba(226, 74, 127, 0.2);
+  padding-top: 12px;
 }
 
 .draft-card .overlay-header {
@@ -1260,6 +1368,10 @@ button:hover {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
   }
+
+  .landing-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) and (orientation: landscape) {
@@ -1310,6 +1422,18 @@ button:hover {
 
   .start-actions {
     grid-template-columns: 1fr;
+  }
+
+  .landing-body {
+    padding: 14px 14px 18px;
+  }
+
+  .landing-lobby {
+    padding: 12px;
+  }
+
+  .lobby-footer {
+    flex-direction: column;
   }
 
   #game-area {
