@@ -25,13 +25,6 @@ const RECONNECT_KEY = "sakura.reconnectToken";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
-const modeSelect = document.getElementById("mode") as HTMLSelectElement;
-const connectBtn = document.getElementById("connect") as HTMLButtonElement;
-const roomInput = document.getElementById("room") as HTMLInputElement;
-const roomInfoEl = document.getElementById("room-info") as HTMLElement;
-const copyRoomBtn = document.getElementById("copy-room") as HTMLButtonElement;
-const quickOnlineBtn = document.getElementById("quick-online") as HTMLButtonElement;
-const restartLocalBtn = document.getElementById("restart-local") as HTMLButtonElement;
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const localOpponentNameInput = document.getElementById("local-opponent-name") as HTMLInputElement;
 const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
@@ -116,6 +109,7 @@ let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
 let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
 let reconnectToken = localStorage.getItem(RECONNECT_KEY) ?? "";
+let currentMode: "local" | "online" = "local";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
 let pendingMove:
@@ -126,6 +120,7 @@ let namesEditing = false;
 let lobbyTimer: number | undefined;
 let returnToLandingOnCustomizeClose = false;
 let lastSwapAnimationKey: string | undefined;
+let noticeTimeout: number | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -143,8 +138,6 @@ const controller = new GameController({
   },
   onRoom: (roomId) => {
     currentRoomId = roomId;
-    roomInput.value = roomId;
-    roomInfoEl.textContent = `Room code: ${roomId}`;
     statusEl.textContent = `Online match ready · Room ${roomId}`;
   },
   onPlayer: (playerId) => {
@@ -154,6 +147,9 @@ const controller = new GameController({
     }
     const label = latestConfig?.players.find((p) => p.id === playerId)?.name ?? playerId;
     playerLabel.textContent = label;
+  },
+  onNotice: (message) => {
+    showNotice(message);
   },
   onReconnectToken: (token) => {
     if (token) setReconnectToken(token);
@@ -329,6 +325,15 @@ function setReconnectToken(token?: string) {
   updateResumeButton();
 }
 
+function showNotice(message: string) {
+  statusEl.textContent = message;
+  if (noticeTimeout) window.clearTimeout(noticeTimeout);
+  noticeTimeout = window.setTimeout(() => {
+    noticeTimeout = undefined;
+    renderAll();
+  }, 2200);
+}
+
 function showLanding() {
   landingOverlay.classList.remove("hidden");
   setLandingTab("play");
@@ -392,7 +397,6 @@ async function refreshLobby() {
       join.textContent = open ? "Join" : "Full";
       join.disabled = !open;
       join.addEventListener("click", async () => {
-        modeSelect.value = "online";
         setMode("online");
         await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
         hideLanding();
@@ -401,7 +405,6 @@ async function refreshLobby() {
       spectate.className = "ghost-button";
       spectate.textContent = "Spectate";
       spectate.addEventListener("click", async () => {
-        modeSelect.value = "online";
         setMode("online");
         await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName(), {
           spectator: true
@@ -423,11 +426,11 @@ async function refreshLobby() {
 }
 
 function setMode(mode: "local" | "online") {
+  currentMode = mode;
   appEl.dataset.mode = mode;
   controller.setMode(mode);
   if (mode === "local") {
     currentRoomId = undefined;
-    roomInfoEl.textContent = "Not connected";
     if (baseConfig) {
       const withName = applyLocalName(baseConfig);
       latestConfig = withName;
@@ -1039,7 +1042,7 @@ function startWithDeck(deck: string[]) {
 }
 
 function startRandomFive() {
-  if (modeSelect.value !== "local") {
+  if (currentMode !== "local") {
     statusEl.textContent = "Random deck is available for local matches only.";
     return;
   }
@@ -1056,7 +1059,7 @@ function startRandomFive() {
 }
 
 function openDraft() {
-  if (modeSelect.value !== "local") {
+  if (currentMode !== "local") {
     statusEl.textContent = "Deck selection is available for local matches only.";
     return;
   }
@@ -1068,7 +1071,7 @@ function openDraft() {
 }
 
 function maybeShowStartOverlay() {
-  if (modeSelect.value !== "local") return;
+  if (currentMode !== "local") return;
   if (startChoiceResolved) return;
   startOverlay.classList.remove("hidden");
 }
@@ -1149,7 +1152,7 @@ async function bootstrap() {
           latestConfig = localLoaded;
           controller.setConfig(localLoaded);
           renderer.setConfig(localLoaded);
-          if (modeSelect.value === "local") {
+          if (currentMode === "local") {
             startChoiceResolved = false;
             playerLabel.textContent = localName || "You";
           }
@@ -1163,56 +1166,8 @@ async function bootstrap() {
   }
 }
 
-modeSelect.addEventListener("change", () => {
-  const mode = modeSelect.value === "online" ? "online" : "local";
-  setMode(mode);
-  if (mode === "local") {
-    startChoiceResolved = false;
-  } else {
-    startOverlay.classList.add("hidden");
-  }
-});
-
-connectBtn.addEventListener("click", async () => {
-  if (modeSelect.value === "local") {
-    startChoiceResolved = false;
-    startOverlay.classList.remove("hidden");
-    return;
-  }
-
-  await controller.connectOnline(SERVER_URL, roomInput.value.trim() || undefined, getOnlineName());
-  hideLanding();
-});
-
-quickOnlineBtn.addEventListener("click", async () => {
-  modeSelect.value = "online";
-  setMode("online");
-  roomInput.value = "";
-  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
-  hideLanding();
-});
-
-copyRoomBtn.addEventListener("click", async () => {
-  if (!currentRoomId) {
-    statusEl.textContent = "No room code yet.";
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(currentRoomId);
-    statusEl.textContent = "Room code copied.";
-  } catch {
-    statusEl.textContent = "Copy failed. Select and copy the room code.";
-  }
-});
-
-restartLocalBtn.addEventListener("click", () => {
-  startChoiceResolved = false;
-  startOverlay.classList.remove("hidden");
-});
 
 newGameBtn.addEventListener("click", () => {
-  roomInfoEl.textContent = "Not connected";
-  roomInput.value = "";
   controller.disconnectOnline();
   setReconnectToken("");
   statusEl.textContent = "Choose how you want to play.";
@@ -1228,7 +1183,6 @@ landingTabPlay?.addEventListener("click", () => setLandingTab("play"));
 landingTabRules?.addEventListener("click", () => setLandingTab("rules"));
 landingResumeBtn?.addEventListener("click", async () => {
   if (!reconnectToken) return;
-  modeSelect.value = "online";
   setMode("online");
   try {
     await controller.reconnectOnline(
@@ -1243,14 +1197,12 @@ landingResumeBtn?.addEventListener("click", async () => {
   }
 });
 landingLocalBtn.addEventListener("click", () => {
-  modeSelect.value = "local";
   setMode("local");
   startChoiceResolved = false;
   startOverlay.classList.remove("hidden");
   hideLanding();
 });
 landingOnlineBtn.addEventListener("click", () => {
-  modeSelect.value = "online";
   setMode("online");
   refreshLobby();
 });
@@ -1261,13 +1213,11 @@ landingCustomizeBtn.addEventListener("click", () => {
 });
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyQuickBtn.addEventListener("click", async () => {
-  modeSelect.value = "online";
   setMode("online");
   await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
   hideLanding();
 });
 lobbyCreateBtn.addEventListener("click", async () => {
-  modeSelect.value = "online";
   setMode("online");
   await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
   hideLanding();

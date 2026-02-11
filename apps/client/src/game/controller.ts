@@ -11,6 +11,7 @@ export type ControllerCallbacks = {
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
   onReconnectToken?: (token?: string) => void;
+  onNotice?: (message: string) => void;
 };
 
 export class GameController {
@@ -93,6 +94,7 @@ export class GameController {
         this.callbacks.onPlayer(playerId);
       },
       onError: (message) => this.callbacks.onStatus(message),
+      onNotice: (message) => this.callbacks.onNotice?.(message),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
@@ -123,6 +125,7 @@ export class GameController {
         this.callbacks.onPlayer(playerId);
       },
       onError: (message) => this.callbacks.onStatus(message),
+      onNotice: (message) => this.callbacks.onNotice?.(message),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 

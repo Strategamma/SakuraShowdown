@@ -79,18 +79,28 @@ class GameRoom extends Room {
   onJoin(client, options = {}) {
     let assigned = this.playerByClient.get(client.sessionId);
     const wantsSpectate = Boolean(options?.spectator);
+    const isReconnect = Boolean(options?.reconnectionToken);
     if (!assigned && !wantsSpectate) {
       if (this.seatsLocked) {
         assigned = undefined;
       } else {
-      const taken = new Set(this.playerByClient.values());
-      for (const reserved of this.reservedPlayerIds) taken.add(reserved);
-      const available = this.config.players.find((p) => !taken.has(p.id));
-      if (available) {
-        assigned = available.id;
-        this.playerByClient.set(client.sessionId, assigned);
-        this.reservedPlayerIds.delete(assigned);
+        const taken = new Set(this.playerByClient.values());
+        for (const reserved of this.reservedPlayerIds) taken.add(reserved);
+        const available = this.config.players.find((p) => !taken.has(p.id));
+        if (available) {
+          assigned = available.id;
+          this.playerByClient.set(client.sessionId, assigned);
+          this.reservedPlayerIds.delete(assigned);
+        }
       }
+    }
+
+    if (assigned && !this.seatsLocked) {
+      const rawName = typeof options?.name === "string" ? options.name : "";
+      const name = rawName.trim().slice(0, 30);
+      if (name) {
+        const player = this.config.players.find((p) => p.id === assigned);
+        if (player) player.name = name;
       }
     }
 
@@ -98,6 +108,15 @@ class GameRoom extends Room {
     client.send("config", this.config);
     client.send("state", this.stateData);
     this.updateMetadata();
+
+    if (!isReconnect) {
+      if (assigned) {
+        const name = this.config.players.find((p) => p.id === assigned)?.name ?? "Player";
+        this.broadcast("player_joined", { playerId: assigned, name }, { except: client });
+      } else {
+        this.broadcast("spectator_joined", { name: "Spectator" }, { except: client });
+      }
+    }
   }
 
   async onLeave(client, consented) {

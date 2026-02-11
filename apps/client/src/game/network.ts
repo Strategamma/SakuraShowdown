@@ -8,6 +8,7 @@ export type OnlineHandlers = {
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
   onReconnectToken?: (token?: string) => void;
+  onNotice?: (message: string) => void;
 };
 
 export class OnlineSession {
@@ -22,7 +23,8 @@ export class OnlineSession {
 
   async connect(roomId?: string, name?: string, options?: { spectator?: boolean }) {
     try {
-      const joinOptions = options ?? {};
+      const joinOptions = { ...(options ?? {}) } as { spectator?: boolean; name?: string };
+      if (name) joinOptions.name = name;
       this.room = roomId
         ? await this.client.joinById(roomId, joinOptions)
         : await this.client.joinOrCreate("onitama", joinOptions);
@@ -36,6 +38,14 @@ export class OnlineSession {
       this.room.onMessage("error", (payload: { message: string }) =>
         this.handlers.onError(payload.message)
       );
+      this.room.onMessage("player_joined", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} joined the room.`);
+        }
+      });
+      this.room.onMessage("spectator_joined", () => {
+        this.handlers.onNotice?.("A spectator joined the room.");
+      });
       if (name) {
         this.room.send("set_name", { name });
       }
@@ -59,6 +69,14 @@ export class OnlineSession {
       this.room.onMessage("error", (payload: { message: string }) =>
         this.handlers.onError(payload.message)
       );
+      this.room.onMessage("player_joined", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} joined the room.`);
+        }
+      });
+      this.room.onMessage("spectator_joined", () => {
+        this.handlers.onNotice?.("A spectator joined the room.");
+      });
       if (name) {
         this.room.send("set_name", { name });
       }
