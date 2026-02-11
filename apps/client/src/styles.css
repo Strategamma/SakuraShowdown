@@ -50,6 +50,7 @@ body {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100%;
+  min-height: 100vh;
 }
 
 #top-bar {
@@ -65,6 +66,7 @@ body {
   z-index: 10;
   min-height: 78px;
   backdrop-filter: blur(12px);
+  gap: 12px;
 }
 
 .brand {
@@ -119,6 +121,10 @@ body {
   gap: 10px;
   justify-self: end;
   flex-wrap: wrap;
+}
+
+.toolbar > * {
+  flex-shrink: 0;
 }
 
 .match-controls {
@@ -266,6 +272,7 @@ body {
   gap: 16px;
   min-height: 0;
   overflow-y: auto;
+  padding-right: 2px;
 }
 
 #card-house {
@@ -646,7 +653,7 @@ button:active {
   background: linear-gradient(160deg, rgba(36, 24, 32, 0.95) 0%, rgba(20, 14, 20, 0.98) 100%);
   border: 1px solid rgba(120, 90, 105, 0.5);
   min-width: 0;
-  min-height: 96px;
+  min-height: 92px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -661,7 +668,7 @@ button:active {
 }
 
 #card-house .card {
-  min-height: 82px;
+  min-height: 80px;
 }
 
 #card-house .card-pattern {
@@ -819,12 +826,185 @@ button:active {
 
 .card-pattern {
   margin-top: 6px;
-  width: clamp(64px, 7vw, 84px);
-  height: clamp(64px, 7vw, 84px);
+  width: clamp(58px, 7vw, 84px);
+  height: clamp(58px, 7vw, 84px);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(200, 180, 150, 0.55);
   display: block;
+}
+
+@media (max-width: 1200px) {
+  #game-area {
+    grid-template-columns: minmax(190px, 24vw) minmax(0, 1fr) minmax(180px, 18vw);
+    gap: 12px;
+  }
+
+  #canvas-container {
+    min-height: 520px;
+    height: min(86vh, 86vw);
+  }
+}
+
+@media (max-width: 1024px) {
+  #top-bar {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "brand toolbar"
+      "title title";
+    row-gap: 8px;
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .brand-text.centered {
+    grid-area: title;
+    justify-self: center;
+  }
+
+  .toolbar {
+    grid-area: toolbar;
+    justify-self: end;
+  }
+
+  #game-area {
+    grid-template-columns: minmax(180px, 28vw) minmax(0, 1fr);
+    grid-template-areas:
+      "board board"
+      "cards right";
+  }
+
+  #card-house {
+    grid-template-rows: minmax(180px, 1fr) auto minmax(180px, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  #game-area {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "board"
+      "cards"
+      "right";
+  }
+
+  #canvas-container {
+    min-height: 460px;
+    height: min(80vh, 92vw);
+  }
+
+  #card-house {
+    grid-template-rows: auto auto auto;
+    overflow: auto;
+  }
+
+  #right-panel {
+    max-height: 360px;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  #top-bar {
+    padding: 10px 12px;
+    min-height: 64px;
+  }
+
+  .toolbar {
+    gap: 8px;
+  }
+
+  .status-pill {
+    font-size: 0.82rem;
+  }
+
+  #canvas-container {
+    min-height: 400px;
+  }
+
+  #card-house {
+    padding: 10px;
+  }
+
+  #opponent-hand,
+  #hand {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  #top-bar {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "title"
+      "toolbar";
+    justify-items: center;
+  }
+
+  .toolbar {
+    justify-self: center;
+  }
+
+  #game-area {
+    padding: 8px 10px 12px;
+    gap: 10px;
+  }
+
+  #canvas-container {
+    min-height: 340px;
+    height: min(72vh, 92vw);
+  }
+
+  #card-house {
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+    overflow: auto;
+  }
+
+  #opponent-hand,
+  #hand {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    min-height: 78px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 0.95rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .card {
+    min-height: 72px;
+  }
+
+  .card-title {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-height: 740px) {
+  #canvas-container {
+    min-height: 320px;
+    height: min(68vh, 90vw);
+  }
+
+  #right-panel {
+    max-height: 300px;
+  }
+
+  #card-house {
+    overflow: auto;
+  }
 }
 
 .overlay {
@@ -888,7 +1068,7 @@ button:active {
 }
 
 .start-card {
-  width: min(520px, 90vw);
+  width: min(520px, 92vw);
 }
 
 .start-body {
@@ -991,6 +1171,45 @@ button:active {
   background: radial-gradient(circle at 20% 10%, rgba(226, 74, 127, 0.24), rgba(20, 12, 18, 0.97));
   border: 1px solid rgba(226, 74, 127, 0.35);
   box-shadow: 0 30px 70px rgba(12, 8, 16, 0.65);
+}
+
+@media (max-width: 900px) {
+  .overlay-card {
+    width: min(92vw, 720px);
+    max-height: 92vh;
+  }
+
+  .landing-card,
+  .draft-card {
+    width: min(94vw, 760px);
+    height: min(92vh, 760px);
+  }
+
+  .start-card {
+    width: min(92vw, 520px);
+  }
+}
+
+@media (max-width: 600px) {
+  .overlay-card {
+    width: 96vw;
+    max-height: 92vh;
+    border-radius: 16px;
+  }
+
+  .landing-card,
+  .draft-card {
+    width: 96vw;
+    height: 92vh;
+  }
+
+  .victory-card {
+    width: 94vw;
+  }
+
+  .start-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .landing-body {
@@ -1198,22 +1417,49 @@ button:active {
 
 .overlay-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #30202a;
   background: #1a1218;
+  position: relative;
+}
+
+.overlay-header > div {
+  text-align: center;
 }
 
 .overlay-title {
   font-weight: 700;
   font-size: 1.2rem;
   color: var(--ink);
+  text-align: center;
 }
 
 .overlay-subtitle {
   color: var(--muted);
   font-size: 0.9rem;
+  text-align: center;
+}
+
+.close-button {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  min-height: 32px;
+  border-radius: 999px;
+  background: rgba(30, 20, 28, 0.8);
+  border: 1px solid rgba(226, 74, 127, 0.35);
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.close-button:hover {
+  box-shadow: 0 8px 18px rgba(226, 74, 127, 0.3);
+  border-color: rgba(226, 74, 127, 0.7);
 }
 
 .overlay-body {
@@ -1349,8 +1595,50 @@ button:active {
 }
 
 @media (max-width: 900px) {
+  .overlay-header {
+    padding: 14px 16px;
+  }
+
   .overlay-body {
     grid-template-columns: 1fr;
+    padding: 14px 16px;
+  }
+
+  .draft-grid {
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+  }
+
+  .card-grid {
+    width: min(260px, 100%);
+  }
+}
+
+@media (max-width: 600px) {
+  .overlay-header {
+    padding: 12px 14px;
+  }
+
+  .overlay-body {
+    padding: 12px 14px;
+  }
+
+  .overlay-footer,
+  .draft-footer {
+    padding: 10px 14px 14px;
+  }
+
+  .draft-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .card-grid {
+    width: min(220px, 100%);
+  }
+}
+
+@media (max-width: 420px) {
+  .draft-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
