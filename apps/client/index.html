@@ -59,7 +59,14 @@
             <div id="pool" class="cards vertical"></div>
           </div>
           <div class="card-house-section" id="player-section">
-            <div class="player-name" id="player-name">You</div>
+            <div class="player-name-row">
+              <div class="player-name" id="player-name">You</div>
+              <button id="player-name-edit" class="icon-button ghost-button compact" type="button" aria-pressed="false" title="Edit names">
+                <svg class="icon-sword" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 3l7 7-2.2 2.2-7-7L14 3zM10.8 6.2L4 13l3 3 6.8-6.8-3-3zM6 17l-2 2 3 3 2-2-3-3z" />
+                </svg>
+              </button>
+            </div>
             <div class="captured-row" id="player-captured"></div>
             <div id="card-choice-hint" class="card-hint hidden">Choose card to discard</div>
             <div id="hand" class="cards vertical"></div>

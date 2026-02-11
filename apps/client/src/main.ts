@@ -38,6 +38,7 @@ const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
+const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
@@ -318,7 +319,17 @@ function renderCards() {
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
   const activeId = latestState.activePlayerId;
-  const getCardOrientation = (ownerId?: string) => (ownerId === activeId ? 1 : -1);
+  const getCardOrientation = (ownerId?: string) => {
+    const meta = latestConfig.players.find((p) => p.id === ownerId);
+    const forward = meta?.forward ?? 1;
+    let xMul = 1;
+    let yMul = forward;
+    if (ownerId && ownerId !== activeId) {
+      xMul *= -1;
+      yMul *= -1;
+    }
+    return { xMul, yMul };
+  };
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
   const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
@@ -360,7 +371,7 @@ function renderCards() {
         cardEl.classList.add("swap-in");
       }
       if (card) {
-        const pattern = drawCardPattern(card.moves, playerOrientation);
+        const pattern = drawCardPattern(card.moves, playerOrientation.xMul, playerOrientation.yMul);
         cardEl.appendChild(pattern);
       }
       cardEl.addEventListener("click", () => {
@@ -393,7 +404,7 @@ function renderCards() {
       title.textContent = card?.name ?? cardId;
       cardEl.appendChild(title);
       if (card) {
-        const pattern = drawCardPattern(card.moves, opponentOrientation);
+        const pattern = drawCardPattern(card.moves, opponentOrientation.xMul, opponentOrientation.yMul);
         cardEl.appendChild(pattern);
       }
       opponentHandEl.appendChild(cardEl);
@@ -412,7 +423,8 @@ function renderCards() {
     poolCardEl.classList.add("swap-out");
   }
   if (poolCard) {
-    const pattern = drawCardPattern(poolCard.moves, getCardOrientation(activeId));
+    const activeOrientation = getCardOrientation(activeId);
+    const pattern = drawCardPattern(poolCard.moves, activeOrientation.xMul, activeOrientation.yMul);
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);
@@ -428,6 +440,7 @@ function renderCards() {
 
 function setNamesEditing(enabled: boolean) {
   namesEditing = enabled;
+  appEl.dataset.editing = enabled ? "true" : "false";
   localNameInput.disabled = !enabled;
   localOpponentNameInput.disabled = !enabled;
   startingPlayerSelect.disabled = !enabled;
@@ -437,6 +450,11 @@ function setNamesEditing(enabled: boolean) {
   }
   if (namesEditLabel) {
     namesEditLabel.textContent = enabled ? "Done" : "Edit";
+  }
+
+  if (playerNameEditBtn) {
+    playerNameEditBtn.setAttribute("aria-pressed", String(enabled));
+    playerNameEditBtn.classList.toggle("active", enabled);
   }
 }
 
@@ -493,7 +511,7 @@ function filterMoves(
   });
 }
 
-function drawCardPattern(moves: { x: number; y: number }[], orientation: 1 | -1 = 1) {
+function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) {
   const size = 80;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -528,8 +546,8 @@ function drawCardPattern(moves: { x: number; y: number }[], orientation: 1 | -1 
 
   ctx.fillStyle = "#7b4d3a";
   for (const move of moves) {
-    const mx = move.x;
-    const my = move.y * orientation;
+    const mx = move.x * xMul;
+    const my = move.y * yMul;
     const x = center.x + mx;
     const y = center.y - my;
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
@@ -865,7 +883,7 @@ function renderDraft() {
       const title = document.createElement("div");
       title.className = "card-title";
       title.textContent = card.name;
-      const pattern = drawCardPattern(card.moves);
+    const pattern = drawCardPattern(card.moves);
       item.appendChild(title);
       item.appendChild(pattern);
       draftSelectedEl.appendChild(item);
@@ -989,6 +1007,9 @@ playerNameEl.textContent = localName || "You";
 opponentNameEl.textContent = localOpponentName || "Opponent";
 setNamesEditing(!localName && !localOpponentName);
 namesEditBtn?.addEventListener("click", () => {
+  setNamesEditing(!namesEditing);
+});
+playerNameEditBtn?.addEventListener("click", () => {
   setNamesEditing(!namesEditing);
 });
 localNameInput.addEventListener("input", () => {
