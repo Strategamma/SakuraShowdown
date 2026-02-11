@@ -118,6 +118,8 @@ let pendingMove:
 let startChoiceResolved = false;
 let namesEditing = false;
 let lobbyTimer: number | undefined;
+let returnToLandingOnCustomizeClose = false;
+let lastSwapAnimationKey: string | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -429,6 +431,16 @@ function renderCards() {
   opponentSection.classList.toggle("active", !hasWinner && !isPlayerActive);
   renderCaptured(viewPlayerId);
 
+  const lastMove = latestState.lastMove;
+  const swapKey = lastMove ? `${latestState.turn}:${lastMove.playerId}:${lastMove.cardId}` : undefined;
+  let swapFromRect: DOMRect | null = null;
+  if (lastMove && swapKey !== lastSwapAnimationKey) {
+    const currentCardEl = handEl.querySelector(`[data-card-id="${lastMove.cardId}"]`) as HTMLElement | null;
+    if (currentCardEl) {
+      swapFromRect = currentCardEl.getBoundingClientRect();
+    }
+  }
+
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
   if (playerState) {
@@ -437,6 +449,7 @@ function renderCards() {
       const card = latestConfig.cards.find((c) => c.id === cardId);
       const cardEl = document.createElement("div");
       cardEl.className = "card";
+      cardEl.dataset.cardId = cardId;
       const title = document.createElement("div");
       title.className = "card-title";
       title.textContent = card?.name ?? cardId;
@@ -486,6 +499,7 @@ function renderCards() {
       const card = latestConfig.cards.find((c) => c.id === cardId);
       const cardEl = document.createElement("div");
       cardEl.className = "card";
+      cardEl.dataset.cardId = cardId;
       const title = document.createElement("div");
       title.className = "card-title";
       title.textContent = card?.name ?? cardId;
@@ -515,6 +529,12 @@ function renderCards() {
     poolCardEl.appendChild(pattern);
   }
   poolEl.appendChild(poolCardEl);
+
+  if (swapFromRect && lastMove && swapKey) {
+    const toRect = poolCardEl.getBoundingClientRect();
+    animateCardSwap(lastMove.cardId, swapFromRect, toRect);
+    lastSwapAnimationKey = swapKey;
+  }
 
   previousHand = playerState?.hand ?? [];
   previousPoolCard = latestState.poolCard;
@@ -644,6 +664,39 @@ function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) 
   return canvas;
 }
 
+function animateCardSwap(cardId: string, fromRect: DOMRect, toRect: DOMRect) {
+  const ghost = document.createElement("div");
+  ghost.className = "card card-fly";
+  ghost.style.left = `${fromRect.left}px`;
+  ghost.style.top = `${fromRect.top}px`;
+  ghost.style.width = `${fromRect.width}px`;
+  ghost.style.height = `${fromRect.height}px`;
+  ghost.style.opacity = "0.95";
+  const title = document.createElement("div");
+  title.className = "card-title";
+  const card = latestConfig?.cards.find((c) => c.id === cardId);
+  title.textContent = card?.name ?? cardId;
+  ghost.appendChild(title);
+  if (card) {
+    ghost.appendChild(drawCardPattern(card.moves));
+  }
+  document.body.appendChild(ghost);
+
+  const dx = toRect.left + (toRect.width - fromRect.width) / 2 - fromRect.left;
+  const dy = toRect.top + (toRect.height - fromRect.height) / 2 - fromRect.top;
+
+  requestAnimationFrame(() => {
+    ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.92)`;
+    ghost.style.opacity = "0.6";
+  });
+
+  const cleanup = () => {
+    ghost.remove();
+  };
+  ghost.addEventListener("transitionend", cleanup, { once: true });
+  window.setTimeout(cleanup, 600);
+}
+
 function cloneConfig<T>(value: T): T {
   if (typeof structuredClone === "function") return structuredClone(value);
   return JSON.parse(JSON.stringify(value)) as T;
@@ -651,6 +704,7 @@ function cloneConfig<T>(value: T): T {
 
 function openCustomize() {
   if (!latestConfig) return;
+  returnToLandingOnCustomizeClose = false;
   editableConfig = cloneConfig(latestConfig);
   selectedCardIndex = 0;
   renderCustomize();
@@ -659,6 +713,10 @@ function openCustomize() {
 
 function closeCustomize() {
   overlay.classList.add("hidden");
+  if (returnToLandingOnCustomizeClose) {
+    returnToLandingOnCustomizeClose = false;
+    showLanding();
+  }
 }
 
 function renderCustomize() {
@@ -1070,15 +1128,15 @@ restartLocalBtn.addEventListener("click", () => {
 });
 
 newGameBtn.addEventListener("click", () => {
-  if (modeSelect.value === "local") {
-    startChoiceResolved = false;
-    startOverlay.classList.remove("hidden");
-  } else {
-    roomInfoEl.textContent = "Not connected";
-    roomInput.value = "";
-    controller.disconnectOnline();
-    statusEl.textContent = "Start a new online match when ready.";
-  }
+  roomInfoEl.textContent = "Not connected";
+  roomInput.value = "";
+  controller.disconnectOnline();
+  statusEl.textContent = "Choose how you want to play.";
+  startOverlay.classList.add("hidden");
+  draftOverlay.classList.add("hidden");
+  victoryOverlay.classList.add("hidden");
+  overlay.classList.add("hidden");
+  showLanding();
 });
 
 landingCloseBtn.addEventListener("click", hideLanding);
@@ -1097,6 +1155,7 @@ landingOnlineBtn.addEventListener("click", () => {
   refreshLobby();
 });
 landingCustomizeBtn.addEventListener("click", () => {
+  returnToLandingOnCustomizeClose = true;
   hideLanding();
   openCustomize();
 });
