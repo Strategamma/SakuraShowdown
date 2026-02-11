@@ -10,6 +10,7 @@ export type ControllerCallbacks = {
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
+  onReconnectToken?: (token?: string) => void;
 };
 
 export class GameController {
@@ -64,7 +65,12 @@ export class GameController {
     this.callbacks.onStatus("Local match ready.");
   }
 
-  async connectOnline(endpoint: string, roomId?: string, name?: string) {
+  async connectOnline(
+    endpoint: string,
+    roomId?: string,
+    name?: string,
+    options?: { spectator?: boolean }
+  ) {
     if (!this.config) throw new Error("Config not loaded.");
 
     this.callbacks.onStatus("Connecting...");
@@ -86,10 +92,41 @@ export class GameController {
         this.playerId = playerId;
         this.callbacks.onPlayer(playerId);
       },
-      onError: (message) => this.callbacks.onStatus(message)
+      onError: (message) => this.callbacks.onStatus(message),
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
-    await this.online.connect(roomId, name);
+    await this.online.connect(roomId, name, options);
+    this.callbacks.onStatus("Connected.");
+  }
+
+  async reconnectOnline(endpoint: string, reconnectToken: string, name?: string) {
+    if (!this.config) throw new Error("Config not loaded.");
+
+    this.callbacks.onStatus("Reconnecting...");
+
+    this.online = new OnlineSession(endpoint, {
+      onState: (state) => {
+        this.state = state;
+        this.recalculateMoves();
+        this.callbacks.onState(state);
+      },
+      onConfig: (config) => {
+        this.config = config;
+        this.callbacks.onConfig(config);
+      },
+      onRoom: (roomId) => {
+        this.callbacks.onRoom?.(roomId);
+      },
+      onPlayer: (playerId) => {
+        this.playerId = playerId;
+        this.callbacks.onPlayer(playerId);
+      },
+      onError: (message) => this.callbacks.onStatus(message),
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
+    });
+
+    await this.online.reconnect(reconnectToken, name);
     this.callbacks.onStatus("Connected.");
   }
 

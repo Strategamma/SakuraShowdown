@@ -21,6 +21,7 @@ const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
 const LOCAL_START_KEY = "sakura.localStartingPlayer";
 const VIEW_MODE_KEY = "sakura.viewMode";
 const ONLINE_NAME_KEY = "sakura.onlineName";
+const RECONNECT_KEY = "sakura.reconnectToken";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
@@ -87,6 +88,7 @@ const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonEl
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
+const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
 const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
@@ -113,6 +115,7 @@ let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
 let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
 let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
+let reconnectToken = localStorage.getItem(RECONNECT_KEY) ?? "";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
 let pendingMove:
@@ -151,6 +154,9 @@ const controller = new GameController({
     }
     const label = latestConfig?.players.find((p) => p.id === playerId)?.name ?? playerId;
     playerLabel.textContent = label;
+  },
+  onReconnectToken: (token) => {
+    if (token) setReconnectToken(token);
   }
 });
 
@@ -295,10 +301,34 @@ function syncOnlineNameInput() {
   onlineNameInput.value = onlineName || localName;
 }
 
+function normalizeReconnectToken(token: string) {
+  const parts = token.split(":");
+  if (parts.length >= 3 && parts[0] === parts[1]) {
+    return [parts[0], ...parts.slice(2)].join(":");
+  }
+  return token;
+}
+
+function updateResumeButton() {
+  if (!landingResumeBtn) return;
+  landingResumeBtn.toggleAttribute("hidden", !reconnectToken);
+}
+
+function setReconnectToken(token?: string) {
+  reconnectToken = token ? normalizeReconnectToken(token) : "";
+  if (reconnectToken) {
+    localStorage.setItem(RECONNECT_KEY, reconnectToken);
+  } else {
+    localStorage.removeItem(RECONNECT_KEY);
+  }
+  updateResumeButton();
+}
+
 function showLanding() {
   landingOverlay.classList.remove("hidden");
   setLandingTab("play");
   syncOnlineNameInput();
+  updateResumeButton();
   refreshLobby();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
@@ -317,7 +347,14 @@ async function refreshLobby() {
     const response = await fetch(LOBBY_URL, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed");
     const payload = (await response.json()) as {
-      rooms?: { roomId: string; clients: number; maxClients: number }[];
+      rooms?: {
+        roomId: string;
+        clients: number;
+        maxClients: number;
+        players?: number;
+        maxPlayers?: number;
+        open?: boolean;
+      }[];
     };
     const rooms = payload.rooms ?? [];
     if (!rooms.length) {
@@ -337,20 +374,39 @@ async function refreshLobby() {
       id.textContent = `Room ${room.roomId.slice(0, 6)}`;
       const count = document.createElement("div");
       count.className = "room-count";
-      count.textContent = `${room.clients}/${room.maxClients} players`;
+      const players = room.players ?? room.clients;
+      const maxPlayers = room.maxPlayers ?? room.maxClients;
+      count.textContent = `${players}/${maxPlayers} players`;
       meta.appendChild(id);
       meta.appendChild(count);
+      const actions = document.createElement("div");
+      actions.className = "lobby-actions";
       const join = document.createElement("button");
       join.className = "ghost-button";
-      join.textContent = "Join";
+      const open = room.open ?? players < maxPlayers;
+      join.textContent = open ? "Join" : "Full";
+      join.disabled = !open;
       join.addEventListener("click", async () => {
         modeSelect.value = "online";
         setMode("online");
         await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
         hideLanding();
       });
+      const spectate = document.createElement("button");
+      spectate.className = "ghost-button";
+      spectate.textContent = "Spectate";
+      spectate.addEventListener("click", async () => {
+        modeSelect.value = "online";
+        setMode("online");
+        await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName(), {
+          spectator: true
+        });
+        hideLanding();
+      });
       row.appendChild(meta);
-      row.appendChild(join);
+      actions.appendChild(join);
+      actions.appendChild(spectate);
+      row.appendChild(actions);
       lobbyListEl.appendChild(row);
     }
   } catch {
@@ -1153,6 +1209,7 @@ newGameBtn.addEventListener("click", () => {
   roomInfoEl.textContent = "Not connected";
   roomInput.value = "";
   controller.disconnectOnline();
+  setReconnectToken("");
   statusEl.textContent = "Choose how you want to play.";
   startOverlay.classList.add("hidden");
   draftOverlay.classList.add("hidden");
@@ -1164,6 +1221,22 @@ newGameBtn.addEventListener("click", () => {
 landingCloseBtn.addEventListener("click", hideLanding);
 landingTabPlay?.addEventListener("click", () => setLandingTab("play"));
 landingTabRules?.addEventListener("click", () => setLandingTab("rules"));
+landingResumeBtn?.addEventListener("click", async () => {
+  if (!reconnectToken) return;
+  modeSelect.value = "online";
+  setMode("online");
+  try {
+    await controller.reconnectOnline(
+      SERVER_URL,
+      normalizeReconnectToken(reconnectToken),
+      getOnlineName()
+    );
+    hideLanding();
+  } catch {
+    statusEl.textContent = "Resume failed. Start a new match.";
+    setReconnectToken("");
+  }
+});
 landingLocalBtn.addEventListener("click", () => {
   modeSelect.value = "local";
   setMode("local");

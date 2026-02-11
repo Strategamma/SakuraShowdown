@@ -8,14 +8,34 @@ import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rul
 const PORT = Number(process.env.PORT ?? 2567);
 
 class GameRoom extends Room {
-  maxClients = 2;
+  maxClients = 20;
   config;
   stateData;
   playerByClient = new Map();
+  reservedPlayerIds = new Set();
+  maxPlayers = 2;
+  seatsLocked = false;
+
+  updateMetadata() {
+    const active = new Set();
+    for (const client of this.clients) {
+      const playerId = this.playerByClient.get(client.sessionId);
+      if (playerId) active.add(playerId);
+    }
+    const reserved = new Set(this.reservedPlayerIds);
+    const total = new Set([...active, ...reserved]);
+    this.setMetadata({
+      players: total.size,
+      maxPlayers: this.maxPlayers,
+      open: !this.seatsLocked && total.size < this.maxPlayers
+    });
+  }
 
   onCreate() {
     this.config = loadConfig();
     this.stateData = createInitialState(this.config);
+    this.maxPlayers = this.config.players.length;
+    this.updateMetadata();
 
     this.onMessage("move", (client, move) => {
       const playerId = this.playerByClient.get(client.sessionId);
@@ -24,6 +44,7 @@ class GameRoom extends Room {
       if (move.playerId !== playerId) return;
 
       try {
+        if (!this.seatsLocked) this.seatsLocked = true;
         this.stateData = applyMove(this.stateData, move, this.config);
         this.broadcast("state", this.stateData);
       } catch {
@@ -54,17 +75,66 @@ class GameRoom extends Room {
     });
   }
 
-  onJoin(client) {
-    const assigned = this.config.players[this.clients.length - 1]?.id;
-    if (assigned) this.playerByClient.set(client.sessionId, assigned);
+  onJoin(client, options = {}) {
+    let assigned = this.playerByClient.get(client.sessionId);
+    const wantsSpectate = Boolean(options?.spectator);
+    if (!assigned && !wantsSpectate) {
+      if (this.seatsLocked) {
+        assigned = undefined;
+      } else {
+      const taken = new Set(this.playerByClient.values());
+      for (const reserved of this.reservedPlayerIds) taken.add(reserved);
+      const available = this.config.players.find((p) => !taken.has(p.id));
+      if (available) {
+        assigned = available.id;
+        this.playerByClient.set(client.sessionId, assigned);
+        this.reservedPlayerIds.delete(assigned);
+      }
+      }
+    }
 
-    client.send("player", { playerId: assigned });
+    client.send("player", { playerId: assigned, spectator: !assigned });
     client.send("config", this.config);
     client.send("state", this.stateData);
+    this.updateMetadata();
   }
 
-  onLeave(client) {
-    this.playerByClient.delete(client.sessionId);
+  async onLeave(client, consented) {
+    const playerId = this.playerByClient.get(client.sessionId);
+    if (!playerId) {
+      this.updateMetadata();
+      return;
+    }
+    if (this.seatsLocked) {
+      this.reservedPlayerIds.add(playerId);
+      this.updateMetadata();
+      try {
+        await this.allowReconnection(client, 300);
+        this.reservedPlayerIds.delete(playerId);
+        this.updateMetadata();
+      } catch {
+        this.updateMetadata();
+      }
+      return;
+    }
+
+    if (consented) {
+      this.playerByClient.delete(client.sessionId);
+      this.updateMetadata();
+      return;
+    }
+
+    this.reservedPlayerIds.add(playerId);
+    this.updateMetadata();
+    try {
+      await this.allowReconnection(client, 60);
+      this.reservedPlayerIds.delete(playerId);
+      this.updateMetadata();
+    } catch {
+      this.reservedPlayerIds.delete(playerId);
+      this.playerByClient.delete(client.sessionId);
+      this.updateMetadata();
+    }
   }
 }
 
@@ -87,12 +157,16 @@ app.get("/config", (_req, res) => {
 app.get("/lobby", async (_req, res) => {
   try {
     const rooms = await matchMaker.query({ name: "onitama" });
-    const openRooms = rooms.filter((room) => room.clients < room.maxClients);
     res.json({
-      rooms: openRooms.map((room) => ({
+      rooms: rooms.map((room) => ({
         roomId: room.roomId,
         clients: room.clients,
-        maxClients: room.maxClients
+        maxClients: room.maxClients,
+        players: room.metadata?.players ?? 0,
+        maxPlayers: room.metadata?.maxPlayers ?? 2,
+        open:
+          room.metadata?.open ??
+          (room.metadata?.players ?? 0) < (room.metadata?.maxPlayers ?? 2)
       }))
     });
   } catch {

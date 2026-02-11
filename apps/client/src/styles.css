@@ -455,6 +455,12 @@ button:active {
   box-shadow: 0 4px 12px rgba(95, 76, 59, 0.2);
 }
 
+.ghost-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .player-name {
   min-width: 0;
   font-family: var(--font-display);
@@ -1325,7 +1331,7 @@ button:active {
 
 .landing-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
 }
 
@@ -1366,6 +1372,12 @@ button:active {
   border-radius: 12px;
   border: 1px solid rgba(120, 90, 105, 0.5);
   background: linear-gradient(160deg, #22141d 0%, #151017 100%);
+}
+
+.lobby-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .lobby-item .room-meta {
@@ -1876,6 +1888,16 @@ button:active {
 
   .landing-lobby {
     padding: 12px;
+  }
+
+  .lobby-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lobby-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .lobby-footer {
