@@ -12,6 +12,7 @@ export type OnlineHandlers = {
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
+  onLeave?: (code?: number) => void;
 };
 
 export class OnlineSession {
@@ -33,6 +34,7 @@ export class OnlineSession {
         : await this.client.joinOrCreate("onitama", joinOptions);
 
       this.handlers.onRoom?.(this.room.id);
+      this.room.onLeave((code) => this.handlers.onLeave?.(code));
       this.room.onMessage("state", (state: GameState) => this.handlers.onState(state));
       this.room.onMessage("config", (config: GameConfig) => this.handlers.onConfig(config));
       this.room.onMessage("player", (payload: { playerId?: string }) =>
@@ -73,6 +75,7 @@ export class OnlineSession {
       }
     } catch (error) {
       this.handlers.onError("Failed to connect.");
+      throw error;
     }
   }
 
@@ -80,6 +83,7 @@ export class OnlineSession {
     try {
       this.room = await this.client.reconnect(reconnectToken);
       this.handlers.onRoom?.(this.room.id);
+      this.room.onLeave((code) => this.handlers.onLeave?.(code));
       this.room.onMessage("state", (state: GameState) => this.handlers.onState(state));
       this.room.onMessage("config", (config: GameConfig) => this.handlers.onConfig(config));
       this.room.onMessage("player", (payload: { playerId?: string }) =>
@@ -120,6 +124,58 @@ export class OnlineSession {
       }
     } catch (error) {
       this.handlers.onError("Failed to reconnect.");
+      throw error;
+    }
+  }
+
+  async create(name?: string, options?: { spectator?: boolean }) {
+    try {
+      const joinOptions = { ...(options ?? {}) } as { spectator?: boolean; name?: string };
+      if (name) joinOptions.name = name;
+      this.room = await this.client.create("onitama", joinOptions);
+
+      this.handlers.onRoom?.(this.room.id);
+      this.room.onLeave((code) => this.handlers.onLeave?.(code));
+      this.room.onMessage("state", (state: GameState) => this.handlers.onState(state));
+      this.room.onMessage("config", (config: GameConfig) => this.handlers.onConfig(config));
+      this.room.onMessage("player", (payload: { playerId?: string }) =>
+        this.handlers.onPlayer(payload.playerId)
+      );
+      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+        this.handlers.onRoomInfo?.(payload)
+      );
+      this.room.onMessage("error", (payload: { message: string }) =>
+        this.handlers.onError(payload.message)
+      );
+      this.room.onMessage("rematch_start", () => {
+        this.handlers.onRematchStart?.();
+      });
+      this.room.onMessage("rematch_cancelled", () => {
+        this.handlers.onRematchCancel?.();
+      });
+      this.room.onMessage("rematch_pending", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} wants a rematch.`);
+        } else {
+          this.handlers.onNotice?.("Opponent wants a rematch.");
+        }
+      });
+      this.room.onMessage("player_joined", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} joined the room.`);
+        }
+      });
+      this.room.onMessage("spectator_joined", () => {
+        this.handlers.onNotice?.("A spectator joined the room.");
+      });
+      if (name) {
+        this.room.send("set_name", { name });
+      }
+      if (this.room.reconnectionToken) {
+        this.handlers.onReconnectToken?.(this.room.reconnectionToken);
+      }
+    } catch (error) {
+      this.handlers.onError("Failed to create room.");
       throw error;
     }
   }

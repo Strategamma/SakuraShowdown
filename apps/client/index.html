@@ -36,6 +36,7 @@
             <span class="status-dot"></span>
             <span id="status">Ready</span>
           </div>
+          <div id="room-code" class="status room-code hidden">Room</div>
           <div class="status" id="player-label">You</div>
         </div>
       </header>
@@ -272,6 +273,21 @@
               </ul>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="spectator-overlay" class="overlay hidden">
+      <div class="overlay-card spectator-card">
+        <div class="overlay-header">
+          <div>
+            <div class="overlay-title">Spectator Mode</div>
+            <div class="overlay-subtitle">You are watching this match.</div>
+          </div>
+        </div>
+        <div class="spectator-body">
+          <p class="room-info">Only players can make moves. Return to the lobby to join another game.</p>
+          <button id="spectator-back">Back to Lobby</button>
         </div>
       </div>
     </div>

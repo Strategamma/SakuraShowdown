@@ -15,6 +15,7 @@ export type ControllerCallbacks = {
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
+  onLeave?: (code?: number) => void;
 };
 
 export class GameController {
@@ -74,7 +75,7 @@ export class GameController {
     roomId?: string,
     name?: string,
     options?: { spectator?: boolean }
-  ) {
+  ): Promise<boolean> {
     if (!this.config) throw new Error("Config not loaded.");
 
     this.callbacks.onStatus("Connecting...");
@@ -103,14 +104,24 @@ export class GameController {
       onNotice: (message) => this.callbacks.onNotice?.(message),
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
-    await this.online.connect(roomId, name, options);
-    this.callbacks.onStatus("Connected.");
+    try {
+      await this.online.connect(roomId, name, options);
+      this.callbacks.onStatus("Connected.");
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  async reconnectOnline(endpoint: string, reconnectToken: string, name?: string) {
+  async reconnectOnline(
+    endpoint: string,
+    reconnectToken: string,
+    name?: string
+  ): Promise<boolean> {
     if (!this.config) throw new Error("Config not loaded.");
 
     this.callbacks.onStatus("Reconnecting...");
@@ -139,11 +150,63 @@ export class GameController {
       onNotice: (message) => this.callbacks.onNotice?.(message),
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
-    await this.online.reconnect(reconnectToken, name);
-    this.callbacks.onStatus("Connected.");
+    try {
+      await this.online.reconnect(reconnectToken, name);
+      this.callbacks.onStatus("Connected.");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async createOnline(
+    endpoint: string,
+    name?: string,
+    options?: { spectator?: boolean }
+  ): Promise<boolean> {
+    if (!this.config) throw new Error("Config not loaded.");
+
+    this.callbacks.onStatus("Creating room...");
+
+    this.online = new OnlineSession(endpoint, {
+      onState: (state) => {
+        this.state = state;
+        this.recalculateMoves();
+        this.callbacks.onState(state);
+      },
+      onConfig: (config) => {
+        this.config = config;
+        this.callbacks.onConfig(config);
+      },
+      onRoom: (roomId) => {
+        this.callbacks.onRoom?.(roomId);
+      },
+      onRoomInfo: (info) => {
+        this.callbacks.onRoomInfo?.(info);
+      },
+      onPlayer: (playerId) => {
+        this.playerId = playerId;
+        this.callbacks.onPlayer(playerId);
+      },
+      onError: (message) => this.callbacks.onStatus(message),
+      onNotice: (message) => this.callbacks.onNotice?.(message),
+      onRematchStart: () => this.callbacks.onRematchStart?.(),
+      onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onLeave: (code) => this.callbacks.onLeave?.(code),
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
+    });
+
+    try {
+      await this.online.create(name, options);
+      this.callbacks.onStatus("Connected.");
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   disconnectOnline() {

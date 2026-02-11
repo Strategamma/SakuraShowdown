@@ -17,6 +17,7 @@ class GameRoom extends Room {
   seatsLocked = false;
   rematchVotes = new Set();
   roomCode = "";
+  rematchTimer;
 
   updateMetadata() {
     const active = new Set();
@@ -51,6 +52,9 @@ class GameRoom extends Room {
         if (!this.seatsLocked) this.seatsLocked = true;
         this.stateData = applyMove(this.stateData, move, this.config);
         this.broadcast("state", this.stateData);
+        if (this.stateData.winnerId) {
+          this.scheduleRematchTimeout();
+        }
       } catch {
         client.send("error", { message: "Illegal move." });
       }
@@ -88,6 +92,7 @@ class GameRoom extends Room {
       this.broadcast("rematch_pending", { playerId, name }, { except: client });
       if (this.rematchVotes.size >= this.maxPlayers) {
         this.rematchVotes.clear();
+        this.clearRematchTimer();
         this.stateData = createInitialState(this.config, Date.now());
         this.broadcast("state", this.stateData);
         this.broadcast("rematch_start", {});
@@ -98,6 +103,10 @@ class GameRoom extends Room {
       if (!this.rematchVotes.size) return;
       this.rematchVotes.clear();
       this.broadcast("rematch_cancelled", { reason: "cancelled" }, { except: client });
+      if (this.stateData.winnerId) {
+        this.clearRematchTimer();
+        this.disconnect();
+      }
     });
   }
 
@@ -125,7 +134,9 @@ class GameRoom extends Room {
       const name = rawName.trim().slice(0, 30);
       if (name) {
         const player = this.config.players.find((p) => p.id === assigned);
-        if (player) player.name = name;
+        if (player && player.name !== name) {
+          player.name = name;
+        }
       }
     }
 
@@ -134,6 +145,10 @@ class GameRoom extends Room {
     client.send("config", this.config);
     client.send("state", this.stateData);
     this.updateMetadata();
+
+    if (assigned && !isReconnect) {
+      this.broadcast("config", this.config, { except: client });
+    }
 
     if (!isReconnect) {
       if (assigned) {
@@ -154,6 +169,14 @@ class GameRoom extends Room {
     if (this.stateData.winnerId && this.rematchVotes.size) {
       this.rematchVotes.clear();
       this.broadcast("rematch_cancelled", { reason: "left" }, { except: client });
+      this.clearRematchTimer();
+      this.disconnect();
+      return;
+    }
+    if (this.stateData.winnerId) {
+      this.clearRematchTimer();
+      this.disconnect();
+      return;
     }
     if (this.seatsLocked) {
       this.reservedPlayerIds.add(playerId);
@@ -184,6 +207,22 @@ class GameRoom extends Room {
       this.reservedPlayerIds.delete(playerId);
       this.playerByClient.delete(client.sessionId);
       this.updateMetadata();
+    }
+  }
+
+  scheduleRematchTimeout() {
+    this.clearRematchTimer();
+    this.rematchTimer = setTimeout(() => {
+      this.rematchVotes.clear();
+      this.broadcast("rematch_cancelled", { reason: "timeout" });
+      this.disconnect();
+    }, 120000);
+  }
+
+  clearRematchTimer() {
+    if (this.rematchTimer) {
+      clearTimeout(this.rematchTimer);
+      this.rematchTimer = undefined;
     }
   }
 }

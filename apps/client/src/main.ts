@@ -31,6 +31,7 @@ const startingPlayerSelect = document.getElementById("starting-player") as HTMLS
 const namesEditBtn = document.getElementById("names-edit") as HTMLButtonElement;
 const namesEditLabel = namesEditBtn?.querySelector(".icon-label") as HTMLElement;
 const playerLabel = document.getElementById("player-label") as HTMLElement;
+const roomCodeEl = document.getElementById("room-code") as HTMLElement;
 const playerNameEl = document.getElementById("player-name") as HTMLElement;
 const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
@@ -85,6 +86,8 @@ const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonEl
 const landingOnlineBtn = document.getElementById("landing-online") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
+const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
+const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabPlay = document.getElementById("landing-tab-play") as HTMLButtonElement | null;
 const landingTabRules = document.getElementById("landing-tab-rules") as HTMLButtonElement | null;
@@ -126,6 +129,8 @@ let returnToLandingOnCustomizeClose = false;
 let lastSwapAnimationKey: string | undefined;
 let noticeTimeout: number | undefined;
 let rematchPending = false;
+let isSpectator = false;
+let lobbyBusy = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -144,6 +149,7 @@ const controller = new GameController({
   onRoom: (roomId) => {
     currentRoomId = roomId;
     statusEl.textContent = `Online match ready · Room ${roomId}`;
+    updateRoomCode();
   },
   onRoomInfo: (info) => {
     currentRoomId = info.roomId;
@@ -151,12 +157,15 @@ const controller = new GameController({
     if (info.code) {
       statusEl.textContent = `Online match ready · ${info.code}`;
     }
+    updateRoomCode();
   },
   onPlayer: (playerId) => {
     if (!playerId) {
       playerLabel.textContent = "Spectator";
+      setSpectatorMode(true);
       return;
     }
+    setSpectatorMode(false);
     const label = latestConfig?.players.find((p) => p.id === playerId)?.name ?? playerId;
     playerLabel.textContent = label;
   },
@@ -176,6 +185,24 @@ const controller = new GameController({
     controller.disconnectOnline();
     setReconnectToken("");
     statusEl.textContent = "Opponent left. Back to lobby.";
+    setSpectatorMode(false);
+    currentRoomId = undefined;
+    currentRoomCode = undefined;
+    updateRoomCode();
+    showLanding();
+  },
+  onLeave: () => {
+    if (currentMode !== "online") return;
+    if (latestState?.winnerId) {
+      setReconnectToken("");
+      statusEl.textContent = "Match ended. Back to lobby.";
+    } else {
+      statusEl.textContent = "Disconnected. You can resume from the lobby.";
+    }
+    setSpectatorMode(false);
+    currentRoomId = undefined;
+    currentRoomCode = undefined;
+    updateRoomCode();
     showLanding();
   },
   onReconnectToken: (token) => {
@@ -186,6 +213,15 @@ const controller = new GameController({
 function handleCellTap(x: number, y: number) {
   if (!latestState || !latestConfig) return;
   if (!controller.canAct()) return;
+  const pieceAt = latestState.pieces.find(
+    (p) => p.alive && p.x === x && p.y === y && p.ownerId === latestState.activePlayerId
+  );
+  if (pieceAt) {
+    pendingMove = undefined;
+    controller.selectPiece(pieceAt.id);
+    renderAll();
+    return;
+  }
   const selection = controller.getSelection();
   const movesForCell = latestMoves.filter(
     (move) =>
@@ -287,7 +323,7 @@ function renderAll() {
       latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
       latestState.winnerId;
     statusEl.textContent = `Winner: ${winnerName}`;
-    if (lastWinnerId !== latestState.winnerId) {
+    if (!isSpectator && lastWinnerId !== latestState.winnerId) {
       showVictory(winnerName);
       lastWinnerId = latestState.winnerId;
     }
@@ -350,6 +386,37 @@ function setReconnectToken(token?: string) {
   updateResumeButton();
 }
 
+function setSpectatorMode(enabled: boolean) {
+  isSpectator = enabled;
+  spectatorOverlay.classList.toggle("hidden", !enabled);
+}
+
+function setLobbyBusy(busy: boolean) {
+  lobbyBusy = busy;
+  lobbyRefreshBtn.disabled = busy;
+  lobbyQuickBtn.disabled = busy;
+  lobbyCreateBtn.disabled = busy;
+  landingOnlineBtn.disabled = busy;
+  if (landingResumeBtn) landingResumeBtn.disabled = busy;
+  if (busy) {
+    lobbyQuickBtn.textContent = "Connecting...";
+    lobbyCreateBtn.textContent = "Creating...";
+  } else {
+    lobbyQuickBtn.textContent = "Quick Match";
+    lobbyCreateBtn.textContent = "Create Room";
+  }
+}
+
+function updateRoomCode() {
+  if (!roomCodeEl) return;
+  const code = currentRoomCode || currentRoomId;
+  const show = currentMode === "online" && Boolean(code);
+  roomCodeEl.classList.toggle("hidden", !show);
+  if (show) {
+    roomCodeEl.textContent = code ? `Room ${code.toUpperCase()}` : "Room";
+  }
+}
+
 function showNotice(message: string) {
   statusEl.textContent = message;
   if (noticeTimeout) window.clearTimeout(noticeTimeout);
@@ -364,9 +431,13 @@ function showLanding() {
   setLandingTab("play");
   syncOnlineNameInput();
   updateResumeButton();
+  setLobbyBusy(false);
   refreshLobby();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    statusEl.textContent = "You appear to be offline.";
+  }
 }
 
 function hideLanding() {
@@ -377,6 +448,7 @@ function hideLanding() {
 
 async function refreshLobby() {
   if (!lobbyListEl) return;
+  if (lobbyBusy) return;
   lobbyListEl.innerHTML = "";
   try {
     const response = await fetch(LOBBY_URL, { cache: "no-store" });
@@ -423,19 +495,41 @@ async function refreshLobby() {
       join.textContent = open ? "Join" : "Full";
       join.disabled = !open;
       join.addEventListener("click", async () => {
+        if (!open || lobbyBusy) return;
+        setLobbyBusy(true);
+        join.textContent = "Joining...";
+        join.disabled = true;
         setMode("online");
-        await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
-        hideLanding();
+        const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
+        setLobbyBusy(false);
+        if (ok) {
+          hideLanding();
+          return;
+        }
+        join.textContent = open ? "Join" : "Full";
+        join.disabled = !open;
+        statusEl.textContent = "Room unavailable. Refreshing lobby…";
+        refreshLobby();
       });
       const spectate = document.createElement("button");
       spectate.className = "ghost-button";
       spectate.textContent = "Spectate";
       spectate.addEventListener("click", async () => {
+        if (lobbyBusy) return;
+        setLobbyBusy(true);
+        spectate.textContent = "Joining...";
         setMode("online");
-        await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName(), {
+        const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName(), {
           spectator: true
         });
-        hideLanding();
+        setLobbyBusy(false);
+        if (ok) {
+          hideLanding();
+          return;
+        }
+        spectate.textContent = "Spectate";
+        statusEl.textContent = "Spectate failed. Refreshing lobby…";
+        refreshLobby();
       });
       row.appendChild(meta);
       actions.appendChild(join);
@@ -455,6 +549,7 @@ function setMode(mode: "local" | "online") {
   currentMode = mode;
   appEl.dataset.mode = mode;
   controller.setMode(mode);
+  updateRoomCode();
   if (mode === "local") {
     currentRoomId = undefined;
     if (baseConfig) {
@@ -1215,6 +1310,10 @@ newGameBtn.addEventListener("click", () => {
   draftOverlay.classList.add("hidden");
   victoryOverlay.classList.add("hidden");
   overlay.classList.add("hidden");
+  setSpectatorMode(false);
+  currentRoomId = undefined;
+  currentRoomCode = undefined;
+  updateRoomCode();
   showLanding();
 });
 
@@ -1224,14 +1323,17 @@ landingTabRules?.addEventListener("click", () => setLandingTab("rules"));
 landingResumeBtn?.addEventListener("click", async () => {
   if (!reconnectToken) return;
   setMode("online");
-  try {
-    await controller.reconnectOnline(
-      SERVER_URL,
-      normalizeReconnectToken(reconnectToken),
-      getOnlineName()
-    );
+  setLobbyBusy(true);
+  const ok = await controller.reconnectOnline(
+    SERVER_URL,
+    normalizeReconnectToken(reconnectToken),
+    getOnlineName()
+  );
+  setLobbyBusy(false);
+  if (ok) {
+    setSpectatorMode(false);
     hideLanding();
-  } catch {
+  } else {
     statusEl.textContent = "Resume failed. Start a new match.";
     setReconnectToken("");
   }
@@ -1240,6 +1342,7 @@ landingLocalBtn.addEventListener("click", () => {
   setMode("local");
   startChoiceResolved = false;
   startOverlay.classList.remove("hidden");
+  setSpectatorMode(false);
   hideLanding();
 });
 landingOnlineBtn.addEventListener("click", () => {
@@ -1254,13 +1357,23 @@ landingCustomizeBtn.addEventListener("click", () => {
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyQuickBtn.addEventListener("click", async () => {
   setMode("online");
-  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
-  hideLanding();
+  setLobbyBusy(true);
+  const ok = await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
+  setLobbyBusy(false);
+  if (ok) {
+    setSpectatorMode(false);
+    hideLanding();
+  }
 });
 lobbyCreateBtn.addEventListener("click", async () => {
   setMode("online");
-  await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
-  hideLanding();
+  setLobbyBusy(true);
+  const ok = await controller.createOnline(SERVER_URL, getOnlineName());
+  setLobbyBusy(false);
+  if (ok) {
+    setSpectatorMode(false);
+    hideLanding();
+  }
 });
 
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
@@ -1306,6 +1419,16 @@ if (onlineNameInput) {
     localStorage.setItem(ONLINE_NAME_KEY, onlineName);
   });
 }
+
+spectatorBackBtn?.addEventListener("click", () => {
+  controller.disconnectOnline();
+  setReconnectToken("");
+  setSpectatorMode(false);
+  currentRoomId = undefined;
+  currentRoomCode = undefined;
+  updateRoomCode();
+  showLanding();
+});
 
 localOpponentNameInput.value = localOpponentName;
 opponentNameEl.textContent = localOpponentName || "Opponent";
@@ -1360,6 +1483,7 @@ victoryLobbyBtn?.addEventListener("click", () => {
   controller.cancelRematch();
   controller.disconnectOnline();
   setReconnectToken("");
+  setSpectatorMode(false);
   showLanding();
 });
 victoryOverlay.addEventListener("click", (event) => {
