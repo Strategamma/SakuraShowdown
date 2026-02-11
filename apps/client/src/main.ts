@@ -113,6 +113,7 @@ const sandboxNameWrap = document.getElementById("sandbox-name-wrap") as HTMLElem
 const sandboxNameInput = document.getElementById("sandbox-name") as HTMLInputElement | null;
 
 appEl.dataset.started = "false";
+document.body.dataset.mode = appEl.dataset.mode || "local";
 
 let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
@@ -637,6 +638,7 @@ async function lookupPrivateRoom(code: string) {
 function setMode(mode: "local" | "online") {
   currentMode = mode;
   appEl.dataset.mode = mode;
+  document.body.dataset.mode = mode;
   controller.setMode(mode);
   updateRoomCode();
   if (mode === "local") {

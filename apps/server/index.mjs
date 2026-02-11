@@ -75,8 +75,8 @@ class GameRoom extends Room {
       if (move.playerId !== playerId) return;
 
       try {
-        if (!this.seatsLocked) this.seatsLocked = true;
         this.stateData = applyMove(this.stateData, move, this.config);
+        if (!this.seatsLocked) this.seatsLocked = true;
         this.broadcast("state", this.stateData);
         if (this.stateData.winnerId) {
           this.scheduleRematchTimeout();

@@ -634,13 +634,15 @@ button:active {
   display: none;
 }
 
-#app[data-mode="online"] .online-only {
+#app[data-mode="online"] .online-only,
+body[data-mode="online"] .online-only {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-#app[data-mode="online"] .local-only {
+#app[data-mode="online"] .local-only,
+body[data-mode="online"] .local-only {
   display: none;
 }
 
@@ -655,13 +657,15 @@ button:active {
   display: block;
 }
 
-#app[data-mode="local"] .local-only {
+#app[data-mode="local"] .local-only,
+body[data-mode="local"] .local-only {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-#app[data-mode="local"] .online-only {
+#app[data-mode="local"] .online-only,
+body[data-mode="local"] .online-only {
   display: none;
 }
 
