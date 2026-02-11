@@ -284,7 +284,12 @@ function updateStartedUI() {
   appEl.dataset.started = started ? "true" : "false";
   if (!started) {
     pendingMove = undefined;
+  } else {
+    if (namesEditing) setNamesEditing(false);
   }
+  if (namesEditBtn) namesEditBtn.disabled = started;
+  if (playerNameEditBtn) playerNameEditBtn.disabled = started;
+}
 }
 
 function setLandingTab(tab: "play" | "rules") {
@@ -1281,9 +1286,11 @@ playerNameEl.textContent = localName || "You";
 opponentNameEl.textContent = localOpponentName || "Opponent";
 setNamesEditing(!localName && !localOpponentName);
 namesEditBtn?.addEventListener("click", () => {
+  if (appEl.dataset.started === "true") return;
   setNamesEditing(!namesEditing);
 });
 playerNameEditBtn?.addEventListener("click", () => {
+  if (appEl.dataset.started === "true") return;
   setNamesEditing(!namesEditing);
 });
 localNameInput.addEventListener("input", () => {

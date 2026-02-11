@@ -61,6 +61,7 @@ class GameRoom extends Room {
     });
 
     this.onMessage("set_name", (client, payload) => {
+      if (this.seatsLocked) return;
       const playerId = this.playerByClient.get(client.sessionId);
       if (!playerId) return;
       const rawName = typeof payload === "string" ? payload : payload?.name;
