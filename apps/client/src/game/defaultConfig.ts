@@ -83,7 +83,12 @@ const defaultConfig: GameConfig = {
     { id: "crane", name: "Crane", moves: [{ x: 0, y: 1 }, { x: -1, y: -1 }, { x: 1, y: -1 }] },
     { id: "boar", name: "Boar", moves: [{ x: -1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 }] },
     { id: "eel", name: "Eel", moves: [{ x: -1, y: 1 }, { x: 1, y: 0 }, { x: -1, y: -1 }] },
-    { id: "cobra", name: "Cobra", moves: [{ x: 1, y: 1 }, { x: -1, y: 0 }, { x: 1, y: -1 }] }
+    { id: "cobra", name: "Cobra", moves: [{ x: 1, y: 1 }, { x: -1, y: 0 }, { x: 1, y: -1 }] },
+    { id: "fox", name: "Fox", moves: [{ x: -1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 0, y: -1 }] },
+    { id: "wolf", name: "Wolf", moves: [{ x: -2, y: 0 }, { x: 2, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }] },
+    { id: "heron", name: "Heron", moves: [{ x: -1, y: 2 }, { x: 1, y: 2 }, { x: 0, y: -1 }] },
+    { id: "stag", name: "Stag", moves: [{ x: 0, y: 2 }, { x: -1, y: 1 }, { x: 1, y: 1 }] },
+    { id: "lynx", name: "Lynx", moves: [{ x: -2, y: -1 }, { x: 2, y: -1 }, { x: -1, y: 1 }, { x: 1, y: 1 }] }
   ],
   deck: [
     "tiger",
@@ -101,7 +106,12 @@ const defaultConfig: GameConfig = {
     "crane",
     "boar",
     "eel",
-    "cobra"
+    "cobra",
+    "fox",
+    "wolf",
+    "heron",
+    "stag",
+    "lynx"
   ],
   handSize: 2,
   mechanics: [

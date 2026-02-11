@@ -619,21 +619,25 @@ function filterMoves(
 }
 
 function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) {
-  const size = 80;
+  const size = 120;
+  const dpr = window.devicePixelRatio || 1;
   const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = `${size}px`;
+  canvas.style.height = `${size}px`;
   canvas.className = "card-pattern";
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
+  ctx.scale(dpr, dpr);
 
   const grid = 5;
   const cell = size / grid;
   const center = { x: 2, y: 2 };
 
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = "rgba(90, 70, 90, 0.45)";
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "rgba(80, 70, 80, 0.5)";
+  ctx.lineWidth = 1.4;
 
   for (let i = 0; i <= grid; i += 1) {
     ctx.beginPath();
@@ -646,19 +650,23 @@ function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) 
     ctx.stroke();
   }
 
-  ctx.fillStyle = "#f9c7d3";
+  ctx.fillStyle = "#f3b6c6";
   ctx.beginPath();
-  ctx.arc(size / 2, size / 2, 4.5, 0, Math.PI * 2);
+  ctx.arc(size / 2, size / 2, 6.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#7b4d3a";
+  ctx.fillStyle = "#9a5d42";
+  ctx.strokeStyle = "rgba(65, 40, 30, 0.6)";
   for (const move of moves) {
     const mx = move.x * xMul;
     const my = move.y * yMul;
     const x = center.x + mx;
     const y = center.y - my;
     if (x < 0 || x >= grid || y < 0 || y >= grid) continue;
-    ctx.fillRect(x * cell + cell * 0.18, y * cell + cell * 0.18, cell * 0.64, cell * 0.64);
+    const inset = cell * 0.12;
+    const sizeCell = cell * 0.76;
+    ctx.fillRect(x * cell + inset, y * cell + inset, sizeCell, sizeCell);
+    ctx.strokeRect(x * cell + inset, y * cell + inset, sizeCell, sizeCell);
   }
 
   return canvas;
