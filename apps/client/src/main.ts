@@ -286,8 +286,6 @@ function updateStartedUI() {
   if (namesEditBtn) namesEditBtn.disabled = started;
   if (playerNameEditBtn) playerNameEditBtn.disabled = started;
 }
-}
-
 function setLandingTab(tab: "play" | "rules") {
   if (!landingTabPlay || !landingTabRules || !landingPanelPlay || !landingPanelRules) return;
   const playActive = tab === "play";
@@ -439,6 +437,8 @@ function setMode(mode: "local" | "online") {
       startChoiceResolved = false;
       playerLabel.textContent = localName || "You";
     }
+  } else {
+    startOverlay.classList.add("hidden");
   }
 }
 
