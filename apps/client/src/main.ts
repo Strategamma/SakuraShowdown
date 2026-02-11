@@ -114,12 +114,20 @@ const sandboxNameInput = document.getElementById("sandbox-name") as HTMLInputEle
 
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
+document.body.dataset.cards = "canvas";
+
+let cardHintOverlay: HTMLElement | null = null;
+if (canvasContainer) {
+  cardHintOverlay = document.createElement("div");
+  cardHintOverlay.id = "card-choice-overlay";
+  cardHintOverlay.className = "card-hint overlay hidden";
+  cardHintOverlay.textContent = "Choose card to discard";
+  canvasContainer.appendChild(cardHintOverlay);
+}
 
 let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
-let previousHand: string[] = [];
-let previousPoolCard: string | undefined;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let currentRoomId: string | undefined;
@@ -142,7 +150,6 @@ let startChoiceResolved = false;
 let namesEditing = false;
 let lobbyTimer: number | undefined;
 let returnToLandingOnCustomizeClose = false;
-let lastSwapAnimationKey: string | undefined;
 let noticeTimeout: number | undefined;
 let rematchPending = false;
 let isSpectator = false;
@@ -198,8 +205,6 @@ const controller = new GameController({
     setRematchPending(false);
     hideVictory();
     lastWinnerId = undefined;
-    previousHand = [];
-    previousPoolCard = undefined;
     statusEl.textContent = "Rematch started.";
   },
   onRematchCancel: () => {
@@ -325,6 +330,26 @@ const renderer = new GameRenderer(canvasContainer, {
     pendingMove = undefined;
     controller.selectPiece(pieceId);
     renderAll();
+  },
+  onCardTap: (cardId, ownerId, role) => {
+    if (!latestState || !latestConfig) return;
+    if (!controller.canAct()) return;
+    if (role !== "player") return;
+
+    if (pendingMove && pendingMove.cardIds.includes(cardId)) {
+      controller.selectCard(cardId);
+      controller.tryMove(pendingMove.to.x, pendingMove.to.y);
+      controller.clearSelection();
+      pendingMove = undefined;
+      renderAll();
+      return;
+    }
+
+    const selection = controller.getSelection();
+    const next = selection.selectedCardId === cardId ? undefined : cardId;
+    pendingMove = undefined;
+    controller.selectCard(next);
+    renderAll();
   }
 });
 renderer.setViewMode(viewMode);
@@ -333,11 +358,14 @@ function renderAll() {
   if (!latestConfig || !latestState) return;
   renderCards();
 
+  const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
   const selection = controller.getSelection();
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
-  renderer.render(latestState, moves, selection);
-
-  const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
+  renderer.render(latestState, moves, {
+    ...selection,
+    pendingCardIds: pendingMove?.cardIds,
+    viewerId: viewPlayerId
+  });
   const primaryId = latestConfig.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
   renderer.setBoardFlip(flip);
@@ -716,148 +744,35 @@ function applyLocalName(config: GameConfig): GameConfig {
 
 function renderCards() {
   if (!latestState || !latestConfig) return;
-
-  const selection = controller.getSelection();
   const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
-  const playerState = latestState.players.find((p) => p.id === viewPlayerId);
-  const opponentState = latestState.players.find((p) => p.id !== viewPlayerId);
   const playerMeta = latestConfig.players.find((p) => p.id === viewPlayerId);
   const opponentMeta = latestConfig.players.find((p) => p.id !== viewPlayerId);
   const playerName = playerMeta?.name ?? "You";
   const opponentName = opponentMeta?.name ?? "Opponent";
   const primaryId = latestConfig.players[0]?.id;
-  const viewerId = viewPlayerId;
-  const viewerFlip = primaryId && viewerId && viewerId !== primaryId ? -1 : 1;
-  const getCardOrientation = (ownerId?: string) => {
-    // Card moves are defined in player-local coords (x right, y forward).
-    // Render from viewer perspective: own cards unflipped, opponent rotated 180.
-    const ownerForward = latestConfig.players.find((p) => p.id === ownerId)?.forward ?? 1;
-    const mul = -ownerForward * viewerFlip;
-    return { xMul: mul, yMul: mul };
-  };
+
   playerNameEl.textContent = playerName;
   opponentNameEl.textContent = opponentName;
-  const playerId = latestConfig.players.find((p) => p.id === viewPlayerId)?.id;
-  const opponentId = latestConfig.players.find((p) => p.id !== viewPlayerId)?.id;
-  setNameClass(playerNameEl, playerId === primaryId ? "primary" : "secondary");
-  setNameClass(opponentNameEl, opponentId === primaryId ? "primary" : "secondary");
+  setNameClass(playerNameEl, viewPlayerId === primaryId ? "primary" : "secondary");
+  setNameClass(opponentNameEl, opponentMeta?.id === primaryId ? "primary" : "secondary");
+
   const isPlayerActive = latestState.activePlayerId === viewPlayerId;
   const hasWinner = Boolean(latestState.winnerId);
   playerSection.classList.toggle("active", !hasWinner && isPlayerActive);
   opponentSection.classList.toggle("active", !hasWinner && !isPlayerActive);
   renderCaptured(viewPlayerId);
 
-  const lastMove = latestState.lastMove;
-  const swapKey = lastMove ? `${latestState.turn}:${lastMove.playerId}:${lastMove.cardId}` : undefined;
-  let swapFromRect: DOMRect | null = null;
-  if (lastMove && swapKey !== lastSwapAnimationKey) {
-    const currentCardEl = handEl.querySelector(`[data-card-id="${lastMove.cardId}"]`) as HTMLElement | null;
-    if (currentCardEl) {
-      swapFromRect = currentCardEl.getBoundingClientRect();
-    }
-  }
-
   handEl.innerHTML = "";
   opponentHandEl.innerHTML = "";
-  if (playerState) {
-    const playerOrientation = getCardOrientation(playerState.id);
-    for (const cardId of playerState.hand) {
-      const card = latestConfig.cards.find((c) => c.id === cardId);
-      const cardEl = document.createElement("div");
-      cardEl.className = "card";
-      cardEl.dataset.cardId = cardId;
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = card?.name ?? cardId;
-      cardEl.appendChild(title);
-      if (!previousHand.includes(cardId)) {
-        cardEl.classList.add("reveal");
-      }
-      if (selection.selectedCardId === cardId) {
-        cardEl.classList.add("active");
-      }
-      if (pendingMove) {
-        if (pendingMove.cardIds.includes(cardId)) {
-          cardEl.classList.add("choice");
-        } else {
-          cardEl.classList.add("disabled");
-        }
-      }
-      if (previousPoolCard && previousPoolCard !== latestState.poolCard && cardId === previousPoolCard) {
-        cardEl.classList.add("swap-in");
-      }
-      if (card) {
-        const pattern = drawCardPattern(card.moves, playerOrientation.xMul, playerOrientation.yMul);
-        cardEl.appendChild(pattern);
-      }
-      cardEl.addEventListener("click", () => {
-        if (pendingMove && pendingMove.cardIds.includes(cardId)) {
-          controller.selectCard(cardId);
-          controller.tryMove(pendingMove.to.x, pendingMove.to.y);
-          controller.clearSelection();
-          pendingMove = undefined;
-          renderAll();
-          return;
-        }
-
-        const next = selection.selectedCardId === cardId ? undefined : cardId;
-        pendingMove = undefined;
-        controller.selectCard(next);
-        renderAll();
-      });
-      handEl.appendChild(cardEl);
-    }
-  }
-
-  if (opponentState) {
-    const opponentOrientation = getCardOrientation(opponentState.id);
-    for (const cardId of opponentState.hand) {
-      const card = latestConfig.cards.find((c) => c.id === cardId);
-      const cardEl = document.createElement("div");
-      cardEl.className = "card";
-      cardEl.dataset.cardId = cardId;
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = card?.name ?? cardId;
-      cardEl.appendChild(title);
-      if (card) {
-        const pattern = drawCardPattern(card.moves, opponentOrientation.xMul, opponentOrientation.yMul);
-        cardEl.appendChild(pattern);
-      }
-      opponentHandEl.appendChild(cardEl);
-    }
-  }
-
   poolEl.innerHTML = "";
-  const poolCard = latestConfig.cards.find((c) => c.id === latestState.poolCard);
-  const poolCardEl = document.createElement("div");
-  poolCardEl.className = "card disabled";
-  const poolTitle = document.createElement("div");
-  poolTitle.className = "card-title";
-  poolTitle.textContent = poolCard?.name ?? latestState.poolCard;
-  poolCardEl.appendChild(poolTitle);
-  if (previousPoolCard && previousPoolCard !== latestState.poolCard) {
-    poolCardEl.classList.add("swap-out");
-  }
-  if (poolCard) {
-    const viewerOrientation = getCardOrientation(viewerId);
-    const pattern = drawCardPattern(poolCard.moves, viewerOrientation.xMul, viewerOrientation.yMul);
-    poolCardEl.appendChild(pattern);
-  }
-  poolEl.appendChild(poolCardEl);
 
-  if (swapFromRect && lastMove && swapKey) {
-    const toRect = poolCardEl.getBoundingClientRect();
-    animateCardSwap(lastMove.cardId, swapFromRect, toRect);
-    lastSwapAnimationKey = swapKey;
-  }
-
-  previousHand = playerState?.hand ?? [];
-  previousPoolCard = latestState.poolCard;
-
+  const showHint = Boolean(pendingMove);
   if (cardChoiceHint) {
-    const showHint = Boolean(pendingMove);
-    cardChoiceHint.classList.toggle("hidden", !showHint);
+    const hideLegacy = document.body.dataset.cards === "canvas";
+    cardChoiceHint.classList.toggle("hidden", hideLegacy || !showHint);
+  }
+  if (cardHintOverlay) {
+    cardHintOverlay.classList.toggle("hidden", !showHint);
   }
 }
 
@@ -986,39 +901,6 @@ function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) 
   }
 
   return canvas;
-}
-
-function animateCardSwap(cardId: string, fromRect: DOMRect, toRect: DOMRect) {
-  const ghost = document.createElement("div");
-  ghost.className = "card card-fly";
-  ghost.style.left = `${fromRect.left}px`;
-  ghost.style.top = `${fromRect.top}px`;
-  ghost.style.width = `${fromRect.width}px`;
-  ghost.style.height = `${fromRect.height}px`;
-  ghost.style.opacity = "0.95";
-  const title = document.createElement("div");
-  title.className = "card-title";
-  const card = latestConfig?.cards.find((c) => c.id === cardId);
-  title.textContent = card?.name ?? cardId;
-  ghost.appendChild(title);
-  if (card) {
-    ghost.appendChild(drawCardPattern(card.moves));
-  }
-  document.body.appendChild(ghost);
-
-  const dx = toRect.left + (toRect.width - fromRect.width) / 2 - fromRect.left;
-  const dy = toRect.top + (toRect.height - fromRect.height) / 2 - fromRect.top;
-
-  requestAnimationFrame(() => {
-    ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.92)`;
-    ghost.style.opacity = "0.6";
-  });
-
-  const cleanup = () => {
-    ghost.remove();
-  };
-  ghost.addEventListener("transitionend", cleanup, { once: true });
-  window.setTimeout(cleanup, 600);
 }
 
 function cloneConfig<T>(value: T): T {
@@ -1185,8 +1067,6 @@ function applyCardChanges() {
     startChoiceResolved = true;
     startLocalMatch();
     playerLabel.textContent = localName || "You";
-    previousHand = [];
-    previousPoolCard = undefined;
     closeCustomize();
   } catch (error) {
     statusEl.textContent = "Invalid card configuration.";
@@ -1278,8 +1158,6 @@ function startWithDeck(deck: string[]) {
     startChoiceResolved = true;
     startLocalMatch();
     playerLabel.textContent = localName || "You";
-    previousHand = [];
-    previousPoolCard = undefined;
     hideVictory();
     draftOverlay.classList.add("hidden");
     startOverlay.classList.add("hidden");

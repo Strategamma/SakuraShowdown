@@ -5,11 +5,14 @@ import type { GameConfig, GameState, LegalMove } from "@game/rules";
 export type RendererSelection = {
   selectedPieceId?: string;
   selectedCardId?: string;
+  pendingCardIds?: string[];
+  viewerId?: string;
 };
 
 export type RendererCallbacks = {
   onCellTap?: (x: number, y: number) => void;
   onPieceTap?: (pieceId: string) => void;
+  onCardTap?: (cardId: string, ownerId?: string, role?: "player" | "opponent" | "pool") => void;
 };
 
 type PieceVisual = {
@@ -26,6 +29,41 @@ type PieceVisual = {
   moveStyle?: MoveStyle;
   moveStartTime?: number;
   moveDuration?: number;
+};
+
+type CardVisual = {
+  mesh: THREE.Mesh;
+  cardId: string;
+  ownerId?: string;
+  role: "player" | "opponent" | "pool";
+  selected: boolean;
+  choice: boolean;
+  dimmed: boolean;
+  inverted: boolean;
+  size: { w: number; h: number };
+  start: THREE.Vector3;
+  target: THREE.Vector3;
+  startTime: number;
+  duration: number;
+};
+
+type CardFly = {
+  mesh: THREE.Mesh;
+  start: THREE.Vector3;
+  target: THREE.Vector3;
+  startTime: number;
+  duration: number;
+  arc: number;
+};
+
+type CardLayout = {
+  cardWidth: number;
+  cardHeight: number;
+  gap: number;
+  playerSlots: THREE.Vector3[];
+  opponentSlots: THREE.Vector3[];
+  poolSlot: THREE.Vector3;
+  rowOffset: number;
 };
 
 type ModelEntry = {
@@ -50,6 +88,7 @@ export class GameRenderer {
   private templeGroup: THREE.Group;
   private pieceGroup: THREE.Group;
   private highlightGroup: THREE.Group;
+  private cardGroup: THREE.Group;
   private raycaster = new THREE.Raycaster();
   private pointer = new THREE.Vector2();
   private config?: GameConfig;
@@ -62,6 +101,11 @@ export class GameRenderer {
   private pieces = new Map<string, PieceVisual>();
   private cells: THREE.Mesh[] = [];
   private highlights: Array<{ fill: THREE.Mesh; border: THREE.LineSegments }> = [];
+  private cards = new Map<string, CardVisual>();
+  private cardFly: CardFly[] = [];
+  private lastCardSwapKey?: string;
+  private cardLayout?: CardLayout;
+  private cardTextureCache = new Map<string, THREE.CanvasTexture>();
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
   private loader = new GLTFLoader();
@@ -95,6 +139,7 @@ export class GameRenderer {
   private flipStart = 0;
   private flipDuration = 600;
   private viewMode: "3d" | "2d" = "3d";
+  private cardSize = { width: 1.8, height: 2.2 };
   private dragActive = false;
   private dragStart = { x: 0, y: 0 };
   private dragLast = { x: 0, y: 0 };
@@ -131,7 +176,15 @@ export class GameRenderer {
     this.pieceGroup = new THREE.Group();
     this.highlightGroup = new THREE.Group();
     this.highlightGroup.renderOrder = 3;
-    this.scene.add(this.boardGroup, this.templeGroup, this.highlightGroup, this.pieceGroup);
+    this.cardGroup = new THREE.Group();
+    this.cardGroup.renderOrder = 4;
+    this.scene.add(
+      this.boardGroup,
+      this.templeGroup,
+      this.highlightGroup,
+      this.pieceGroup,
+      this.cardGroup
+    );
 
     this.setupLights();
 
@@ -150,6 +203,10 @@ export class GameRenderer {
     this.buildBoard();
     this.buildTempleMarkers();
     this.buildHighlights();
+    this.cardGroup.clear();
+    this.cards.clear();
+    this.cardFly = [];
+    this.cardTextureCache.clear();
     this.fitCamera();
     void this.loadModels();
   }
@@ -162,6 +219,7 @@ export class GameRenderer {
 
     this.updateHighlights(legalMoves);
     this.updatePieces(state, selection);
+    this.updateCards(state, selection);
   }
 
   setBoardFlip(flipped: boolean) {
@@ -462,6 +520,326 @@ export class GameRenderer {
 
       visual.group.visible = piece.alive;
     }
+  }
+
+  private updateCards(state: GameState, selection: RendererSelection) {
+    if (!this.config) return;
+
+    const viewerId = selection.viewerId ?? this.config.players[0]?.id;
+    const viewer = state.players.find((p) => p.id === viewerId) ?? state.players[0];
+    const opponent = state.players.find((p) => p.id !== viewer?.id);
+    const layout = this.computeCardLayout();
+    this.cardLayout = layout;
+
+    const pendingIds = new Set(selection.pendingCardIds ?? []);
+    const selectedCardId = selection.selectedCardId;
+
+    const desired: Array<{
+      key: string;
+      cardId: string;
+      ownerId?: string;
+      role: "player" | "opponent" | "pool";
+      position: THREE.Vector3;
+      inverted: boolean;
+      size: { w: number; h: number };
+    }> = [];
+
+    if (viewer) {
+      viewer.hand.forEach((cardId, index) => {
+        const slot = layout.playerSlots[index] ?? layout.playerSlots[layout.playerSlots.length - 1];
+        desired.push({
+          key: this.cardKey("player", viewer.id, cardId),
+          cardId,
+          ownerId: viewer.id,
+          role: "player",
+          position: slot.clone(),
+          inverted: false,
+          size: { w: layout.cardWidth, h: layout.cardHeight }
+        });
+      });
+    }
+
+    if (opponent) {
+      opponent.hand.forEach((cardId, index) => {
+        const slot = layout.opponentSlots[index] ?? layout.opponentSlots[layout.opponentSlots.length - 1];
+        desired.push({
+          key: this.cardKey("opponent", opponent.id, cardId),
+          cardId,
+          ownerId: opponent.id,
+          role: "opponent",
+          position: slot.clone(),
+          inverted: true,
+          size: { w: layout.cardWidth, h: layout.cardHeight }
+        });
+      });
+    }
+
+    if (state.poolCard) {
+      desired.push({
+        key: this.cardKey("pool", undefined, state.poolCard),
+        cardId: state.poolCard,
+        ownerId: undefined,
+        role: "pool",
+        position: layout.poolSlot.clone(),
+        inverted: false,
+        size: { w: layout.cardWidth * 0.9, h: layout.cardHeight * 0.9 }
+      });
+    }
+
+    const previous = new Map(this.cards);
+    const next = new Map<string, CardVisual>();
+
+    for (const entry of desired) {
+      const card = this.config.cards.find((c) => c.id === entry.cardId);
+      if (!card) continue;
+
+      let visual = previous.get(entry.key);
+      if (!visual) {
+        const mesh = this.createCardMesh(card, entry.inverted);
+        mesh.userData = {
+          type: "card",
+          cardId: entry.cardId,
+          ownerId: entry.ownerId,
+          role: entry.role
+        };
+        visual = {
+          mesh,
+          cardId: entry.cardId,
+          ownerId: entry.ownerId,
+          role: entry.role,
+          selected: false,
+          choice: false,
+          dimmed: false,
+          inverted: entry.inverted,
+          size: entry.size,
+          start: new THREE.Vector3(),
+          target: entry.position.clone(),
+          startTime: 0,
+          duration: 0
+        };
+        mesh.position.copy(entry.position);
+        mesh.scale.set(entry.size.w, entry.size.h, 1);
+        this.cardGroup.add(mesh);
+      }
+
+      visual.cardId = entry.cardId;
+      visual.ownerId = entry.ownerId;
+      visual.role = entry.role;
+      visual.size = entry.size;
+      visual.target.copy(entry.position);
+      if (!visual.start.equals(visual.target)) {
+        visual.start.copy(visual.mesh.position);
+        visual.startTime = performance.now();
+        visual.duration = 220;
+      }
+
+      if (visual.inverted !== entry.inverted) {
+        const material = visual.mesh.material as THREE.MeshStandardMaterial;
+        material.map = this.getCardTexture(card, entry.inverted);
+        material.needsUpdate = true;
+        visual.inverted = entry.inverted;
+      }
+
+      const isSelectable = entry.role === "player";
+      visual.selected = isSelectable && selectedCardId === entry.cardId;
+      visual.choice = isSelectable && pendingIds.has(entry.cardId);
+      visual.dimmed = isSelectable && pendingIds.size > 0 && !visual.choice;
+
+      const material = visual.mesh.material as THREE.MeshStandardMaterial;
+      material.opacity = visual.dimmed ? 0.4 : 1;
+      material.emissive.setHex(visual.selected ? 0xf4a261 : visual.choice ? 0xf7c4d4 : 0x000000);
+      material.emissiveIntensity = visual.selected ? 0.45 : visual.choice ? 0.3 : 0;
+
+      visual.mesh.userData = {
+        type: "card",
+        cardId: entry.cardId,
+        ownerId: entry.ownerId,
+        role: entry.role
+      };
+
+      next.set(entry.key, visual);
+    }
+
+    for (const [key, visual] of previous.entries()) {
+      if (!next.has(key)) {
+        this.cardGroup.remove(visual.mesh);
+      }
+    }
+
+    this.cards = next;
+
+    const lastMove = state.lastMove;
+    const swapKey = lastMove ? `${state.turn}:${lastMove.playerId}:${lastMove.cardId}` : undefined;
+    if (lastMove && swapKey !== this.lastCardSwapKey) {
+      const role = lastMove.playerId === viewer?.id ? "player" : "opponent";
+      const fromKey = this.cardKey(role, lastMove.playerId, lastMove.cardId);
+      const fromVisual = previous.get(fromKey);
+      const poolKey = this.cardKey("pool", undefined, state.poolCard);
+      const toVisual = this.cards.get(poolKey);
+      if (fromVisual && toVisual) {
+        const inverted = role === "opponent";
+        this.spawnCardFly(fromVisual.mesh.position, toVisual.mesh.position, lastMove.cardId, inverted);
+      }
+      this.lastCardSwapKey = swapKey;
+    }
+  }
+
+  private computeCardLayout(): CardLayout {
+    const boardW = this.boardSize.width * this.cellSize;
+    const boardD = this.boardSize.height * this.cellSize;
+    const ratio = this.cardSize.height / this.cardSize.width;
+    const gap = Math.max(this.cellSize * 0.3, 0.22);
+    const maxCardW = boardW * 0.46;
+    const cardWidth = Math.min(this.cardSize.width, maxCardW);
+    const cardHeight = cardWidth * ratio;
+    const rowOffset = boardD / 2 + cardHeight / 2 + this.cellSize * 0.4;
+    const edgeOffset = boardW / 2 - cardWidth / 2 - this.cellSize * 0.2;
+    const xOffset = Math.max(cardWidth / 2 + gap / 2, edgeOffset);
+    const cardY = 0.18;
+    return {
+      cardWidth,
+      cardHeight,
+      gap,
+      rowOffset,
+      playerSlots: [
+        new THREE.Vector3(-xOffset, cardY, rowOffset),
+        new THREE.Vector3(xOffset, cardY, rowOffset)
+      ],
+      opponentSlots: [
+        new THREE.Vector3(-xOffset, cardY, -rowOffset),
+        new THREE.Vector3(xOffset, cardY, -rowOffset)
+      ],
+      poolSlot: new THREE.Vector3(0, cardY + 0.08, 0)
+    };
+  }
+
+  private cardKey(role: "player" | "opponent" | "pool", ownerId: string | undefined, cardId: string) {
+    return `${role}:${ownerId ?? "pool"}:${cardId}`;
+  }
+
+  private createCardMesh(card: { id: string; name: string; moves: { x: number; y: number }[] }, inverted: boolean) {
+    const geom = new THREE.PlaneGeometry(1, 1);
+    const texture = this.getCardTexture(card, inverted);
+    const material = new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      roughness: 0.6,
+      metalness: 0.12
+    });
+    const mesh = new THREE.Mesh(geom, material);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    return mesh;
+  }
+
+  private spawnCardFly(from: THREE.Vector3, to: THREE.Vector3, cardId: string, inverted: boolean) {
+    if (!this.config) return;
+    const card = this.config.cards.find((c) => c.id === cardId);
+    if (!card) return;
+    const mesh = this.createCardMesh(card, inverted);
+    mesh.position.copy(from);
+    mesh.scale.set(this.cardLayout?.cardWidth ?? this.cardSize.width, this.cardLayout?.cardHeight ?? this.cardSize.height, 1);
+    this.cardGroup.add(mesh);
+    this.cardFly.push({
+      mesh,
+      start: from.clone(),
+      target: to.clone(),
+      startTime: performance.now(),
+      duration: 520,
+      arc: 0.28
+    });
+  }
+
+  private getCardTexture(card: { id: string; name: string; moves: { x: number; y: number }[] }, inverted: boolean) {
+    const key = `${card.id}:${inverted ? "inv" : "norm"}`;
+    const cached = this.cardTextureCache.get(key);
+    if (cached) return cached;
+    const texture = this.drawCardTexture(card, inverted);
+    this.cardTextureCache.set(key, texture);
+    return texture;
+  }
+
+  private drawCardTexture(card: { id: string; name: string; moves: { x: number; y: number }[] }, inverted: boolean) {
+    const width = 360;
+    const height = 480;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const canvas = document.createElement("canvas");
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return new THREE.CanvasTexture(canvas);
+    ctx.scale(dpr, dpr);
+
+    const radius = 26;
+    ctx.fillStyle = "#f2ece4";
+    ctx.strokeStyle = "rgba(90, 70, 80, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(width - radius, 0);
+    ctx.quadraticCurveTo(width, 0, width, radius);
+    ctx.lineTo(width, height - radius);
+    ctx.quadraticCurveTo(width, height, width - radius, height);
+    ctx.lineTo(radius, height);
+    ctx.quadraticCurveTo(0, height, 0, height - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(62, 44, 52, 0.88)";
+    ctx.font = "600 26px \"Cinzel\", \"Georgia\", serif";
+    ctx.textAlign = "center";
+    ctx.fillText(card.name.toUpperCase(), width / 2, 44);
+
+    const grid = 5;
+    const gridSize = Math.min(width - 70, height - 130);
+    const gridLeft = (width - gridSize) / 2;
+    const gridTop = 70;
+    const cell = gridSize / grid;
+
+    ctx.strokeStyle = "rgba(70, 60, 75, 0.45)";
+    ctx.lineWidth = 1.3;
+    for (let i = 0; i <= grid; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(gridLeft, gridTop + i * cell);
+      ctx.lineTo(gridLeft + gridSize, gridTop + i * cell);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(gridLeft + i * cell, gridTop);
+      ctx.lineTo(gridLeft + i * cell, gridTop + gridSize);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#f3b6c6";
+    ctx.beginPath();
+    ctx.arc(gridLeft + gridSize / 2, gridTop + gridSize / 2, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    const center = { x: 2, y: 2 };
+    const xMul = inverted ? -1 : 1;
+    const yMul = inverted ? -1 : 1;
+    ctx.fillStyle = "#9a5d42";
+    ctx.strokeStyle = "rgba(65, 40, 30, 0.65)";
+    for (const move of card.moves) {
+      const mx = move.x * xMul;
+      const my = move.y * yMul;
+      const gx = center.x + mx;
+      const gy = center.y - my;
+      if (gx < 0 || gx >= grid || gy < 0 || gy >= grid) continue;
+      const inset = cell * 0.12;
+      const sizeCell = cell * 0.76;
+      const px = gridLeft + gx * cell + inset;
+      const py = gridTop + gy * cell + inset;
+      ctx.fillRect(px, py, sizeCell, sizeCell);
+      ctx.strokeRect(px, py, sizeCell, sizeCell);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
   }
 
   private getOrCreatePiece(pieceId: string, isPrimary: boolean): PieceVisual {
@@ -890,12 +1268,23 @@ export class GameRenderer {
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hits = this.raycaster.intersectObjects([this.pieceGroup, this.boardGroup], true);
+    const hits = this.raycaster.intersectObjects(
+      [this.cardGroup, this.pieceGroup, this.boardGroup],
+      true
+    );
 
     for (const hit of hits) {
       const data = this.findUserData(hit.object) as
         | { type?: string; pieceId?: string; x?: number; y?: number }
         | undefined;
+      if (data?.type === "card" && data.cardId) {
+        this.callbacks.onCardTap?.(
+          data.cardId as string,
+          data.ownerId as string | undefined,
+          data.role as "player" | "opponent" | "pool" | undefined
+        );
+        if (data.role !== "pool") return;
+      }
       if (data?.type === "piece" && data.pieceId) {
         this.callbacks.onPieceTap?.(data.pieceId as string);
         return;
@@ -1042,13 +1431,59 @@ export class GameRenderer {
       }
     }
 
+    for (const card of this.cards.values()) {
+      const elapsed = now - card.startTime;
+      const t = card.duration === 0 ? 1 : Math.min(elapsed / card.duration, 1);
+      const pos = new THREE.Vector3();
+      if (card.duration > 0) {
+        pos.lerpVectors(card.start, card.target, this.easeOutCubic(t));
+      } else {
+        pos.copy(card.target);
+      }
+      card.mesh.position.copy(pos);
+
+      let scale = 1;
+      if (card.selected) {
+        scale = 1.06 + Math.sin(time * 4) * 0.02;
+      } else if (card.choice) {
+        scale = 1.04 + Math.sin(time * 5) * 0.02;
+      }
+      card.mesh.scale.set(card.size.w * scale, card.size.h * scale, 1);
+    }
+
+    if (this.cardFly.length > 0) {
+      const remaining: CardFly[] = [];
+      for (const fly of this.cardFly) {
+        const t = Math.min(Math.max((now - fly.startTime) / fly.duration, 0), 1);
+        const eased = this.easeInOutCubic(t);
+        const pos = new THREE.Vector3().lerpVectors(fly.start, fly.target, eased);
+        pos.y += fly.arc * Math.sin(Math.PI * eased);
+        fly.mesh.position.copy(pos);
+        fly.mesh.scale.set(
+          (this.cardLayout?.cardWidth ?? this.cardSize.width) * 0.92,
+          (this.cardLayout?.cardHeight ?? this.cardSize.height) * 0.92,
+          1
+        );
+        if (t < 1) {
+          remaining.push(fly);
+        } else {
+          this.cardGroup.remove(fly.mesh);
+        }
+      }
+      this.cardFly = remaining;
+    }
+
     this.camera.lookAt(0, 0, 0);
   }
 
   private fitCamera() {
     const width = this.boardSize.width * this.cellSize;
     const depth = this.boardSize.height * this.cellSize;
-    const boardRadius = Math.max(width, depth) * 0.6;
+    const layout = this.computeCardLayout();
+    const cardXExtent = Math.abs(layout.playerSlots[1]?.x ?? 0) + layout.cardWidth / 2;
+    const extentX = Math.max(width / 2, cardXExtent);
+    const extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
+    const boardRadius = Math.max(extentX, extentZ);
     const fov = (this.camera.fov * Math.PI) / 180;
     const distance = boardRadius / Math.tan(fov / 2) + 2.5;
 
