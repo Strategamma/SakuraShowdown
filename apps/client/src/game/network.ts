@@ -5,10 +5,13 @@ export type OnlineHandlers = {
   onState: (state: GameState) => void;
   onConfig: (config: GameConfig) => void;
   onRoom?: (roomId: string) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string }) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
+  onRematchStart?: () => void;
+  onRematchCancel?: () => void;
 };
 
 export class OnlineSession {
@@ -35,9 +38,25 @@ export class OnlineSession {
       this.room.onMessage("player", (payload: { playerId?: string }) =>
         this.handlers.onPlayer(payload.playerId)
       );
+      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+        this.handlers.onRoomInfo?.(payload)
+      );
       this.room.onMessage("error", (payload: { message: string }) =>
         this.handlers.onError(payload.message)
       );
+      this.room.onMessage("rematch_start", () => {
+        this.handlers.onRematchStart?.();
+      });
+      this.room.onMessage("rematch_cancelled", () => {
+        this.handlers.onRematchCancel?.();
+      });
+      this.room.onMessage("rematch_pending", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} wants a rematch.`);
+        } else {
+          this.handlers.onNotice?.("Opponent wants a rematch.");
+        }
+      });
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
           this.handlers.onNotice?.(`${payload.name} joined the room.`);
@@ -66,9 +85,25 @@ export class OnlineSession {
       this.room.onMessage("player", (payload: { playerId?: string }) =>
         this.handlers.onPlayer(payload.playerId)
       );
+      this.room.onMessage("room_info", (payload: { roomId: string; code?: string }) =>
+        this.handlers.onRoomInfo?.(payload)
+      );
       this.room.onMessage("error", (payload: { message: string }) =>
         this.handlers.onError(payload.message)
       );
+      this.room.onMessage("rematch_start", () => {
+        this.handlers.onRematchStart?.();
+      });
+      this.room.onMessage("rematch_cancelled", () => {
+        this.handlers.onRematchCancel?.();
+      });
+      this.room.onMessage("rematch_pending", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} wants a rematch.`);
+        } else {
+          this.handlers.onNotice?.("Opponent wants a rematch.");
+        }
+      });
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
           this.handlers.onNotice?.(`${payload.name} joined the room.`);
@@ -100,5 +135,13 @@ export class OnlineSession {
   disconnect() {
     this.room?.leave();
     this.room = undefined;
+  }
+
+  requestRematch() {
+    this.room?.send("rematch_request");
+  }
+
+  cancelRematch() {
+    this.room?.send("rematch_cancel");
   }
 }

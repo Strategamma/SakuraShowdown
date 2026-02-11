@@ -67,6 +67,9 @@ const victorySubtitle = document.getElementById("victory-subtitle") as HTMLEleme
 const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
 const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
 const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
+const victoryRematchBtn = document.getElementById("victory-rematch") as HTMLButtonElement | null;
+const victoryLobbyBtn = document.getElementById("victory-lobby") as HTMLButtonElement | null;
+const victoryWaitEl = document.getElementById("victory-wait") as HTMLElement | null;
 const startOverlay = document.getElementById("start-overlay") as HTMLElement;
 const startRandomBtn = document.getElementById("start-random") as HTMLButtonElement;
 const startChooseBtn = document.getElementById("start-choose") as HTMLButtonElement;
@@ -102,6 +105,7 @@ let previousPoolCard: string | undefined;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let currentRoomId: string | undefined;
+let currentRoomCode: string | undefined;
 let baseConfig: GameConfig | undefined;
 let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
@@ -121,6 +125,7 @@ let lobbyTimer: number | undefined;
 let returnToLandingOnCustomizeClose = false;
 let lastSwapAnimationKey: string | undefined;
 let noticeTimeout: number | undefined;
+let rematchPending = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -140,6 +145,13 @@ const controller = new GameController({
     currentRoomId = roomId;
     statusEl.textContent = `Online match ready · Room ${roomId}`;
   },
+  onRoomInfo: (info) => {
+    currentRoomId = info.roomId;
+    currentRoomCode = info.code;
+    if (info.code) {
+      statusEl.textContent = `Online match ready · ${info.code}`;
+    }
+  },
   onPlayer: (playerId) => {
     if (!playerId) {
       playerLabel.textContent = "Spectator";
@@ -150,6 +162,21 @@ const controller = new GameController({
   },
   onNotice: (message) => {
     showNotice(message);
+  },
+  onRematchStart: () => {
+    setRematchPending(false);
+    hideVictory();
+    lastWinnerId = undefined;
+    previousHand = [];
+    previousPoolCard = undefined;
+    statusEl.textContent = "Rematch started.";
+  },
+  onRematchCancel: () => {
+    setRematchPending(false);
+    controller.disconnectOnline();
+    setReconnectToken("");
+    statusEl.textContent = "Opponent left. Back to lobby.";
+    showLanding();
   },
   onReconnectToken: (token) => {
     if (token) setReconnectToken(token);
@@ -379,7 +406,8 @@ async function refreshLobby() {
       meta.className = "room-meta";
       const id = document.createElement("div");
       id.className = "room-id";
-      id.textContent = `Room ${room.roomId.slice(0, 6)}`;
+      const code = (room as { code?: string }).code;
+      id.textContent = code ? code.toUpperCase() : `Room ${room.roomId.slice(0, 6)}`;
       const count = document.createElement("div");
       count.className = "room-count";
       const players = room.players ?? room.clients;
@@ -979,12 +1007,21 @@ function exportConfig() {
 function showVictory(winnerName: string) {
   victoryTitle.textContent = `${winnerName} Wins!`;
   victorySubtitle.textContent = "A masterful duel.";
+  rematchPending = false;
+  if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
+  if (victoryRematchBtn) victoryRematchBtn.disabled = false;
   victoryOverlay.classList.remove("hidden");
   triggerConfetti();
 }
 
 function hideVictory() {
   victoryOverlay.classList.add("hidden");
+}
+
+function setRematchPending(pending: boolean) {
+  rematchPending = pending;
+  if (victoryWaitEl) victoryWaitEl.classList.toggle("hidden", !pending);
+  if (victoryRematchBtn) victoryRematchBtn.disabled = pending;
 }
 
 function triggerConfetti() {
@@ -1168,6 +1205,9 @@ async function bootstrap() {
 
 
 newGameBtn.addEventListener("click", () => {
+  if (currentMode === "online") {
+    controller.cancelRematch();
+  }
   controller.disconnectOnline();
   setReconnectToken("");
   statusEl.textContent = "Choose how you want to play.";
@@ -1310,6 +1350,18 @@ cardsExportBtn.addEventListener("click", exportConfig);
 victoryCloseBtn.addEventListener("click", hideVictory);
 victoryRandomBtn.addEventListener("click", startRandomFive);
 victoryChooseBtn.addEventListener("click", openDraft);
+victoryRematchBtn?.addEventListener("click", () => {
+  if (currentMode !== "online") return;
+  setRematchPending(true);
+  controller.requestRematch();
+});
+victoryLobbyBtn?.addEventListener("click", () => {
+  if (currentMode !== "online") return;
+  controller.cancelRematch();
+  controller.disconnectOnline();
+  setReconnectToken("");
+  showLanding();
+});
 victoryOverlay.addEventListener("click", (event) => {
   if (event.target === victoryOverlay) hideVictory();
 });

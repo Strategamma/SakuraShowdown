@@ -10,8 +10,11 @@ export type ControllerCallbacks = {
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string }) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
+  onRematchStart?: () => void;
+  onRematchCancel?: () => void;
 };
 
 export class GameController {
@@ -89,12 +92,17 @@ export class GameController {
       onRoom: (roomId) => {
         this.callbacks.onRoom?.(roomId);
       },
+      onRoomInfo: (info) => {
+        this.callbacks.onRoomInfo?.(info);
+      },
       onPlayer: (playerId) => {
         this.playerId = playerId;
         this.callbacks.onPlayer(playerId);
       },
       onError: (message) => this.callbacks.onStatus(message),
       onNotice: (message) => this.callbacks.onNotice?.(message),
+      onRematchStart: () => this.callbacks.onRematchStart?.(),
+      onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
@@ -120,12 +128,17 @@ export class GameController {
       onRoom: (roomId) => {
         this.callbacks.onRoom?.(roomId);
       },
+      onRoomInfo: (info) => {
+        this.callbacks.onRoomInfo?.(info);
+      },
       onPlayer: (playerId) => {
         this.playerId = playerId;
         this.callbacks.onPlayer(playerId);
       },
       onError: (message) => this.callbacks.onStatus(message),
       onNotice: (message) => this.callbacks.onNotice?.(message),
+      onRematchStart: () => this.callbacks.onRematchStart?.(),
+      onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
     });
 
@@ -136,6 +149,14 @@ export class GameController {
   disconnectOnline() {
     this.online?.disconnect();
     this.online = undefined;
+  }
+
+  requestRematch() {
+    this.online?.requestRematch();
+  }
+
+  cancelRematch() {
+    this.online?.cancelRematch();
   }
 
   selectCard(cardId?: string) {

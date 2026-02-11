@@ -15,6 +15,8 @@ class GameRoom extends Room {
   reservedPlayerIds = new Set();
   maxPlayers = 2;
   seatsLocked = false;
+  rematchVotes = new Set();
+  roomCode = "";
 
   updateMetadata() {
     const active = new Set();
@@ -27,11 +29,13 @@ class GameRoom extends Room {
     this.setMetadata({
       players: total.size,
       maxPlayers: this.maxPlayers,
-      open: !this.seatsLocked && total.size < this.maxPlayers
+      open: !this.seatsLocked && total.size < this.maxPlayers,
+      code: this.roomCode
     });
   }
 
   onCreate() {
+    this.roomCode = generateRoomCode();
     this.config = loadConfig();
     this.stateData = createInitialState(this.config);
     this.maxPlayers = this.config.players.length;
@@ -74,6 +78,27 @@ class GameRoom extends Room {
       player.name = name;
       this.broadcast("config", this.config);
     });
+
+    this.onMessage("rematch_request", (client) => {
+      if (!this.stateData.winnerId) return;
+      const playerId = this.playerByClient.get(client.sessionId);
+      if (!playerId) return;
+      this.rematchVotes.add(playerId);
+      const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
+      this.broadcast("rematch_pending", { playerId, name }, { except: client });
+      if (this.rematchVotes.size >= this.maxPlayers) {
+        this.rematchVotes.clear();
+        this.stateData = createInitialState(this.config, Date.now());
+        this.broadcast("state", this.stateData);
+        this.broadcast("rematch_start", {});
+      }
+    });
+
+    this.onMessage("rematch_cancel", (client) => {
+      if (!this.rematchVotes.size) return;
+      this.rematchVotes.clear();
+      this.broadcast("rematch_cancelled", { reason: "cancelled" }, { except: client });
+    });
   }
 
   onJoin(client, options = {}) {
@@ -105,6 +130,7 @@ class GameRoom extends Room {
     }
 
     client.send("player", { playerId: assigned, spectator: !assigned });
+    client.send("room_info", { roomId: this.roomId, code: this.roomCode });
     client.send("config", this.config);
     client.send("state", this.stateData);
     this.updateMetadata();
@@ -124,6 +150,10 @@ class GameRoom extends Room {
     if (!playerId) {
       this.updateMetadata();
       return;
+    }
+    if (this.stateData.winnerId && this.rematchVotes.size) {
+      this.rematchVotes.clear();
+      this.broadcast("rematch_cancelled", { reason: "left" }, { except: client });
     }
     if (this.seatsLocked) {
       this.reservedPlayerIds.add(playerId);
@@ -158,6 +188,114 @@ class GameRoom extends Room {
   }
 }
 
+const ROOM_WORDS = [
+  "sakura",
+  "garden",
+  "temple",
+  "crimson",
+  "embered",
+  "shadow",
+  "blossom",
+  "misty",
+  "harmony",
+  "lantern",
+  "cascade",
+  "dawnlight",
+  "silkroad",
+  "rainbow",
+  "meadow",
+  "starlit",
+  "citadel",
+  "orchard",
+  "harvest",
+  "thunder",
+  "crescent",
+  "rubyred",
+  "topaz",
+  "cobalt",
+  "ivory",
+  "onyx",
+  "zephyr",
+  "voyage",
+  "harbor",
+  "summit",
+  "prairie",
+  "monarch",
+  "valiant",
+  "serene",
+  "silent",
+  "glimmer",
+  "embers",
+  "mistveil",
+  "drifted",
+  "feather",
+  "cinder",
+  "jasmine",
+  "maple",
+  "redwood",
+  "everest",
+  "morning",
+  "twilight",
+  "marigold",
+  "onyxstone",
+  "luminous",
+  "saffron",
+  "cascade",
+  "tempest",
+  "aurora",
+  "solstice",
+  "alloyed",
+  "mezzina",
+  "seaborn",
+  "verdant",
+  "mythic",
+  "citrine",
+  "orchid",
+  "gravity",
+  "sapphire",
+  "tundra",
+  "embered",
+  "glacier",
+  "sunrise",
+  "seaglass",
+  "constel",
+  "opaline",
+  "silvers",
+  "midnight",
+  "horizon",
+  "seraph",
+  "tangram",
+  "mariner",
+  "isotope",
+  "crystal",
+  "citron",
+  "embered",
+  "harvest",
+  "snowfall",
+  "tangelo",
+  "bonfire",
+  "wisteria",
+  "zenith",
+  "sandbar",
+  "sundial",
+  "sequoia",
+  "vintage",
+  "lullaby",
+  "mariner",
+  "opaline",
+  "silvana",
+  "veritas",
+  "whisper",
+  "windmill",
+  "moonrise"
+].filter((word) => word.length >= 6);
+
+function generateRoomCode() {
+  if (!ROOM_WORDS.length) return `room-${Math.random().toString(36).slice(2, 8)}`;
+  const index = Math.floor(Math.random() * ROOM_WORDS.length);
+  return ROOM_WORDS[index];
+}
+
 const app = express();
 app.use(cors());
 
@@ -186,7 +324,8 @@ app.get("/lobby", async (_req, res) => {
         maxPlayers: room.metadata?.maxPlayers ?? 2,
         open:
           room.metadata?.open ??
-          (room.metadata?.players ?? 0) < (room.metadata?.maxPlayers ?? 2)
+          (room.metadata?.players ?? 0) < (room.metadata?.maxPlayers ?? 2),
+        code: room.metadata?.code
       }))
     });
   } catch {
