@@ -300,6 +300,8 @@ class GameRoom extends Room {
         this.reservedPlayerIds.delete(playerId);
         this.updateMetadata();
       } catch {
+        const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
+        this.broadcast("player_left", { playerId, name });
         this.updateMetadata();
       }
       return;
@@ -307,6 +309,8 @@ class GameRoom extends Room {
 
     if (consented) {
       this.playerByClient.delete(client.sessionId);
+      const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
+      this.broadcast("player_left", { playerId, name });
       this.updateMetadata();
       return;
     }
@@ -320,6 +324,8 @@ class GameRoom extends Room {
     } catch {
       this.reservedPlayerIds.delete(playerId);
       this.playerByClient.delete(client.sessionId);
+      const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
+      this.broadcast("player_left", { playerId, name });
       this.updateMetadata();
     }
   }

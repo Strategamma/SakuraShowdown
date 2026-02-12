@@ -92,7 +92,6 @@ const landingOverlay = document.getElementById("landing-overlay") as HTMLElement
 const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
-const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
 const landingActionsOnline = document.getElementById("landing-actions-online") as HTMLElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
@@ -207,8 +206,32 @@ let lastReadyAll = false;
 
 const controller = new GameController({
   onState: (state) => {
+    const previous = latestState;
     latestState = state;
     latestMoves = controller.getLegalMoves();
+    if (previous) {
+      const prevPieces = new Map(previous.pieces.map((piece) => [piece.id, piece]));
+      const nextPieces = new Map(state.pieces.map((piece) => [piece.id, piece]));
+      let moved = false;
+      let captured = false;
+      for (const [id, next] of nextPieces) {
+        const prev = prevPieces.get(id);
+        if (!prev) continue;
+        if (prev.alive && !next.alive) {
+          captured = true;
+        } else if (prev.alive && next.alive && (prev.x !== next.x || prev.y !== next.y)) {
+          moved = true;
+        }
+      }
+      if (captured) {
+        sound.play("capture");
+      } else if (moved) {
+        sound.play("move");
+      }
+      if (!previous.winnerId && state.winnerId) {
+        sound.play("victory");
+      }
+    }
     renderAll();
   },
   onConfig: (config) => {
@@ -254,6 +277,12 @@ const controller = new GameController({
   },
   onNotice: (message) => {
     showNotice(message);
+    const lower = message.toLowerCase();
+    if (lower.includes("joined")) {
+      sound.play("join");
+    } else if (lower.includes("left") || lower.includes("disconnected")) {
+      sound.play("disconnect");
+    }
   },
   onRematchStart: () => {
     setRematchPending(false);
@@ -538,11 +567,14 @@ function normalizeReconnectToken(token: string) {
   return token;
 }
 
+function getReconnectRoomId(token: string) {
+  if (!token) return undefined;
+  return token.split(":")[0];
+}
+
 function updateResumeButton() {
-  if (!landingResumeBtn) return;
-  landingResumeBtn.toggleAttribute("hidden", !reconnectToken);
   if (landingActionsOnline) {
-    landingActionsOnline.classList.toggle("hidden", !reconnectToken);
+    landingActionsOnline.classList.add("hidden");
   }
 }
 
@@ -728,7 +760,7 @@ function setLobbyBusy(busy: boolean) {
   setButtonDisabled(lobbyRefreshBtn, busy, tooltip);
   setButtonDisabled(lobbyCreateBtn, busy, tooltip);
   setButtonDisabled(landingTabOnline, busy, tooltip);
-  setButtonDisabled(landingResumeBtn, busy, tooltip);
+  if (landingActionsOnline) landingActionsOnline.classList.add("hidden");
   setButtonDisabled(privateJoinBtn, busy, tooltip);
   setButtonDisabled(privateCreateBtn, busy, tooltip);
   if (privateKeyInput) privateKeyInput.disabled = busy;
@@ -831,6 +863,7 @@ async function refreshLobby() {
       lobbyListEl.appendChild(empty);
       return;
     }
+    const reconnectRoomId = reconnectToken ? getReconnectRoomId(reconnectToken) : undefined;
     for (const room of rooms) {
       const row = document.createElement("div");
       row.className = "lobby-item";
@@ -863,14 +896,43 @@ async function refreshLobby() {
       join.className = "ghost-button";
       const open = room.open ?? players < maxPlayers;
       const canRejoin = Boolean(started);
+      const canResume = Boolean(
+        reconnectRoomId && reconnectRoomId === room.roomId && started && open
+      );
       join.textContent = open ? "Join" : canRejoin ? "Rejoin" : "Full";
       setButtonDisabled(
         join,
         !open && !canRejoin,
         open ? undefined : canRejoin ? "Rejoin with the same display name" : "Room is full"
       );
+      if (canResume) {
+        join.textContent = "Resume";
+        setButtonDisabled(join, false);
+      }
       join.addEventListener("click", async () => {
         if ((!open && !canRejoin) || lobbyBusy) return;
+        if (canResume && reconnectToken) {
+          setLobbyBusy(true);
+          join.textContent = "Resuming...";
+          setButtonDisabled(join, true, "Reconnecting…");
+          setMode("online");
+          const ok = await controller.reconnectOnline(
+            SERVER_URL,
+            normalizeReconnectToken(reconnectToken),
+            getOnlineName()
+          );
+          setLobbyBusy(false);
+          if (ok) {
+            setSpectatorMode(false);
+            hideLanding();
+            updateLobbyOverlay();
+            return;
+          }
+          statusEl.textContent = "Resume failed. Try joining again.";
+          setReconnectToken("");
+          refreshLobby();
+          return;
+        }
         setLobbyBusy(true);
         join.textContent = open ? "Joining..." : "Rejoining...";
         setButtonDisabled(join, true, "Connecting…");
@@ -1635,25 +1697,6 @@ landingCloseBtn.addEventListener("click", hideLanding);
 landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
-landingResumeBtn?.addEventListener("click", async () => {
-  if (!reconnectToken) return;
-  setMode("online");
-  setLobbyBusy(true);
-  const ok = await controller.reconnectOnline(
-    SERVER_URL,
-    normalizeReconnectToken(reconnectToken),
-    getOnlineName()
-  );
-  setLobbyBusy(false);
-  if (ok) {
-    setSpectatorMode(false);
-    hideLanding();
-    updateLobbyOverlay();
-  } else {
-    statusEl.textContent = "Resume failed. Start a new match.";
-    setReconnectToken("");
-  }
-});
 landingLocalBtn.addEventListener("click", () => {
   setMode("local");
   startChoiceResolved = false;

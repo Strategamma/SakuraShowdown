@@ -1843,7 +1843,8 @@ body[data-mode="local"] .online-only {
   justify-content: center;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 0 14px;
+  line-height: 1;
 }
 
 #lobby-refresh .button-label {

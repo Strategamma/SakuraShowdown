@@ -68,6 +68,11 @@ export class OnlineSession {
           this.handlers.onNotice?.(`${payload.name} joined the room.`);
         }
       });
+      this.room.onMessage("player_left", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} left the room.`);
+        }
+      });
       this.room.onMessage("spectator_joined", () => {
         this.handlers.onNotice?.("A spectator joined the room.");
       });
@@ -123,6 +128,11 @@ export class OnlineSession {
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
           this.handlers.onNotice?.(`${payload.name} joined the room.`);
+        }
+      });
+      this.room.onMessage("player_left", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} left the room.`);
         }
       });
       this.room.onMessage("spectator_joined", () => {
@@ -194,6 +204,11 @@ export class OnlineSession {
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
           this.handlers.onNotice?.(`${payload.name} joined the room.`);
+        }
+      });
+      this.room.onMessage("player_left", (payload: { name?: string }) => {
+        if (payload?.name) {
+          this.handlers.onNotice?.(`${payload.name} left the room.`);
         }
       });
       this.room.onMessage("spectator_joined", () => {

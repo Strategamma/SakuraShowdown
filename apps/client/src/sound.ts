@@ -1,4 +1,12 @@
-type SoundType = "turn" | "ready" | "notice";
+type SoundType =
+  | "turn"
+  | "ready"
+  | "notice"
+  | "move"
+  | "capture"
+  | "victory"
+  | "join"
+  | "disconnect";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
@@ -27,6 +35,27 @@ class SoundManager {
       case "turn":
         this.tone(660, now, 0.12, 0.12);
         this.tone(880, now + 0.12, 0.14, 0.12);
+        break;
+      case "move":
+        this.tone(520, now, 0.08, 0.09);
+        this.tone(640, now + 0.08, 0.1, 0.08);
+        break;
+      case "capture":
+        this.tone(320, now, 0.12, 0.12);
+        this.tone(220, now + 0.1, 0.16, 0.14);
+        break;
+      case "victory":
+        this.tone(440, now, 0.16, 0.12);
+        this.tone(660, now + 0.16, 0.16, 0.14);
+        this.tone(880, now + 0.32, 0.22, 0.16);
+        break;
+      case "join":
+        this.tone(740, now, 0.12, 0.1);
+        this.tone(940, now + 0.12, 0.12, 0.1);
+        break;
+      case "disconnect":
+        this.tone(300, now, 0.12, 0.12);
+        this.tone(200, now + 0.12, 0.16, 0.12);
         break;
       case "ready":
         this.tone(440, now, 0.14, 0.12);
