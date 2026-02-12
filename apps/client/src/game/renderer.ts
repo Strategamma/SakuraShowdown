@@ -313,18 +313,19 @@ export class GameRenderer {
     const blossomGeom = this.createBlossomGeometry(0.16, 5);
     const halfW = width / 2;
     const halfH = height / 2;
-    const inset = this.cellSize * 0.35;
-    const y = 0.125;
-    const blossomPositions: Array<[number, number, number]> = [
-      [-halfW + inset, y, -halfH + inset],
-      [halfW - inset, y, -halfH + inset],
-      [-halfW + inset, y, halfH - inset],
-      [halfW - inset, y, halfH - inset],
-      [0, y, -halfH + inset],
-      [0, y, halfH - inset],
-      [-halfW + inset, y, 0],
-      [halfW - inset, y, 0]
-    ];
+    const edgeOffset = this.cellSize * 0.65;
+    const y = 0.095;
+    const blossomPositions: Array<[number, number, number]> = [];
+    for (let i = 0; i < this.boardSize.width; i += 1) {
+      const x = -halfW + this.cellSize / 2 + i * this.cellSize;
+      blossomPositions.push([x, y, -halfH - edgeOffset]);
+      blossomPositions.push([x, y, halfH + edgeOffset]);
+    }
+    for (let j = 0; j < this.boardSize.height; j += 1) {
+      const z = -halfH + this.cellSize / 2 + j * this.cellSize;
+      blossomPositions.push([-halfW - edgeOffset, y, z]);
+      blossomPositions.push([halfW + edgeOffset, y, z]);
+    }
     blossomPositions.forEach(([x, y, z], index) => {
       const blossom = new THREE.Mesh(blossomGeom, blossomMat);
       blossom.position.set(x, y, z);

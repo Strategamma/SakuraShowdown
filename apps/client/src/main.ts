@@ -93,6 +93,7 @@ const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonEl
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingResumeBtn = document.getElementById("landing-resume") as HTMLButtonElement | null;
+const landingActionsOnline = document.getElementById("landing-actions-online") as HTMLElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
 const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
@@ -151,6 +152,8 @@ if (canvasContainer) {
   canvasNameBottom = document.createElement("div");
   canvasNameBottom.className = "canvas-nameplate bottom";
   canvasContainer.appendChild(canvasNameBottom);
+
+  canvasContainer.dataset.rotation = String(boardRotation);
 }
 
 let latestConfig: GameConfig | undefined;
@@ -193,6 +196,12 @@ let draftMode: "local" | "online" = "local";
 let draftConfig: GameConfig | undefined;
 let lastActivePlayerId: string | undefined;
 let lastReadyAll = false;
+let boardRotation =
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(pointer: coarse)").matches
+    ? 90
+    : 0;
 
 const controller = new GameController({
   onState: (state) => {
@@ -412,7 +421,14 @@ const renderer = new GameRenderer(canvasContainer, {
 renderer.setViewMode(viewMode);
 rotateBoardBtn?.addEventListener("click", () => {
   renderer.rotateBoardQuarter();
+  boardRotation = (boardRotation + 90) % 360;
+  updateBoardRotation();
 });
+
+function updateBoardRotation() {
+  if (!canvasContainer) return;
+  canvasContainer.dataset.rotation = String(boardRotation);
+}
 
 function renderAll() {
   if (!latestConfig || !latestState) return;
@@ -523,6 +539,9 @@ function normalizeReconnectToken(token: string) {
 function updateResumeButton() {
   if (!landingResumeBtn) return;
   landingResumeBtn.toggleAttribute("hidden", !reconnectToken);
+  if (landingActionsOnline) {
+    landingActionsOnline.classList.toggle("hidden", !reconnectToken);
+  }
 }
 
 function setReconnectToken(token?: string) {
