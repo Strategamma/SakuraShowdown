@@ -120,7 +120,6 @@ const landingPanelOnline = document.getElementById("landing-panel-online") as HT
 const landingPanelRules = document.getElementById("landing-panel-rules") as HTMLElement | null;
 const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
 const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
-const lobbyQuickBtn = document.getElementById("lobby-quick") as HTMLButtonElement;
 const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElement;
 const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
@@ -680,7 +679,6 @@ function applyOnlineDeck(deck: string[]) {
 function setLobbyBusy(busy: boolean) {
   lobbyBusy = busy;
   lobbyRefreshBtn.disabled = busy;
-  lobbyQuickBtn.disabled = busy;
   lobbyCreateBtn.disabled = busy;
   if (landingTabOnline) landingTabOnline.disabled = busy;
   if (landingResumeBtn) landingResumeBtn.disabled = busy;
@@ -690,12 +688,10 @@ function setLobbyBusy(busy: boolean) {
   if (sandboxToggle) sandboxToggle.disabled = busy;
   if (sandboxNameInput) sandboxNameInput.disabled = busy || !sandboxToggle?.checked;
   if (busy) {
-    lobbyQuickBtn.textContent = "Connecting...";
     lobbyCreateBtn.textContent = "Creating...";
     if (privateJoinBtn) privateJoinBtn.textContent = "Joining...";
     if (privateCreateBtn) privateCreateBtn.textContent = "Creating...";
   } else {
-    lobbyQuickBtn.textContent = "Quick Match";
     lobbyCreateBtn.textContent = "Create Public Room";
     if (privateJoinBtn) privateJoinBtn.textContent = "Join Private";
     if (privateCreateBtn) privateCreateBtn.textContent = "Create Private Room";
@@ -824,8 +820,15 @@ async function refreshLobby() {
         refreshLobby();
       });
       const spectate = document.createElement("button");
-      spectate.className = "ghost-button";
-      spectate.textContent = "Spectate";
+      spectate.className = "ghost-button icon-button lobby-icon";
+      spectate.setAttribute("aria-label", "Spectate");
+      spectate.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 6c5 0 9.3 3.1 10.9 7.5-1.6 4.4-5.9 7.5-10.9 7.5S2.7 17.9 1.1 13.5C2.7 9.1 7 6 12 6zm0 2.2c-3.5 0-6.6 2-8.2 5.3 1.6 3.3 4.7 5.3 8.2 5.3 3.5 0 6.6-2 8.2-5.3-1.6-3.3-4.7-5.3-8.2-5.3zm0 2.3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"
+          />
+        </svg>
+      `;
       spectate.disabled = !started;
       spectate.addEventListener("click", async () => {
         if (lobbyBusy) return;
@@ -1611,17 +1614,6 @@ landingCustomizeBtn.addEventListener("click", () => {
   openCustomize("local");
 });
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
-lobbyQuickBtn.addEventListener("click", async () => {
-  setMode("online");
-  setLobbyBusy(true);
-  const ok = await controller.connectOnline(SERVER_URL, undefined, getOnlineName());
-  setLobbyBusy(false);
-  if (ok) {
-    setSpectatorMode(false);
-    hideLanding();
-    updateLobbyOverlay();
-  }
-});
 lobbyCreateBtn.addEventListener("click", async () => {
   setMode("online");
   setLobbyBusy(true);

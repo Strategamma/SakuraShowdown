@@ -291,23 +291,22 @@
             <div class="landing-actions">
               <button id="landing-resume" class="ghost-button" hidden>Resume Match</button>
             </div>
-            <div class="landing-lobby">
-              <div class="landing-lobby-header">
-                <div>
-                  <div class="label">Public Lobby</div>
-                  <div class="room-info">Join a public room without a code.</div>
+              <div class="landing-lobby">
+                <div class="landing-lobby-header">
+                  <div>
+                    <div class="label">Public Lobby</div>
+                    <div class="room-info">Join a public room without a code.</div>
+                  </div>
+                  <button id="lobby-refresh" class="ghost-button">
+                    <span class="button-label">Refresh</span>
+                    <span class="sakura-spinner" aria-hidden="true"></span>
+                  </button>
                 </div>
-                <button id="lobby-refresh" class="ghost-button">
-                  <span class="button-label">Refresh</span>
-                  <span class="sakura-spinner" aria-hidden="true"></span>
-                </button>
+                <div id="lobby-list" class="lobby-list"></div>
+                <div class="lobby-footer">
+                  <button id="lobby-create">Create Public Room</button>
+                </div>
               </div>
-              <div id="lobby-list" class="lobby-list"></div>
-              <div class="lobby-footer">
-                <button id="lobby-quick" class="ghost-button">Quick Match</button>
-                <button id="lobby-create">Create Public Room</button>
-              </div>
-            </div>
             <div class="landing-private">
               <div class="landing-private-header">
                 <div>
