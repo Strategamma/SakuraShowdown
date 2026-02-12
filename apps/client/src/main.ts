@@ -4,6 +4,7 @@ import type { GameConfig, GameState, LegalMove } from "@game/rules";
 import { GameController } from "./game/controller";
 import { GameRenderer } from "./game/renderer";
 import defaultConfig from "./game/defaultConfig";
+import { sound } from "./sound";
 
 const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
@@ -132,6 +133,10 @@ appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
 document.body.dataset.cards = "canvas";
 
+const unlockSound = () => sound.unlock();
+window.addEventListener("pointerdown", unlockSound, { once: true });
+window.addEventListener("keydown", unlockSound, { once: true });
+
 let cardHintOverlay: HTMLElement | null = null;
 let canvasNameTop: HTMLElement | null = null;
 let canvasNameBottom: HTMLElement | null = null;
@@ -189,6 +194,8 @@ let customizeScope: "local" | "lobby" = "local";
 let returnToLobbyOnCustomizeClose = false;
 let draftMode: "local" | "online" = "local";
 let draftConfig: GameConfig | undefined;
+let lastActivePlayerId: string | undefined;
+let lastReadyAll = false;
 
 const controller = new GameController({
   onState: (state) => {
@@ -415,6 +422,16 @@ function renderAll() {
   renderCards();
 
   const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
+  const activeId = latestState.activePlayerId;
+  if (!latestState.winnerId && activeId !== lastActivePlayerId) {
+    const shouldPlay =
+      currentMode === "local" ||
+      (!isSpectator && viewPlayerId === activeId);
+    if (shouldPlay) {
+      sound.play("turn");
+    }
+    lastActivePlayerId = activeId;
+  }
   const selection = controller.getSelection();
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
   renderer.render(latestState, moves, {
@@ -435,6 +452,7 @@ function renderAll() {
       showVictory(winnerName);
       lastWinnerId = latestState.winnerId;
     }
+    lastActivePlayerId = undefined;
   } else {
     const activeName =
       latestConfig.players.find((p) => p.id === latestState.activePlayerId)?.name ??
@@ -453,6 +471,7 @@ function updateStartedUI() {
   appEl.dataset.started = started ? "true" : "false";
   if (!started) {
     pendingMove = undefined;
+    lastActivePlayerId = undefined;
   } else {
     if (namesEditing) setNamesEditing(false);
   }
@@ -571,6 +590,12 @@ function renderLobbyOverlay() {
     lobbyReadyToggle.disabled = !canReady;
     lobbyReadyToggle.checked = playerId ? onlineReadyIds.has(playerId) : false;
   }
+
+  const readyAll = maxPlayers > 0 && readyCount >= maxPlayers;
+  if (readyAll && !lastReadyAll && !onlineGameStarted) {
+    sound.play("ready");
+  }
+  lastReadyAll = readyAll;
   if (lobbySandboxEl) {
     const showSandbox = currentRoomPrivate;
     lobbySandboxEl.classList.toggle("hidden", !showSandbox);
@@ -594,9 +619,10 @@ function renderLobbyOverlay() {
       }
     }
     const disabled = !canEditOnlineLobby();
-    if (lobbyCustomizeBtn) lobbyCustomizeBtn.disabled = disabled;
-    if (lobbyRandomBtn) lobbyRandomBtn.disabled = disabled;
-    if (lobbyChooseBtn) lobbyChooseBtn.disabled = disabled;
+    const tip = disabled ? "Available before the match starts" : undefined;
+    setButtonDisabled(lobbyCustomizeBtn, disabled, tip);
+    setButtonDisabled(lobbyRandomBtn, disabled, tip);
+    setButtonDisabled(lobbyChooseBtn, disabled, tip);
   }
 }
 
@@ -617,6 +643,8 @@ function leaveOnlineLobby() {
   currentRoomPrivate = false;
   onlineReadyIds = new Set();
   onlineGameStarted = true;
+  lastReadyAll = false;
+  lastActivePlayerId = undefined;
   updateRoomCode();
   lobbyOverlay?.classList.add("hidden");
   showLanding("online");
@@ -711,6 +739,7 @@ function updateRoomCode() {
 
 function showNotice(message: string) {
   statusEl.textContent = message;
+  sound.play("notice");
   if (noticeTimeout) window.clearTimeout(noticeTimeout);
   noticeTimeout = window.setTimeout(() => {
     noticeTimeout = undefined;
@@ -728,6 +757,7 @@ function showLanding(tab: "local" | "online" = "local") {
   updateResumeButton();
   setLobbyBusy(false);
   refreshLobby();
+  lastReadyAll = false;
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
   if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -905,6 +935,7 @@ function setMode(mode: "local" | "online") {
   controller.setMode(mode);
   onlineReadyIds = new Set();
   onlineGameStarted = true;
+  lastActivePlayerId = undefined;
   updateLobbyOverlay();
   updateRoomCode();
   if (mode === "local") {
