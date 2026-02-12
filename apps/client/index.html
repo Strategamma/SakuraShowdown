@@ -29,6 +29,13 @@
           <div class="brand-subtitle">Petal duels. Razor tactics.</div>
         </div>
         <div class="toolbar">
+          <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z"
+              />
+            </svg>
+          </button>
           <button id="open-customize" class="ghost-button">Customize</button>
           <button id="toggle-view" class="ghost-button">3D View</button>
           <button id="new-game" class="ghost-button">New Game</button>
@@ -276,19 +283,6 @@
             <div class="landing-actions">
               <button id="landing-resume" class="ghost-button" hidden>Resume Match</button>
             </div>
-            <div class="landing-sandbox">
-              <label class="label">
-                <input id="sandbox-toggle" type="checkbox" />
-                Use my custom cards for this lobby (sandbox)
-              </label>
-              <div class="sandbox-name hidden" id="sandbox-name-wrap">
-                <label class="label" for="sandbox-name">Sandbox name (optional)</label>
-                <input id="sandbox-name" type="text" maxlength="30" placeholder="Friendly lobby name" />
-              </div>
-              <div class="room-info">
-                Sandbox cards live only inside the lobby you create.
-              </div>
-            </div>
             <div class="landing-lobby">
               <div class="landing-lobby-header">
                 <div>
@@ -319,6 +313,19 @@
                 <div class="private-buttons">
                   <button id="private-join" class="ghost-button">Join Private</button>
                   <button id="private-create">Create Private Room</button>
+                </div>
+              </div>
+              <div class="landing-sandbox">
+                <label class="label">
+                  <input id="sandbox-toggle" type="checkbox" />
+                  Use my custom cards for private lobby (sandbox)
+                </label>
+                <div class="sandbox-name hidden" id="sandbox-name-wrap">
+                  <label class="label" for="sandbox-name">Sandbox name (optional)</label>
+                  <input id="sandbox-name" type="text" maxlength="30" placeholder="Friendly lobby name" />
+                </div>
+                <div class="room-info">
+                  Sandbox cards live only inside the private lobby you create.
                 </div>
               </div>
               <div class="room-info">Key is shown only to the creator on the game screen.</div>
@@ -358,6 +365,34 @@
             <button id="spectator-continue" class="ghost-button">Continue Watching</button>
             <button id="spectator-back">Back to Lobby</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="lobby-overlay" class="overlay hidden">
+      <div class="overlay-card lobby-card">
+        <div class="overlay-header">
+          <div>
+            <div id="lobby-title" class="overlay-title">Public Lobby</div>
+            <div id="lobby-subtitle" class="overlay-subtitle">Waiting for players…</div>
+          </div>
+          <div class="overlay-header-actions">
+            <button id="lobby-close" class="ghost-button close-button" aria-label="Close">X</button>
+          </div>
+        </div>
+        <div class="lobby-body">
+          <div id="lobby-room-code" class="room-code-banner hidden"></div>
+          <div id="lobby-players" class="lobby-players"></div>
+          <div class="lobby-ready">
+            <label class="ready-toggle">
+              <input id="lobby-ready" type="checkbox" />
+              <span>Ready</span>
+            </label>
+            <div class="room-info">Both players must be ready to begin.</div>
+          </div>
+        </div>
+        <div class="overlay-footer lobby-footer">
+          <button id="lobby-back" class="ghost-button">Back to Lobby</button>
         </div>
       </div>
     </div>

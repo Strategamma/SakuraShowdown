@@ -17,6 +17,8 @@ class GameRoom extends Room {
   reservedPlayerIds = new Set();
   maxPlayers = 2;
   seatsLocked = false;
+  gameStarted = false;
+  readyByPlayer = new Set();
   rematchVotes = new Set();
   roomCode = "";
   isPrivate = false;
@@ -37,6 +39,8 @@ class GameRoom extends Room {
       players: total.size,
       maxPlayers: this.maxPlayers,
       open: !this.seatsLocked && total.size < this.maxPlayers,
+      started: this.gameStarted,
+      ready: this.readyByPlayer.size,
       public: !this.isPrivate,
       code: this.isPrivate ? undefined : this.roomCode,
       sandbox: this.isSandbox || undefined,
@@ -71,6 +75,7 @@ class GameRoom extends Room {
     this.onMessage("move", (client, move) => {
       const playerId = this.playerByClient.get(client.sessionId);
       if (!playerId) return;
+      if (!this.gameStarted) return;
       if (this.stateData.winnerId) return;
       if (move.playerId !== playerId) return;
 
@@ -134,6 +139,20 @@ class GameRoom extends Room {
         this.disconnect();
       }
     });
+
+    this.onMessage("ready", (client, payload) => {
+      if (this.gameStarted) return;
+      const playerId = this.playerByClient.get(client.sessionId);
+      if (!playerId) return;
+      const ready = Boolean(payload?.ready);
+      if (ready) {
+        this.readyByPlayer.add(playerId);
+      } else {
+        this.readyByPlayer.delete(playerId);
+      }
+      this.broadcastReadyState();
+      this.maybeStartGame();
+    });
   }
 
   onDispose() {
@@ -149,6 +168,11 @@ class GameRoom extends Room {
     let assigned = this.playerByClient.get(client.sessionId);
     const wantsSpectate = Boolean(options?.spectator);
     const isReconnect = Boolean(options?.reconnectionToken);
+    if (wantsSpectate && !this.gameStarted) {
+      client.send("error", { message: "Spectator mode opens once the match starts." });
+      client.leave(4000);
+      return;
+    }
     if (!assigned && !wantsSpectate) {
       if (this.seatsLocked) {
         assigned = undefined;
@@ -184,10 +208,15 @@ class GameRoom extends Room {
     client.send("room_info", {
       roomId: this.roomId,
       code: showCode ? this.roomCode : undefined,
-      private: this.isPrivate
+      private: this.isPrivate,
+      started: this.gameStarted
     });
     client.send("config", this.config);
     client.send("state", this.stateData);
+    client.send("ready_state", {
+      ready: Array.from(this.readyByPlayer),
+      started: this.gameStarted
+    });
     this.updateMetadata();
 
     if (assigned && !isReconnect) {
@@ -209,6 +238,10 @@ class GameRoom extends Room {
     if (!playerId) {
       this.updateMetadata();
       return;
+    }
+    if (!this.gameStarted) {
+      this.readyByPlayer.delete(playerId);
+      this.broadcastReadyState();
     }
     if (this.stateData.winnerId && this.rematchVotes.size) {
       this.rematchVotes.clear();
@@ -252,6 +285,25 @@ class GameRoom extends Room {
       this.playerByClient.delete(client.sessionId);
       this.updateMetadata();
     }
+  }
+
+  broadcastReadyState() {
+    this.broadcast("ready_state", {
+      ready: Array.from(this.readyByPlayer),
+      started: this.gameStarted
+    });
+    this.updateMetadata();
+  }
+
+  maybeStartGame() {
+    if (this.gameStarted) return;
+    const active = new Set(this.playerByClient.values());
+    if (active.size < this.maxPlayers) return;
+    if (this.readyByPlayer.size < this.maxPlayers) return;
+    this.gameStarted = true;
+    this.seatsLocked = true;
+    this.broadcastReadyState();
+    this.broadcast("game_start", {});
   }
 
   scheduleRematchTimeout() {
@@ -411,6 +463,8 @@ app.get("/lobby", async (_req, res) => {
         open:
           room.metadata?.open ??
           (room.metadata?.players ?? 0) < (room.metadata?.maxPlayers ?? 2),
+        started: room.metadata?.started ?? false,
+        ready: room.metadata?.ready ?? 0,
         code: room.metadata?.code,
         sandbox: room.metadata?.sandbox,
         sandboxName: room.metadata?.sandboxName
@@ -450,7 +504,13 @@ app.get("/private", async (req, res) => {
       res.status(409).json({ error: "Room is full." });
       return;
     }
-    res.json({ roomId, open, players, maxPlayers });
+    res.json({
+      roomId,
+      open,
+      players,
+      maxPlayers,
+      started: room.metadata?.started ?? false
+    });
   } catch {
     res.status(500).json({ error: "Failed to fetch private room." });
   }

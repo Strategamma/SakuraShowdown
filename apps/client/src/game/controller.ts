@@ -10,12 +10,14 @@ export type ControllerCallbacks = {
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; started?: boolean }) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
   onLeave?: (code?: number) => void;
+  onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
+  onGameStart?: () => void;
 };
 
 export class GameController {
@@ -28,6 +30,7 @@ export class GameController {
   private callbacks: ControllerCallbacks;
   private online?: OnlineSession;
   private playerId?: string;
+  private onlineStarted = true;
 
   constructor(callbacks: ControllerCallbacks) {
     this.callbacks = callbacks;
@@ -37,6 +40,7 @@ export class GameController {
     if (this.mode === mode) return;
     this.mode = mode;
     this.disconnectOnline();
+    this.onlineStarted = true;
   }
 
   async loadConfig(url: string) {
@@ -95,6 +99,9 @@ export class GameController {
       },
       onRoomInfo: (info) => {
         this.callbacks.onRoomInfo?.(info);
+        if (typeof info.started === "boolean") {
+          this.onlineStarted = info.started;
+        }
       },
       onPlayer: (playerId) => {
         this.playerId = playerId;
@@ -105,7 +112,15 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onLeave: (code) => this.callbacks.onLeave?.(code),
-      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
+      onReadyState: (payload) => {
+        this.onlineStarted = payload.started;
+        this.callbacks.onReadyState?.(payload);
+      },
+      onGameStart: () => {
+        this.onlineStarted = true;
+        this.callbacks.onGameStart?.();
+      }
     });
 
     try {
@@ -141,6 +156,9 @@ export class GameController {
       },
       onRoomInfo: (info) => {
         this.callbacks.onRoomInfo?.(info);
+        if (typeof info.started === "boolean") {
+          this.onlineStarted = info.started;
+        }
       },
       onPlayer: (playerId) => {
         this.playerId = playerId;
@@ -151,7 +169,15 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onLeave: (code) => this.callbacks.onLeave?.(code),
-      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
+      onReadyState: (payload) => {
+        this.onlineStarted = payload.started;
+        this.callbacks.onReadyState?.(payload);
+      },
+      onGameStart: () => {
+        this.onlineStarted = true;
+        this.callbacks.onGameStart?.();
+      }
     });
 
     try {
@@ -192,6 +218,9 @@ export class GameController {
       },
       onRoomInfo: (info) => {
         this.callbacks.onRoomInfo?.(info);
+        if (typeof info.started === "boolean") {
+          this.onlineStarted = info.started;
+        }
       },
       onPlayer: (playerId) => {
         this.playerId = playerId;
@@ -202,7 +231,15 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onLeave: (code) => this.callbacks.onLeave?.(code),
-      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token)
+      onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
+      onReadyState: (payload) => {
+        this.onlineStarted = payload.started;
+        this.callbacks.onReadyState?.(payload);
+      },
+      onGameStart: () => {
+        this.onlineStarted = true;
+        this.callbacks.onGameStart?.();
+      }
     });
 
     try {
@@ -225,6 +262,10 @@ export class GameController {
 
   cancelRematch() {
     this.online?.cancelRematch();
+  }
+
+  setReady(ready: boolean) {
+    this.online?.setReady(ready);
   }
 
   selectCard(cardId?: string) {
@@ -282,6 +323,7 @@ export class GameController {
     if (!this.state) return false;
     if (this.state.winnerId) return false;
     if (this.mode === "local") return true;
+    if (!this.onlineStarted) return false;
     return this.playerId === this.state.activePlayerId;
   }
 

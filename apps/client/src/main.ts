@@ -43,6 +43,7 @@ const opponentSection = document.getElementById("opponent-section") as HTMLEleme
 const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
 const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
 const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLButtonElement | null;
+const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
@@ -94,6 +95,14 @@ const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLEle
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
 const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
 const spectatorCloseBtn = document.getElementById("spectator-close") as HTMLButtonElement | null;
+const lobbyOverlay = document.getElementById("lobby-overlay") as HTMLElement | null;
+const lobbyTitle = document.getElementById("lobby-title") as HTMLElement | null;
+const lobbySubtitle = document.getElementById("lobby-subtitle") as HTMLElement | null;
+const lobbyRoomCodeEl = document.getElementById("lobby-room-code") as HTMLElement | null;
+const lobbyPlayersEl = document.getElementById("lobby-players") as HTMLElement | null;
+const lobbyReadyToggle = document.getElementById("lobby-ready") as HTMLInputElement | null;
+const lobbyBackBtn = document.getElementById("lobby-back") as HTMLButtonElement | null;
+const lobbyCloseBtn = document.getElementById("lobby-close") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabLocal = document.getElementById("landing-tab-local") as HTMLButtonElement | null;
 const landingTabOnline = document.getElementById("landing-tab-online") as HTMLButtonElement | null;
@@ -122,7 +131,7 @@ let canvasNameBottom: HTMLElement | null = null;
 if (canvasContainer) {
   cardHintOverlay = document.createElement("div");
   cardHintOverlay.id = "card-choice-overlay";
-  cardHintOverlay.className = "card-hint overlay hidden";
+  cardHintOverlay.className = "card-hint board-hint hidden";
   cardHintOverlay.textContent = "Choose card to discard";
   canvasContainer.appendChild(cardHintOverlay);
 
@@ -167,6 +176,8 @@ let lobbyBusy = false;
 let spectatorNoticeHidden = false;
 let landingTab: "local" | "online" = "local";
 let rulesVisible = false;
+let onlineReadyIds = new Set<string>();
+let onlineGameStarted = true;
 
 const controller = new GameController({
   onState: (state) => {
@@ -178,6 +189,7 @@ const controller = new GameController({
     latestConfig = config;
     renderer.setConfig(config);
     renderAll();
+    renderLobbyOverlay();
   },
   onStatus: (message) => {
     statusEl.textContent = message;
@@ -191,22 +203,28 @@ const controller = new GameController({
     currentRoomId = info.roomId;
     currentRoomCode = info.code;
     currentRoomPrivate = Boolean(info.private);
+    if (typeof info.started === "boolean") {
+      onlineGameStarted = info.started;
+    }
     if (info.code) {
       statusEl.textContent = `Online match ready · ${info.code}`;
     } else {
       statusEl.textContent = "Online match ready.";
     }
     updateRoomCode();
+    updateLobbyOverlay();
   },
   onPlayer: (playerId) => {
     if (!playerId) {
       playerLabel.textContent = "Spectator";
       setSpectatorMode(true);
+      updateLobbyOverlay();
       return;
     }
     setSpectatorMode(false);
     const label = latestConfig?.players.find((p) => p.id === playerId)?.name ?? playerId;
     playerLabel.textContent = label;
+    renderLobbyOverlay();
   },
   onNotice: (message) => {
     showNotice(message);
@@ -226,8 +244,10 @@ const controller = new GameController({
     currentRoomId = undefined;
     currentRoomCode = undefined;
     currentRoomPrivate = false;
+    onlineReadyIds = new Set();
+    onlineGameStarted = true;
     updateRoomCode();
-    showLanding();
+    showLanding("online");
   },
   onLeave: () => {
     if (currentMode !== "online") return;
@@ -241,11 +261,23 @@ const controller = new GameController({
     currentRoomId = undefined;
     currentRoomCode = undefined;
     currentRoomPrivate = false;
+    onlineReadyIds = new Set();
+    onlineGameStarted = true;
     updateRoomCode();
-    showLanding();
+    showLanding("online");
   },
   onReconnectToken: (token) => {
     if (token) setReconnectToken(token);
+  },
+  onReadyState: (payload) => {
+    onlineReadyIds = new Set(payload.ready);
+    onlineGameStarted = payload.started;
+    updateLobbyOverlay();
+    renderAll();
+  },
+  onGameStart: () => {
+    onlineGameStarted = true;
+    updateLobbyOverlay();
   }
 });
 
@@ -363,6 +395,9 @@ const renderer = new GameRenderer(canvasContainer, {
   }
 });
 renderer.setViewMode(viewMode);
+rotateBoardBtn?.addEventListener("click", () => {
+  renderer.rotateBoardQuarter();
+});
 
 function renderAll() {
   if (!latestConfig || !latestState) return;
@@ -479,6 +514,72 @@ function setSpectatorMode(enabled: boolean) {
   spectatorOverlay.classList.toggle("hidden", spectatorNoticeHidden);
 }
 
+function shouldShowLobbyOverlay() {
+  return currentMode === "online" && !onlineGameStarted && !isSpectator;
+}
+
+function renderLobbyOverlay() {
+  if (!lobbyOverlay || !lobbyPlayersEl || !latestConfig) return;
+  const playerId = controller.getPlayerId();
+  const maxPlayers = latestConfig.players.length || 2;
+  const readyCount = onlineReadyIds.size;
+  const title = currentRoomPrivate ? "Private Lobby" : "Public Lobby";
+  if (lobbyTitle) lobbyTitle.textContent = title;
+  if (lobbySubtitle) {
+    lobbySubtitle.textContent =
+      readyCount >= maxPlayers ? "Waiting for match to start…" : "Waiting for players…";
+  }
+  if (lobbyRoomCodeEl) {
+    const showCode = Boolean(currentRoomCode);
+    lobbyRoomCodeEl.classList.toggle("hidden", !showCode);
+    if (showCode) {
+      lobbyRoomCodeEl.textContent = `Room Code · ${currentRoomCode?.toUpperCase()}`;
+    }
+  }
+  lobbyPlayersEl.innerHTML = "";
+  for (const player of latestConfig.players) {
+    const row = document.createElement("div");
+    row.className = "lobby-player";
+    const name = document.createElement("div");
+    name.className = "lobby-player-name";
+    name.textContent = player.id === playerId ? `${player.name} (You)` : player.name;
+    const status = document.createElement("div");
+    const ready = onlineReadyIds.has(player.id);
+    status.className = `lobby-player-status ${ready ? "ready" : "waiting"}`;
+    status.textContent = onlineGameStarted ? "Playing" : ready ? "Ready" : "Waiting";
+    row.appendChild(name);
+    row.appendChild(status);
+    lobbyPlayersEl.appendChild(row);
+  }
+  if (lobbyReadyToggle) {
+    const canReady = Boolean(playerId) && !onlineGameStarted;
+    lobbyReadyToggle.disabled = !canReady;
+    lobbyReadyToggle.checked = playerId ? onlineReadyIds.has(playerId) : false;
+  }
+}
+
+function updateLobbyOverlay() {
+  if (!lobbyOverlay) return;
+  const show = shouldShowLobbyOverlay();
+  lobbyOverlay.classList.toggle("hidden", !show);
+  if (show) renderLobbyOverlay();
+}
+
+function leaveOnlineLobby() {
+  controller.cancelRematch();
+  controller.disconnectOnline();
+  setReconnectToken("");
+  setSpectatorMode(false);
+  currentRoomId = undefined;
+  currentRoomCode = undefined;
+  currentRoomPrivate = false;
+  onlineReadyIds = new Set();
+  onlineGameStarted = true;
+  updateRoomCode();
+  lobbyOverlay?.classList.add("hidden");
+  showLanding("online");
+}
+
 function setLobbyBusy(busy: boolean) {
   lobbyBusy = busy;
   lobbyRefreshBtn.disabled = busy;
@@ -523,9 +624,10 @@ function showNotice(message: string) {
   }, 2200);
 }
 
-function showLanding() {
+function showLanding(tab: "local" | "online" = "local") {
   landingOverlay.classList.remove("hidden");
-  setLandingTab("local");
+  lobbyOverlay?.classList.add("hidden");
+  setLandingTab(tab);
   syncOnlineNameInput();
   updateResumeButton();
   setLobbyBusy(false);
@@ -559,6 +661,7 @@ async function refreshLobby() {
         players?: number;
         maxPlayers?: number;
         open?: boolean;
+        started?: boolean;
         sandbox?: boolean;
         sandboxName?: string;
       }[];
@@ -590,9 +693,11 @@ async function refreshLobby() {
       const players = room.players ?? room.clients;
       const maxPlayers = room.maxPlayers ?? room.maxClients;
       const sandbox = Boolean((room as { sandbox?: boolean }).sandbox);
+      const started = Boolean((room as { started?: boolean }).started);
+      const status = started ? "Live" : "Waiting";
       count.textContent = sandbox
-        ? `${players}/${maxPlayers} players · Sandbox`
-        : `${players}/${maxPlayers} players`;
+        ? `${players}/${maxPlayers} players · Sandbox · ${status}`
+        : `${players}/${maxPlayers} players · ${status}`;
       meta.appendChild(id);
       meta.appendChild(count);
       const actions = document.createElement("div");
@@ -622,8 +727,10 @@ async function refreshLobby() {
       const spectate = document.createElement("button");
       spectate.className = "ghost-button";
       spectate.textContent = "Spectate";
+      spectate.disabled = !started;
       spectate.addEventListener("click", async () => {
         if (lobbyBusy) return;
+        if (!started) return;
         setLobbyBusy(true);
         spectate.textContent = "Joining...";
         setMode("online");
@@ -678,6 +785,9 @@ function setMode(mode: "local" | "online") {
   appEl.dataset.mode = mode;
   document.body.dataset.mode = mode;
   controller.setMode(mode);
+  onlineReadyIds = new Set();
+  onlineGameStarted = true;
+  updateLobbyOverlay();
   updateRoomCode();
   if (mode === "local") {
     currentRoomId = undefined;
@@ -1324,7 +1434,7 @@ newGameBtn.addEventListener("click", () => {
   currentRoomCode = undefined;
   currentRoomPrivate = false;
   updateRoomCode();
-  showLanding();
+  showLanding("local");
 });
 
 landingCloseBtn.addEventListener("click", hideLanding);
@@ -1344,6 +1454,7 @@ landingResumeBtn?.addEventListener("click", async () => {
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
+    updateLobbyOverlay();
   } else {
     statusEl.textContent = "Resume failed. Start a new match.";
     setReconnectToken("");
@@ -1370,24 +1481,18 @@ lobbyQuickBtn.addEventListener("click", async () => {
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
+    updateLobbyOverlay();
   }
 });
 lobbyCreateBtn.addEventListener("click", async () => {
   setMode("online");
   setLobbyBusy(true);
-  const sandboxConfig = getSandboxConfig();
-  if (sandboxToggle?.checked && !sandboxConfig) {
-    setLobbyBusy(false);
-    return;
-  }
-  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), {
-    config: sandboxConfig,
-    sandboxName: getSandboxName()
-  });
+  const ok = await controller.createOnline(SERVER_URL, getOnlineName());
   setLobbyBusy(false);
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
+    updateLobbyOverlay();
   }
 });
 privateCreateBtn?.addEventListener("click", async () => {
@@ -1408,6 +1513,7 @@ privateCreateBtn?.addEventListener("click", async () => {
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
+    updateLobbyOverlay();
   } else {
     statusEl.textContent = "Failed to create private lobby.";
   }
@@ -1427,6 +1533,7 @@ privateJoinBtn?.addEventListener("click", async () => {
     if (ok) {
       setSpectatorMode(false);
       hideLanding();
+      updateLobbyOverlay();
       return;
     }
     statusEl.textContent = "Private lobby unavailable. Try again.";
@@ -1435,7 +1542,7 @@ privateJoinBtn?.addEventListener("click", async () => {
       error instanceof Error && error.message === "full"
         ? "Private lobby is full."
         : error instanceof Error && error.message === "not_found"
-          ? "Private lobby not found."
+          ? "No game found."
           : "Private lobby unavailable.";
     statusEl.textContent = message;
   } finally {
@@ -1516,14 +1623,7 @@ if (privateKeyInput) {
 }
 
 spectatorBackBtn?.addEventListener("click", () => {
-  controller.disconnectOnline();
-  setReconnectToken("");
-  setSpectatorMode(false);
-  currentRoomId = undefined;
-  currentRoomCode = undefined;
-  currentRoomPrivate = false;
-  updateRoomCode();
-  showLanding();
+  leaveOnlineLobby();
 });
 
 function hideSpectatorNotice() {
@@ -1533,6 +1633,21 @@ function hideSpectatorNotice() {
 
 spectatorContinueBtn?.addEventListener("click", hideSpectatorNotice);
 spectatorCloseBtn?.addEventListener("click", hideSpectatorNotice);
+lobbyReadyToggle?.addEventListener("change", () => {
+  if (!lobbyReadyToggle) return;
+  const playerId = controller.getPlayerId();
+  if (playerId) {
+    if (lobbyReadyToggle.checked) {
+      onlineReadyIds.add(playerId);
+    } else {
+      onlineReadyIds.delete(playerId);
+    }
+    renderLobbyOverlay();
+  }
+  controller.setReady(lobbyReadyToggle.checked);
+});
+lobbyBackBtn?.addEventListener("click", leaveOnlineLobby);
+lobbyCloseBtn?.addEventListener("click", leaveOnlineLobby);
 
 localOpponentNameInput.value = localOpponentName;
 opponentNameEl.textContent = localOpponentName || "Opponent";
@@ -1584,11 +1699,7 @@ victoryRematchBtn?.addEventListener("click", () => {
 });
 victoryLobbyBtn?.addEventListener("click", () => {
   if (currentMode !== "online") return;
-  controller.cancelRematch();
-  controller.disconnectOnline();
-  setReconnectToken("");
-  setSpectatorMode(false);
-  showLanding();
+  leaveOnlineLobby();
 });
 victoryOverlay.addEventListener("click", (event) => {
   if (event.target === victoryOverlay) hideVictory();

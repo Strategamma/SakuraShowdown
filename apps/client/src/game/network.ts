@@ -5,7 +5,7 @@ export type OnlineHandlers = {
   onState: (state: GameState) => void;
   onConfig: (config: GameConfig) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; started?: boolean }) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
   onReconnectToken?: (token?: string) => void;
@@ -13,6 +13,8 @@ export type OnlineHandlers = {
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
   onLeave?: (code?: number) => void;
+  onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
+  onGameStart?: () => void;
 };
 
 export class OnlineSession {
@@ -42,7 +44,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
@@ -68,6 +70,12 @@ export class OnlineSession {
       });
       this.room.onMessage("spectator_joined", () => {
         this.handlers.onNotice?.("A spectator joined the room.");
+      });
+      this.room.onMessage("ready_state", (payload: { ready: string[]; started: boolean }) => {
+        this.handlers.onReadyState?.(payload);
+      });
+      this.room.onMessage("game_start", () => {
+        this.handlers.onGameStart?.();
       });
       if (name) {
         this.room.send("set_name", { name });
@@ -93,7 +101,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
@@ -119,6 +127,12 @@ export class OnlineSession {
       });
       this.room.onMessage("spectator_joined", () => {
         this.handlers.onNotice?.("A spectator joined the room.");
+      });
+      this.room.onMessage("ready_state", (payload: { ready: string[]; started: boolean }) => {
+        this.handlers.onReadyState?.(payload);
+      });
+      this.room.onMessage("game_start", () => {
+        this.handlers.onGameStart?.();
       });
       if (name) {
         this.room.send("set_name", { name });
@@ -158,7 +172,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: { message: string }) =>
@@ -184,6 +198,12 @@ export class OnlineSession {
       });
       this.room.onMessage("spectator_joined", () => {
         this.handlers.onNotice?.("A spectator joined the room.");
+      });
+      this.room.onMessage("ready_state", (payload: { ready: string[]; started: boolean }) => {
+        this.handlers.onReadyState?.(payload);
+      });
+      this.room.onMessage("game_start", () => {
+        this.handlers.onGameStart?.();
       });
       if (name) {
         this.room.send("set_name", { name });
@@ -216,5 +236,9 @@ export class OnlineSession {
 
   cancelRematch() {
     this.room?.send("rematch_cancel");
+  }
+
+  setReady(ready: boolean) {
+    this.room?.send("ready", { ready });
   }
 }
