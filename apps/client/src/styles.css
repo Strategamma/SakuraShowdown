@@ -1840,11 +1840,13 @@ body[data-mode="local"] .online-only {
 
 #lobby-refresh {
   min-height: 36px;
+  height: 36px;
   justify-content: center;
   align-items: center;
   gap: 6px;
-  padding: 0 14px;
+  padding: 0 16px;
   line-height: 1;
+  display: inline-flex;
 }
 
 #lobby-refresh .button-label {
@@ -1852,6 +1854,12 @@ body[data-mode="local"] .online-only {
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+#lobby-refresh .sakura-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .landing-name {

@@ -224,7 +224,7 @@ const controller = new GameController({
         }
       }
       if (captured) {
-        sound.play("capture");
+        sound.play("slash");
       } else if (moved) {
         sound.play("move");
       }
@@ -279,7 +279,7 @@ const controller = new GameController({
     showNotice(message);
     const lower = message.toLowerCase();
     if (lower.includes("joined")) {
-      sound.play("join");
+      sound.play("door");
     } else if (lower.includes("left") || lower.includes("disconnected")) {
       sound.play("disconnect");
     }

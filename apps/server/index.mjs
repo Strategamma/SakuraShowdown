@@ -197,6 +197,11 @@ class GameRoom extends Room {
     const rawName = typeof options?.name === "string" ? options.name : "";
     const requestedName = rawName.trim().slice(0, 30);
     const requestedKey = requestedName.toLowerCase();
+    const activeIds = new Set(
+      this.clients
+        .map((entry) => this.playerByClient.get(entry.sessionId))
+        .filter(Boolean)
+    );
     if (wantsSpectate && !this.gameStarted) {
       client.send("error", { message: "Spectator mode opens once the match starts." });
       client.leave(4000);
@@ -205,18 +210,17 @@ class GameRoom extends Room {
     if (!assigned && !wantsSpectate) {
       if (this.seatsLocked) {
         if (requestedKey) {
-          const active = new Set(this.playerByClient.values());
           const candidate = this.config.players.find(
             (p) => p.name.trim().toLowerCase() === requestedKey
           );
-          if (candidate && !active.has(candidate.id)) {
+          if (candidate && !activeIds.has(candidate.id)) {
             assigned = candidate.id;
             this.playerByClient.set(client.sessionId, assigned);
             this.reservedPlayerIds.delete(assigned);
           }
         }
       } else {
-        const taken = new Set(this.playerByClient.values());
+        const taken = new Set(activeIds);
         for (const reserved of this.reservedPlayerIds) taken.add(reserved);
         const available = this.config.players.find((p) => !taken.has(p.id));
         if (available) {
@@ -302,6 +306,7 @@ class GameRoom extends Room {
       } catch {
         const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
         this.broadcast("player_left", { playerId, name });
+        this.playerByClient.delete(client.sessionId);
         this.updateMetadata();
       }
       return;
