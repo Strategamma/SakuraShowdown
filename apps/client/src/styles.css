@@ -303,6 +303,22 @@ body[data-cards="canvas"] #canvas-container {
   }
 }
 
+@media (max-width: 780px) {
+  #landing-panel-online {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "name"
+      "lobby"
+      "private"
+      "actions";
+  }
+
+  .landing-lobby {
+    min-height: min(68vh, 560px);
+  }
+}
+
 @media (max-width: 640px) {
   #game-area {
     gap: 10px;
@@ -316,6 +332,68 @@ body[data-cards="canvas"] #canvas-container {
 
   #player-section .card {
     min-height: 110px;
+  }
+}
+
+@media (max-width: 720px) {
+  button,
+  .ghost-button {
+    min-height: 44px;
+    padding: 12px 14px;
+  }
+
+  .card-rail {
+    padding: 14px 16px;
+  }
+
+  #hand,
+  #opponent-hand {
+    gap: 14px;
+  }
+
+  .card {
+    min-height: 140px;
+  }
+
+  #opponent-hand .card {
+    min-height: 120px;
+  }
+
+  #pool .card {
+    min-height: 120px;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+  }
+
+  .card-pattern {
+    width: clamp(88px, 30vw, 128px);
+    height: clamp(88px, 30vw, 128px);
+  }
+
+  .lobby-item {
+    padding: 12px 14px;
+  }
+
+  .lobby-actions {
+    gap: 6px;
+  }
+
+  .lobby-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  #hand,
+  #opponent-hand {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    min-height: 150px;
   }
 }
 

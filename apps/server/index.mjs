@@ -194,6 +194,9 @@ class GameRoom extends Room {
     let assigned = this.playerByClient.get(client.sessionId);
     const wantsSpectate = Boolean(options?.spectator);
     const isReconnect = Boolean(options?.reconnectionToken);
+    const rawName = typeof options?.name === "string" ? options.name : "";
+    const requestedName = rawName.trim().slice(0, 30);
+    const requestedKey = requestedName.toLowerCase();
     if (wantsSpectate && !this.gameStarted) {
       client.send("error", { message: "Spectator mode opens once the match starts." });
       client.leave(4000);
@@ -201,7 +204,17 @@ class GameRoom extends Room {
     }
     if (!assigned && !wantsSpectate) {
       if (this.seatsLocked) {
-        assigned = undefined;
+        if (requestedKey) {
+          const active = new Set(this.playerByClient.values());
+          const candidate = this.config.players.find(
+            (p) => p.name.trim().toLowerCase() === requestedKey
+          );
+          if (candidate && !active.has(candidate.id)) {
+            assigned = candidate.id;
+            this.playerByClient.set(client.sessionId, assigned);
+            this.reservedPlayerIds.delete(assigned);
+          }
+        }
       } else {
         const taken = new Set(this.playerByClient.values());
         for (const reserved of this.reservedPlayerIds) taken.add(reserved);
@@ -219,12 +232,10 @@ class GameRoom extends Room {
     }
 
     if (assigned && !this.seatsLocked) {
-      const rawName = typeof options?.name === "string" ? options.name : "";
-      const name = rawName.trim().slice(0, 30);
-      if (name) {
+      if (requestedName) {
         const player = this.config.players.find((p) => p.id === assigned);
-        if (player && player.name !== name) {
-          player.name = name;
+        if (player && player.name !== requestedName) {
+          player.name = requestedName;
         }
       }
     }

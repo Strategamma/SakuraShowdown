@@ -125,9 +125,6 @@ const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElem
 const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
 const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
-const sandboxToggle = document.getElementById("sandbox-toggle") as HTMLInputElement | null;
-const sandboxNameWrap = document.getElementById("sandbox-name-wrap") as HTMLElement | null;
-const sandboxNameInput = document.getElementById("sandbox-name") as HTMLInputElement | null;
 
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
@@ -682,7 +679,7 @@ function applyOnlineConfig(config: GameConfig) {
   controller.setConfig(config);
   renderer.setConfig(config);
   onlineReadyIds = new Set();
-  controller.updateOnlineConfig(config, getSandboxName());
+  controller.updateOnlineConfig(config);
   statusEl.textContent = "Lobby cards updated. Ready when you are.";
   updateLobbyOverlay();
 }
@@ -714,8 +711,6 @@ function setLobbyBusy(busy: boolean) {
   setButtonDisabled(privateJoinBtn, busy, tooltip);
   setButtonDisabled(privateCreateBtn, busy, tooltip);
   if (privateKeyInput) privateKeyInput.disabled = busy;
-  if (sandboxToggle) sandboxToggle.disabled = busy;
-  if (sandboxNameInput) sandboxNameInput.disabled = busy || !sandboxToggle?.checked;
   if (busy) {
     lobbyCreateBtn.textContent = "Creating...";
     if (privateJoinBtn) privateJoinBtn.textContent = "Joining...";
@@ -846,12 +841,17 @@ async function refreshLobby() {
       const join = document.createElement("button");
       join.className = "ghost-button";
       const open = room.open ?? players < maxPlayers;
-      join.textContent = open ? "Join" : "Full";
-      setButtonDisabled(join, !open, open ? undefined : "Room is full");
+      const canRejoin = Boolean(started);
+      join.textContent = open ? "Join" : canRejoin ? "Rejoin" : "Full";
+      setButtonDisabled(
+        join,
+        !open && !canRejoin,
+        open ? undefined : canRejoin ? "Rejoin with the same display name" : "Room is full"
+      );
       join.addEventListener("click", async () => {
-        if (!open || lobbyBusy) return;
+        if ((!open && !canRejoin) || lobbyBusy) return;
         setLobbyBusy(true);
-        join.textContent = "Joining...";
+        join.textContent = open ? "Joining..." : "Rejoining...";
         setButtonDisabled(join, true, "Connecting…");
         setMode("online");
         const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
@@ -860,8 +860,12 @@ async function refreshLobby() {
           hideLanding();
           return;
         }
-        join.textContent = open ? "Join" : "Full";
-        setButtonDisabled(join, !open, open ? undefined : "Room is full");
+        join.textContent = open ? "Join" : canRejoin ? "Rejoin" : "Full";
+        setButtonDisabled(
+          join,
+          !open && !canRejoin,
+          open ? undefined : canRejoin ? "Rejoin with the same display name" : "Room is full"
+        );
         statusEl.textContent = "Room unavailable. Refreshing lobby…";
         refreshLobby();
       });
@@ -957,29 +961,6 @@ function setMode(mode: "local" | "online") {
 function getOnlineName() {
   const candidate = onlineName.trim() || localName.trim();
   return candidate || "Player";
-}
-
-function getSandboxConfig(): GameConfig | undefined {
-  if (!sandboxToggle?.checked) return undefined;
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    statusEl.textContent = "No custom cards found. Create cards first.";
-    return undefined;
-  }
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return validateConfig(parsed);
-  } catch {
-    statusEl.textContent = "Custom cards are invalid. Please re-save them.";
-    return undefined;
-  }
-}
-
-function getSandboxName() {
-  if (!sandboxToggle?.checked) return undefined;
-  const raw = sandboxNameInput?.value ?? "";
-  const name = raw.trim().slice(0, 30);
-  return name || undefined;
 }
 
 function resolveStartingPlayer(config: GameConfig): string | undefined {
@@ -1680,15 +1661,8 @@ privateCreateBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
   setMode("online");
   setLobbyBusy(true);
-  const sandboxConfig = getSandboxConfig();
-  if (sandboxToggle?.checked && !sandboxConfig) {
-    setLobbyBusy(false);
-    return;
-  }
   const ok = await controller.createOnline(SERVER_URL, getOnlineName(), {
-    private: true,
-    config: sandboxConfig,
-    sandboxName: getSandboxName()
+    private: true
   });
   setLobbyBusy(false);
   if (ok) {
@@ -1781,16 +1755,6 @@ if (onlineNameInput) {
     onlineName = onlineNameInput.value;
     localStorage.setItem(ONLINE_NAME_KEY, onlineName);
   });
-}
-
-if (sandboxToggle) {
-  const updateSandboxUI = () => {
-    const enabled = sandboxToggle.checked;
-    if (sandboxNameWrap) sandboxNameWrap.classList.toggle("hidden", !enabled);
-    if (sandboxNameInput) sandboxNameInput.disabled = !enabled || lobbyBusy;
-  };
-  sandboxToggle.addEventListener("change", updateSandboxUI);
-  updateSandboxUI();
 }
 
 if (privateKeyInput) {
