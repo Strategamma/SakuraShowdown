@@ -241,4 +241,8 @@ export class OnlineSession {
   setReady(ready: boolean) {
     this.room?.send("ready", { ready });
   }
+
+  updateConfig(config: GameConfig, sandboxName?: string) {
+    this.room?.send("config_update", { config, sandboxName });
+  }
 }

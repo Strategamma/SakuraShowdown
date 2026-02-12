@@ -114,6 +114,32 @@ class GameRoom extends Room {
       this.broadcast("config", this.config);
     });
 
+    this.onMessage("config_update", (client, payload) => {
+      if (this.gameStarted) return;
+      if (!this.isPrivate) return;
+      const playerId = this.playerByClient.get(client.sessionId);
+      if (!playerId) return;
+      const configPayload = payload?.config ?? payload;
+      const nextConfig = normalizeCustomConfig(configPayload);
+      if (!nextConfig) {
+        client.send("error", { message: "Invalid card configuration." });
+        return;
+      }
+      this.config = nextConfig;
+      this.stateData = createInitialState(this.config, Date.now());
+      this.maxPlayers = this.config.players.length;
+      this.readyByPlayer.clear();
+      this.isSandbox = true;
+      const rawSandboxName = typeof payload?.sandboxName === "string" ? payload.sandboxName : "";
+      const trimmedSandboxName = rawSandboxName.trim().slice(0, 30);
+      if (trimmedSandboxName) {
+        this.sandboxName = trimmedSandboxName;
+      }
+      this.broadcast("config", this.config);
+      this.broadcast("state", this.stateData);
+      this.broadcastReadyState();
+    });
+
     this.onMessage("rematch_request", (client) => {
       if (!this.stateData.winnerId) return;
       const playerId = this.playerByClient.get(client.sessionId);

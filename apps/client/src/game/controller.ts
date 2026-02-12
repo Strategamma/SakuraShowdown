@@ -268,6 +268,10 @@ export class GameController {
     this.online?.setReady(ready);
   }
 
+  updateOnlineConfig(config: GameConfig, sandboxName?: string) {
+    this.online?.updateConfig(config, sandboxName);
+  }
+
   selectCard(cardId?: string) {
     this.selectedCardId = cardId;
   }

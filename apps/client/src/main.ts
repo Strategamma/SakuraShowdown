@@ -44,6 +44,7 @@ const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElemen
 const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
 const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLButtonElement | null;
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
+const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
@@ -103,6 +104,11 @@ const lobbyPlayersEl = document.getElementById("lobby-players") as HTMLElement |
 const lobbyReadyToggle = document.getElementById("lobby-ready") as HTMLInputElement | null;
 const lobbyBackBtn = document.getElementById("lobby-back") as HTMLButtonElement | null;
 const lobbyCloseBtn = document.getElementById("lobby-close") as HTMLButtonElement | null;
+const lobbySandboxEl = document.getElementById("lobby-sandbox") as HTMLElement | null;
+const lobbySandboxNote = document.getElementById("lobby-sandbox-note") as HTMLElement | null;
+const lobbyCustomizeBtn = document.getElementById("lobby-customize") as HTMLButtonElement | null;
+const lobbyRandomBtn = document.getElementById("lobby-random") as HTMLButtonElement | null;
+const lobbyChooseBtn = document.getElementById("lobby-choose") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabLocal = document.getElementById("landing-tab-local") as HTMLButtonElement | null;
 const landingTabOnline = document.getElementById("landing-tab-online") as HTMLButtonElement | null;
@@ -178,6 +184,10 @@ let landingTab: "local" | "online" = "local";
 let rulesVisible = false;
 let onlineReadyIds = new Set<string>();
 let onlineGameStarted = true;
+let customizeScope: "local" | "lobby" = "local";
+let returnToLobbyOnCustomizeClose = false;
+let draftMode: "local" | "online" = "local";
+let draftConfig: GameConfig | undefined;
 
 const controller = new GameController({
   onState: (state) => {
@@ -436,7 +446,9 @@ function renderAll() {
 }
 
 function updateStartedUI() {
-  const started = Boolean(latestState && !latestState.winnerId);
+  const started = Boolean(
+    latestState && !latestState.winnerId && (currentMode === "local" || onlineGameStarted)
+  );
   appEl.dataset.started = started ? "true" : "false";
   if (!started) {
     pendingMove = undefined;
@@ -556,6 +568,20 @@ function renderLobbyOverlay() {
     lobbyReadyToggle.disabled = !canReady;
     lobbyReadyToggle.checked = playerId ? onlineReadyIds.has(playerId) : false;
   }
+  if (lobbySandboxEl) {
+    const showSandbox = currentRoomPrivate;
+    lobbySandboxEl.classList.toggle("hidden", !showSandbox);
+    if (showSandbox && lobbySandboxNote) {
+      const active = isCustomConfig(latestConfig);
+      lobbySandboxNote.textContent = active
+        ? "Custom cards enabled for this lobby."
+        : "Using the default card set.";
+    }
+    const disabled = !canEditOnlineLobby();
+    if (lobbyCustomizeBtn) lobbyCustomizeBtn.disabled = disabled;
+    if (lobbyRandomBtn) lobbyRandomBtn.disabled = disabled;
+    if (lobbyChooseBtn) lobbyChooseBtn.disabled = disabled;
+  }
 }
 
 function updateLobbyOverlay() {
@@ -578,6 +604,60 @@ function leaveOnlineLobby() {
   updateRoomCode();
   lobbyOverlay?.classList.add("hidden");
   showLanding("online");
+}
+
+function isCustomConfig(config: GameConfig) {
+  const base = defaultConfig;
+  if (config.cards.length !== base.cards.length) return true;
+  const baseMap = new Map(base.cards.map((card) => [card.id, card]));
+  for (const card of config.cards) {
+    const baseline = baseMap.get(card.id);
+    if (!baseline) return true;
+    if (card.name !== baseline.name) return true;
+    if (card.moves.length !== baseline.moves.length) return true;
+    const moveSet = new Set(card.moves.map((move) => `${move.x},${move.y}`));
+    const baseSet = new Set(baseline.moves.map((move) => `${move.x},${move.y}`));
+    if (moveSet.size !== baseSet.size) return true;
+    for (const move of moveSet) {
+      if (!baseSet.has(move)) return true;
+    }
+  }
+  return false;
+}
+
+function canEditOnlineLobby() {
+  return currentMode === "online" && currentRoomPrivate && !onlineGameStarted && !isSpectator;
+}
+
+function applyOnlineConfig(config: GameConfig) {
+  if (!canEditOnlineLobby()) {
+    statusEl.textContent = "Lobby cards can only be changed before the match starts.";
+    return;
+  }
+  latestConfig = config;
+  controller.setConfig(config);
+  renderer.setConfig(config);
+  onlineReadyIds = new Set();
+  controller.updateOnlineConfig(config, getSandboxName());
+  statusEl.textContent = "Lobby cards updated. Ready when you are.";
+  updateLobbyOverlay();
+}
+
+function createConfigWithDeckFrom(config: GameConfig, deck: string[]) {
+  const next = structuredClone(config) as GameConfig;
+  next.deck = deck;
+  return validateConfig(next);
+}
+
+function applyOnlineDeck(deck: string[]) {
+  if (!latestConfig) return;
+  try {
+    const validated = createConfigWithDeckFrom(latestConfig, deck);
+    applyOnlineConfig(validated);
+    draftOverlay.classList.add("hidden");
+  } catch {
+    statusEl.textContent = "Deck selection invalid.";
+  }
 }
 
 function setLobbyBusy(busy: boolean) {
@@ -1034,9 +1114,11 @@ function cloneConfig<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function openCustomize() {
+function openCustomize(scope: "local" | "lobby" = "local") {
   if (!latestConfig) return;
+  customizeScope = scope;
   returnToLandingOnCustomizeClose = false;
+  returnToLobbyOnCustomizeClose = scope === "lobby";
   editableConfig = cloneConfig(latestConfig);
   selectedCardIndex = 0;
   renderCustomize();
@@ -1045,10 +1127,19 @@ function openCustomize() {
 
 function closeCustomize() {
   overlay.classList.add("hidden");
+  if (returnToLobbyOnCustomizeClose) {
+    returnToLobbyOnCustomizeClose = false;
+    customizeScope = "local";
+    updateLobbyOverlay();
+    return;
+  }
   if (returnToLandingOnCustomizeClose) {
     returnToLandingOnCustomizeClose = false;
+    customizeScope = "local";
     showLanding();
+    return;
   }
+  customizeScope = "local";
 }
 
 function renderCustomize() {
@@ -1184,6 +1275,11 @@ function applyCardChanges() {
   try {
     editableConfig.deck = editableConfig.cards.map((card) => card.id);
     const validated = validateConfig(editableConfig);
+    if (customizeScope === "lobby") {
+      applyOnlineConfig(validated);
+      closeCustomize();
+      return;
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
     baseConfig = validated;
     const localConfig = applyLocalName(validated);
@@ -1268,9 +1364,7 @@ function triggerConfetti() {
 
 function createConfigWithDeck(deck: string[]): GameConfig {
   if (!baseConfig) throw new Error("Missing base config.");
-  const next = structuredClone(baseConfig) as GameConfig;
-  next.deck = deck;
-  return validateConfig(next);
+  return createConfigWithDeckFrom(baseConfig, deck);
 }
 
 function startWithDeck(deck: string[]) {
@@ -1293,8 +1387,20 @@ function startWithDeck(deck: string[]) {
 }
 
 function startRandomFive() {
-  if (currentMode !== "local") {
-    statusEl.textContent = "Random deck is available for local matches only.";
+  if (currentMode === "online") {
+    if (!canEditOnlineLobby()) {
+      statusEl.textContent = "Deck selection is available before the match starts.";
+      return;
+    }
+    if (!latestConfig) return;
+    const candidates = [...latestConfig.cards];
+    const selection: string[] = [];
+    while (selection.length < 5 && candidates.length > 0) {
+      const index = Math.floor(Math.random() * candidates.length);
+      const [card] = candidates.splice(index, 1);
+      if (card) selection.push(card.id);
+    }
+    applyOnlineDeck(selection);
     return;
   }
   if (!baseConfig) return;
@@ -1310,11 +1416,22 @@ function startRandomFive() {
 }
 
 function openDraft() {
-  if (currentMode !== "local") {
-    statusEl.textContent = "Deck selection is available for local matches only.";
+  if (currentMode === "online") {
+    if (!canEditOnlineLobby()) {
+      statusEl.textContent = "Deck selection is available before the match starts.";
+      return;
+    }
+    if (!latestConfig) return;
+    draftMode = "online";
+    draftConfig = latestConfig;
+    draftSelection = new Set();
+    renderDraft();
+    draftOverlay.classList.remove("hidden");
     return;
   }
   if (!baseConfig) return;
+  draftMode = "local";
+  draftConfig = baseConfig;
   startChoiceResolved = true;
   draftSelection = new Set();
   renderDraft();
@@ -1328,12 +1445,13 @@ function maybeShowStartOverlay() {
 }
 
 function renderDraft() {
-  if (!baseConfig) return;
+  const sourceConfig = draftConfig ?? baseConfig;
+  if (!sourceConfig) return;
   draftGrid.innerHTML = "";
   if (draftSelectedEl) {
     draftSelectedEl.innerHTML = "";
   }
-  for (const card of baseConfig.cards) {
+  for (const card of sourceConfig.cards) {
     const item = document.createElement("div");
     item.className = "draft-item";
     if (draftSelection.has(card.id)) item.classList.add("selected");
@@ -1470,7 +1588,7 @@ landingLocalBtn.addEventListener("click", () => {
 landingCustomizeBtn.addEventListener("click", () => {
   returnToLandingOnCustomizeClose = true;
   hideLanding();
-  openCustomize();
+  openCustomize("local");
 });
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyQuickBtn.addEventListener("click", async () => {
@@ -1648,6 +1766,32 @@ lobbyReadyToggle?.addEventListener("change", () => {
 });
 lobbyBackBtn?.addEventListener("click", leaveOnlineLobby);
 lobbyCloseBtn?.addEventListener("click", leaveOnlineLobby);
+exitOnlineBtn?.addEventListener("click", () => {
+  if (currentMode !== "online") return;
+  leaveOnlineLobby();
+});
+lobbyCustomizeBtn?.addEventListener("click", () => {
+  if (!canEditOnlineLobby()) {
+    statusEl.textContent = "Lobby cards can only be edited before the match starts.";
+    return;
+  }
+  lobbyOverlay?.classList.add("hidden");
+  openCustomize("lobby");
+});
+lobbyRandomBtn?.addEventListener("click", () => {
+  if (!canEditOnlineLobby()) {
+    statusEl.textContent = "Deck selection is available before the match starts.";
+    return;
+  }
+  startRandomFive();
+});
+lobbyChooseBtn?.addEventListener("click", () => {
+  if (!canEditOnlineLobby()) {
+    statusEl.textContent = "Deck selection is available before the match starts.";
+    return;
+  }
+  openDraft();
+});
 
 localOpponentNameInput.value = localOpponentName;
 opponentNameEl.textContent = localOpponentName || "Opponent";
@@ -1669,8 +1813,8 @@ startingPlayerSelect.addEventListener("change", () => {
   localStorage.setItem(LOCAL_START_KEY, localStartingPlayer);
 });
 
-customizeBtn.addEventListener("click", openCustomize);
-openCustomizeBtn.addEventListener("click", openCustomize);
+customizeBtn.addEventListener("click", () => openCustomize("local"));
+openCustomizeBtn.addEventListener("click", () => openCustomize("local"));
 closeBtn.addEventListener("click", closeCustomize);
 overlay.addEventListener("click", (event) => {
   if (event.target === overlay) closeCustomize();
@@ -1716,6 +1860,11 @@ draftOverlay.addEventListener("click", (event) => {
 });
 draftStartBtn.addEventListener("click", () => {
   if (draftSelection.size !== 5) return;
+  if (draftMode === "online") {
+    applyOnlineDeck([...draftSelection]);
+    draftOverlay.classList.add("hidden");
+    return;
+  }
   startWithDeck([...draftSelection]);
 });
 

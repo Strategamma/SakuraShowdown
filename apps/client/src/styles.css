@@ -123,6 +123,14 @@ body {
   flex-wrap: wrap;
 }
 
+.online-only {
+  display: none;
+}
+
+body[data-mode="online"] .online-only {
+  display: inline-flex;
+}
+
 .toolbar > * {
   flex-shrink: 0;
 }
@@ -1767,6 +1775,25 @@ body[data-mode="local"] .online-only {
   align-items: center;
   gap: 10px;
   font-weight: 600;
+}
+
+.lobby-sandbox {
+  background: rgba(16, 12, 18, 0.7);
+  border: 1px solid rgba(226, 74, 127, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.lobby-sandbox.hidden {
+  display: none;
+}
+
+.lobby-sandbox-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
 }
 
 .lobby-footer {

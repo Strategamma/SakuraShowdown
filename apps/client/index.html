@@ -36,6 +36,14 @@
               />
             </svg>
           </button>
+          <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M14 5h-2v2h2a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-2v2h2a5 5 0 0 0 5-5v-4a5 5 0 0 0-5-5z"
+              />
+              <path d="M4 12l5-4v3h7v2H9v3z" />
+            </svg>
+          </button>
           <button id="open-customize" class="ghost-button">Customize</button>
           <button id="toggle-view" class="ghost-button">3D View</button>
           <button id="new-game" class="ghost-button">New Game</button>
@@ -389,6 +397,17 @@
               <span>Ready</span>
             </label>
             <div class="room-info">Both players must be ready to begin.</div>
+          </div>
+          <div id="lobby-sandbox" class="lobby-sandbox hidden">
+            <div class="label">Lobby Cards</div>
+            <div id="lobby-sandbox-note" class="room-info">
+              Custom cards live only in this private lobby.
+            </div>
+            <div class="lobby-sandbox-actions">
+              <button id="lobby-customize" class="ghost-button">Create New Card</button>
+              <button id="lobby-random" class="ghost-button">Random 5 Cards</button>
+              <button id="lobby-choose" class="ghost-button">Choose 5 Cards</button>
+            </div>
           </div>
         </div>
         <div class="overlay-footer lobby-footer">
