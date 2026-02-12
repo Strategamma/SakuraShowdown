@@ -117,12 +117,22 @@ document.body.dataset.mode = appEl.dataset.mode || "local";
 document.body.dataset.cards = "canvas";
 
 let cardHintOverlay: HTMLElement | null = null;
+let canvasNameTop: HTMLElement | null = null;
+let canvasNameBottom: HTMLElement | null = null;
 if (canvasContainer) {
   cardHintOverlay = document.createElement("div");
   cardHintOverlay.id = "card-choice-overlay";
   cardHintOverlay.className = "card-hint overlay hidden";
   cardHintOverlay.textContent = "Choose card to discard";
   canvasContainer.appendChild(cardHintOverlay);
+
+  canvasNameTop = document.createElement("div");
+  canvasNameTop.className = "canvas-nameplate top";
+  canvasContainer.appendChild(canvasNameTop);
+
+  canvasNameBottom = document.createElement("div");
+  canvasNameBottom.className = "canvas-nameplate bottom";
+  canvasContainer.appendChild(canvasNameBottom);
 }
 
 let latestConfig: GameConfig | undefined;
@@ -755,6 +765,12 @@ function renderCards() {
   opponentNameEl.textContent = opponentName;
   setNameClass(playerNameEl, viewPlayerId === primaryId ? "primary" : "secondary");
   setNameClass(opponentNameEl, opponentMeta?.id === primaryId ? "primary" : "secondary");
+  if (canvasNameTop && canvasNameBottom) {
+    canvasNameTop.textContent = opponentName;
+    canvasNameBottom.textContent = playerName;
+    setNameClass(canvasNameTop, opponentMeta?.id === primaryId ? "primary" : "secondary");
+    setNameClass(canvasNameBottom, viewPlayerId === primaryId ? "primary" : "secondary");
+  }
 
   const isPlayerActive = latestState.activePlayerId === viewPlayerId;
   const hasWinner = Boolean(latestState.winnerId);

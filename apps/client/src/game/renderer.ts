@@ -106,6 +106,7 @@ export class GameRenderer {
   private lastCardSwapKey?: string;
   private cardLayout?: CardLayout;
   private cardTextureCache = new Map<string, THREE.CanvasTexture>();
+  private opponentShelf?: THREE.Mesh;
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
   private loader = new GLTFLoader();
@@ -207,6 +208,7 @@ export class GameRenderer {
     this.cards.clear();
     this.cardFly = [];
     this.cardTextureCache.clear();
+    this.opponentShelf = undefined;
     this.fitCamera();
     void this.loadModels();
   }
@@ -530,6 +532,7 @@ export class GameRenderer {
     const opponent = state.players.find((p) => p.id !== viewer?.id);
     const layout = this.computeCardLayout();
     this.cardLayout = layout;
+    this.updateOpponentShelf(layout);
 
     const pendingIds = new Set(selection.pendingCardIds ?? []);
     const selectedCardId = selection.selectedCardId;
@@ -582,7 +585,7 @@ export class GameRenderer {
         role: "pool",
         position: layout.poolSlot.clone(),
         inverted: false,
-        size: { w: layout.cardWidth * 0.9, h: layout.cardHeight * 0.9 }
+        size: { w: layout.cardWidth * 0.92, h: layout.cardHeight * 0.92 }
       });
     }
 
@@ -688,14 +691,13 @@ export class GameRenderer {
     const boardW = this.boardSize.width * this.cellSize;
     const boardD = this.boardSize.height * this.cellSize;
     const ratio = this.cardSize.height / this.cardSize.width;
-    const gap = Math.max(this.cellSize * 0.3, 0.22);
-    const maxCardW = boardW * 0.46;
-    const cardWidth = Math.min(this.cardSize.width, maxCardW);
+    const gap = Math.max(boardW * 0.04, this.cellSize * 0.2);
+    const cardWidth = (boardW - gap) / 2;
     const cardHeight = cardWidth * ratio;
     const rowOffset = boardD / 2 + cardHeight / 2 + this.cellSize * 0.4;
-    const edgeOffset = boardW / 2 - cardWidth / 2 - this.cellSize * 0.2;
-    const xOffset = Math.max(cardWidth / 2 + gap / 2, edgeOffset);
-    const cardY = 0.18;
+    const xOffset = boardW / 2 - cardWidth / 2;
+    const cardY = 0.2;
+    const poolX = boardW / 2 + cardWidth * 0.65 + this.cellSize * 0.5;
     return {
       cardWidth,
       cardHeight,
@@ -709,8 +711,30 @@ export class GameRenderer {
         new THREE.Vector3(-xOffset, cardY, -rowOffset),
         new THREE.Vector3(xOffset, cardY, -rowOffset)
       ],
-      poolSlot: new THREE.Vector3(0, cardY + 0.08, 0)
+      poolSlot: new THREE.Vector3(poolX, cardY + 0.05, 0)
     };
+  }
+
+  private updateOpponentShelf(layout: CardLayout) {
+    const boardW = this.boardSize.width * this.cellSize;
+    const shelfWidth = boardW * 1.06;
+    const shelfDepth = layout.cardHeight * 0.9;
+    const shelfHeight = 0.06;
+    if (!this.opponentShelf) {
+      const geom = new THREE.BoxGeometry(1, 1, 1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x2b1f2a,
+        roughness: 0.6,
+        metalness: 0.1,
+        emissive: 0x2b1b23,
+        emissiveIntensity: 0.35
+      });
+      this.opponentShelf = new THREE.Mesh(geom, mat);
+      this.opponentShelf.userData = { type: "decor" };
+      this.cardGroup.add(this.opponentShelf);
+    }
+    this.opponentShelf.scale.set(shelfWidth, shelfHeight, shelfDepth);
+    this.opponentShelf.position.set(0, shelfHeight / 2 + 0.02, -layout.rowOffset);
   }
 
   private cardKey(role: "player" | "opponent" | "pool", ownerId: string | undefined, cardId: string) {
@@ -761,8 +785,8 @@ export class GameRenderer {
   }
 
   private drawCardTexture(card: { id: string; name: string; moves: { x: number; y: number }[] }, inverted: boolean) {
-    const width = 360;
-    const height = 480;
+    const width = 420;
+    const height = 540;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const canvas = document.createElement("canvas");
     canvas.width = width * dpr;
@@ -790,14 +814,14 @@ export class GameRenderer {
     ctx.stroke();
 
     ctx.fillStyle = "rgba(62, 44, 52, 0.88)";
-    ctx.font = "600 26px \"Cinzel\", \"Georgia\", serif";
+    ctx.font = "600 28px \"Cinzel\", \"Georgia\", serif";
     ctx.textAlign = "center";
-    ctx.fillText(card.name.toUpperCase(), width / 2, 44);
+    ctx.fillText(card.name.toUpperCase(), width / 2, 54);
 
     const grid = 5;
-    const gridSize = Math.min(width - 70, height - 130);
+    const gridSize = Math.min(width - 64, height - 150);
     const gridLeft = (width - gridSize) / 2;
-    const gridTop = 70;
+    const gridTop = 90;
     const cell = gridSize / grid;
 
     ctx.strokeStyle = "rgba(70, 60, 75, 0.45)";
@@ -1480,7 +1504,11 @@ export class GameRenderer {
     const width = this.boardSize.width * this.cellSize;
     const depth = this.boardSize.height * this.cellSize;
     const layout = this.computeCardLayout();
-    const cardXExtent = Math.abs(layout.playerSlots[1]?.x ?? 0) + layout.cardWidth / 2;
+    const poolExtent = Math.abs(layout.poolSlot.x) + layout.cardWidth / 2;
+    const cardXExtent = Math.max(
+      Math.abs(layout.playerSlots[1]?.x ?? 0) + layout.cardWidth / 2,
+      poolExtent
+    );
     const extentX = Math.max(width / 2, cardXExtent);
     const extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
     const boardRadius = Math.max(extentX, extentZ);
