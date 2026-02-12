@@ -813,7 +813,7 @@ export class GameRenderer {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(62, 44, 52, 0.88)";
+    ctx.fillStyle = "rgba(36, 22, 30, 0.95)";
     ctx.font = "600 28px \"Cinzel\", \"Georgia\", serif";
     ctx.textAlign = "center";
     ctx.fillText(card.name.toUpperCase(), width / 2, 54);
@@ -824,8 +824,8 @@ export class GameRenderer {
     const gridTop = 90;
     const cell = gridSize / grid;
 
-    ctx.strokeStyle = "rgba(70, 60, 75, 0.45)";
-    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = "rgba(55, 42, 52, 0.8)";
+    ctx.lineWidth = 1.6;
     for (let i = 0; i <= grid; i += 1) {
       ctx.beginPath();
       ctx.moveTo(gridLeft, gridTop + i * cell);
@@ -837,7 +837,7 @@ export class GameRenderer {
       ctx.stroke();
     }
 
-    ctx.fillStyle = "#f3b6c6";
+    ctx.fillStyle = "#d9829c";
     ctx.beginPath();
     ctx.arc(gridLeft + gridSize / 2, gridTop + gridSize / 2, 7, 0, Math.PI * 2);
     ctx.fill();
@@ -845,8 +845,8 @@ export class GameRenderer {
     const center = { x: 2, y: 2 };
     const xMul = inverted ? -1 : 1;
     const yMul = inverted ? -1 : 1;
-    ctx.fillStyle = "#9a5d42";
-    ctx.strokeStyle = "rgba(65, 40, 30, 0.65)";
+    ctx.fillStyle = "#7b4330";
+    ctx.strokeStyle = "rgba(40, 24, 20, 0.85)";
     for (const move of card.moves) {
       const mx = move.x * xMul;
       const my = move.y * yMul;
