@@ -138,6 +138,14 @@ window.addEventListener("keydown", unlockSound, { once: true });
 let cardHintOverlay: HTMLElement | null = null;
 let canvasNameTop: HTMLElement | null = null;
 let canvasNameBottom: HTMLElement | null = null;
+let boardRotation = 0;
+if (
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(pointer: coarse)").matches
+) {
+  boardRotation = 90;
+}
 if (canvasContainer) {
   cardHintOverlay = document.createElement("div");
   cardHintOverlay.id = "card-choice-overlay";
@@ -196,12 +204,6 @@ let draftMode: "local" | "online" = "local";
 let draftConfig: GameConfig | undefined;
 let lastActivePlayerId: string | undefined;
 let lastReadyAll = false;
-let boardRotation =
-  typeof window !== "undefined" &&
-  window.matchMedia &&
-  window.matchMedia("(pointer: coarse)").matches
-    ? 90
-    : 0;
 
 const controller = new GameController({
   onState: (state) => {
