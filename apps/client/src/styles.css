@@ -1528,10 +1528,11 @@ body[data-mode="local"] .online-only {
   gap: 0;
   align-items: stretch;
   width: 100%;
-  background: rgba(16, 12, 18, 0.6);
-  border: 1px solid rgba(226, 74, 127, 0.3);
+  background: rgba(10, 8, 12, 0.7);
+  border: 1px solid rgba(226, 74, 127, 0.22);
   border-radius: 14px;
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .landing-tabs .tab-button {
@@ -1539,6 +1540,8 @@ body[data-mode="local"] .online-only {
   width: 100%;
   text-align: center;
   padding: 12px 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   border: none;
   border-right: 1px solid rgba(226, 74, 127, 0.15);
 }
@@ -1549,14 +1552,15 @@ body[data-mode="local"] .online-only {
 
 .landing-tabs .tab-button.active {
   border-color: rgba(226, 74, 127, 0.75);
-  box-shadow: 0 0 14px rgba(226, 74, 127, 0.35);
-  background: rgba(226, 74, 127, 0.18);
+  box-shadow: 0 0 16px rgba(226, 74, 127, 0.25);
+  background: linear-gradient(120deg, rgba(226, 74, 127, 0.24), rgba(132, 44, 76, 0.24));
 }
 
 .rules-button {
   align-self: center;
   white-space: nowrap;
-  padding: 10px 16px;
+  padding: 10px 18px;
+  min-height: 42px;
 }
 
 .landing-panel {
@@ -1574,25 +1578,38 @@ body[data-mode="local"] .online-only {
 }
 
 .landing-name {
-  background: rgba(16, 12, 18, 0.75);
-  border: 1px solid rgba(226, 74, 127, 0.25);
+  background: linear-gradient(180deg, rgba(24, 17, 27, 0.9), rgba(12, 9, 15, 0.95));
+  border: 1px solid rgba(226, 74, 127, 0.18);
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: grid;
   gap: 8px;
+  box-shadow: 0 18px 36px rgba(6, 4, 10, 0.45);
+}
+
+.landing-name .label,
+.landing-lobby .label,
+.landing-private .label {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .landing-name input {
   width: 100%;
+  background: rgba(8, 6, 10, 0.7);
+  border-color: rgba(226, 74, 127, 0.2);
 }
 
 .landing-sandbox {
-  background: rgba(16, 12, 18, 0.75);
-  border: 1px solid rgba(226, 74, 127, 0.25);
+  background: linear-gradient(180deg, rgba(22, 16, 24, 0.9), rgba(12, 9, 15, 0.95));
+  border: 1px solid rgba(226, 74, 127, 0.18);
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   display: grid;
   gap: 10px;
+  box-shadow: 0 16px 30px rgba(6, 4, 10, 0.4);
 }
 
 .landing-sandbox label {
@@ -1634,25 +1651,27 @@ body[data-mode="local"] .online-only {
 }
 
 .landing-lobby {
-  background: rgba(16, 12, 18, 0.78);
-  border: 1px solid rgba(226, 74, 127, 0.25);
+  background: linear-gradient(180deg, rgba(23, 16, 24, 0.9), rgba(12, 9, 15, 0.95));
+  border: 1px solid rgba(226, 74, 127, 0.18);
   border-radius: 16px;
-  padding: 16px;
+  padding: 16px 18px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
   min-height: 0;
   overflow: hidden;
   flex: 1;
+  box-shadow: 0 18px 36px rgba(6, 4, 10, 0.45);
 }
 
 .landing-private {
-  background: rgba(16, 12, 18, 0.78);
-  border: 1px solid rgba(226, 74, 127, 0.25);
+  background: linear-gradient(180deg, rgba(23, 16, 24, 0.9), rgba(12, 9, 15, 0.95));
+  border: 1px solid rgba(226, 74, 127, 0.18);
   border-radius: 16px;
-  padding: 16px;
+  padding: 16px 18px;
   display: grid;
   gap: 12px;
+  box-shadow: 0 18px 36px rgba(6, 4, 10, 0.45);
 }
 
 .landing-private-header {
@@ -1669,6 +1688,8 @@ body[data-mode="local"] .online-only {
 
 .private-actions input {
   width: 100%;
+  background: rgba(8, 6, 10, 0.7);
+  border-color: rgba(226, 74, 127, 0.2);
 }
 
 .private-buttons {
@@ -1682,6 +1703,8 @@ body[data-mode="local"] .online-only {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(226, 74, 127, 0.12);
 }
 
 .sakura-spinner {
@@ -1810,10 +1833,37 @@ body[data-mode="local"] .online-only {
   gap: 10px;
 }
 
+.lobby-deck {
+  display: grid;
+  gap: 8px;
+}
+
+.deck-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.deck-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deck-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 74, 127, 0.3);
+  background: rgba(226, 74, 127, 0.12);
+  font-size: 0.85rem;
+}
+
 .lobby-footer {
   display: flex;
   justify-content: flex-end;
   padding: 0 22px 22px;
+  margin-top: auto;
 }
 
 .lobby-item {
@@ -1823,8 +1873,8 @@ body[data-mode="local"] .online-only {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(120, 90, 105, 0.5);
-  background: linear-gradient(160deg, #22141d 0%, #151017 100%);
+  border: 1px solid rgba(226, 74, 127, 0.18);
+  background: rgba(12, 9, 15, 0.75);
 }
 
 .lobby-actions {

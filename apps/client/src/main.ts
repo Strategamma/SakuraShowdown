@@ -106,6 +106,8 @@ const lobbyBackBtn = document.getElementById("lobby-back") as HTMLButtonElement 
 const lobbyCloseBtn = document.getElementById("lobby-close") as HTMLButtonElement | null;
 const lobbySandboxEl = document.getElementById("lobby-sandbox") as HTMLElement | null;
 const lobbySandboxNote = document.getElementById("lobby-sandbox-note") as HTMLElement | null;
+const lobbyDeckWrap = document.getElementById("lobby-deck") as HTMLElement | null;
+const lobbyDeckList = document.getElementById("lobby-deck-list") as HTMLElement | null;
 const lobbyCustomizeBtn = document.getElementById("lobby-customize") as HTMLButtonElement | null;
 const lobbyRandomBtn = document.getElementById("lobby-random") as HTMLButtonElement | null;
 const lobbyChooseBtn = document.getElementById("lobby-choose") as HTMLButtonElement | null;
@@ -578,6 +580,19 @@ function renderLobbyOverlay() {
       lobbySandboxNote.textContent = active
         ? "Custom cards enabled for this lobby."
         : "Using the default card set.";
+    }
+    if (showSandbox && lobbyDeckWrap && lobbyDeckList) {
+      const deck = latestConfig.deck ?? [];
+      lobbyDeckWrap.classList.toggle("hidden", deck.length === 0);
+      lobbyDeckList.innerHTML = "";
+      const cardById = new Map(latestConfig.cards.map((card) => [card.id, card]));
+      for (const id of deck.slice(0, 5)) {
+        const card = cardById.get(id);
+        const pill = document.createElement("div");
+        pill.className = "deck-pill";
+        pill.textContent = card?.name ?? id;
+        lobbyDeckList.appendChild(pill);
+      }
     }
     const disabled = !canEditOnlineLobby();
     if (lobbyCustomizeBtn) lobbyCustomizeBtn.disabled = disabled;
@@ -1430,6 +1445,7 @@ function openDraft() {
     draftConfig = latestConfig;
     draftSelection = new Set();
     renderDraft();
+    lobbyOverlay?.classList.add("hidden");
     draftOverlay.classList.remove("hidden");
     return;
   }
@@ -1858,15 +1874,24 @@ startChooseBtn.addEventListener("click", openDraft);
 
 draftCloseBtn.addEventListener("click", () => {
   draftOverlay.classList.add("hidden");
+  if (draftMode === "online") {
+    updateLobbyOverlay();
+  }
 });
 draftOverlay.addEventListener("click", (event) => {
-  if (event.target === draftOverlay) draftOverlay.classList.add("hidden");
+  if (event.target === draftOverlay) {
+    draftOverlay.classList.add("hidden");
+    if (draftMode === "online") {
+      updateLobbyOverlay();
+    }
+  }
 });
 draftStartBtn.addEventListener("click", () => {
   if (draftSelection.size !== 5) return;
   if (draftMode === "online") {
     applyOnlineDeck([...draftSelection]);
     draftOverlay.classList.add("hidden");
+    updateLobbyOverlay();
     return;
   }
   startWithDeck([...draftSelection]);
