@@ -472,6 +472,8 @@ function applyLandingView() {
   if (landingRulesBtn) {
     landingRulesBtn.classList.toggle("active", rulesVisible);
   }
+  landingOverlay.dataset.tab = landingTab;
+  landingOverlay.dataset.rules = rulesVisible ? "true" : "false";
 }
 
 function setLandingTab(tab: "local" | "online") {
@@ -706,6 +708,8 @@ function showNotice(message: string) {
 
 function showLanding(tab: "local" | "online" = "local") {
   landingOverlay.classList.remove("hidden");
+  landingOverlay.dataset.tab = tab;
+  landingOverlay.dataset.rules = "false";
   lobbyOverlay?.classList.add("hidden");
   setLandingTab(tab);
   syncOnlineNameInput();

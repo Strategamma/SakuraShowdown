@@ -1495,6 +1495,20 @@ body[data-mode="local"] .online-only {
   min-height: 0;
 }
 
+.landing-overlay[data-tab="local"] #landing-panel-online,
+.landing-overlay[data-tab="online"] #landing-panel-local {
+  display: none;
+}
+
+.landing-overlay[data-rules="true"] #landing-panel-local,
+.landing-overlay[data-rules="true"] #landing-panel-online {
+  display: none;
+}
+
+.landing-overlay[data-rules="false"] #landing-panel-rules {
+  display: none;
+}
+
 .overlay-header-actions {
   display: inline-flex;
   align-items: center;
@@ -1624,8 +1638,8 @@ body[data-mode="local"] .online-only {
   border: 1px solid rgba(226, 74, 127, 0.25);
   border-radius: 16px;
   padding: 16px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
   min-height: 0;
   overflow: hidden;
