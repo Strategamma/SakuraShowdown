@@ -678,12 +678,13 @@ function applyOnlineDeck(deck: string[]) {
 
 function setLobbyBusy(busy: boolean) {
   lobbyBusy = busy;
-  lobbyRefreshBtn.disabled = busy;
-  lobbyCreateBtn.disabled = busy;
-  if (landingTabOnline) landingTabOnline.disabled = busy;
-  if (landingResumeBtn) landingResumeBtn.disabled = busy;
-  if (privateJoinBtn) privateJoinBtn.disabled = busy;
-  if (privateCreateBtn) privateCreateBtn.disabled = busy;
+  const tooltip = busy ? "Working…" : undefined;
+  setButtonDisabled(lobbyRefreshBtn, busy, tooltip);
+  setButtonDisabled(lobbyCreateBtn, busy, tooltip);
+  setButtonDisabled(landingTabOnline, busy, tooltip);
+  setButtonDisabled(landingResumeBtn, busy, tooltip);
+  setButtonDisabled(privateJoinBtn, busy, tooltip);
+  setButtonDisabled(privateCreateBtn, busy, tooltip);
   if (privateKeyInput) privateKeyInput.disabled = busy;
   if (sandboxToggle) sandboxToggle.disabled = busy;
   if (sandboxNameInput) sandboxNameInput.disabled = busy || !sandboxToggle?.checked;
@@ -740,6 +741,21 @@ function hideLanding() {
   lobbyTimer = undefined;
 }
 
+function setButtonDisabled(
+  button: HTMLButtonElement | null,
+  disabled: boolean,
+  tooltip?: string
+) {
+  if (!button) return;
+  button.disabled = disabled;
+  button.classList.toggle("button-disabled", disabled);
+  if (tooltip && disabled) {
+    button.setAttribute("data-tooltip", tooltip);
+  } else {
+    button.removeAttribute("data-tooltip");
+  }
+}
+
 async function refreshLobby() {
   if (!lobbyListEl) return;
   if (lobbyBusy) return;
@@ -765,7 +781,7 @@ async function refreshLobby() {
     if (!rooms.length) {
       const empty = document.createElement("div");
       empty.className = "lobby-empty";
-      empty.textContent = "No public rooms yet. Start a quick match.";
+      empty.textContent = "No public rooms yet. Create one below.";
       lobbyListEl.appendChild(empty);
       return;
     }
@@ -801,12 +817,12 @@ async function refreshLobby() {
       join.className = "ghost-button";
       const open = room.open ?? players < maxPlayers;
       join.textContent = open ? "Join" : "Full";
-      join.disabled = !open;
+      setButtonDisabled(join, !open, open ? undefined : "Room is full");
       join.addEventListener("click", async () => {
         if (!open || lobbyBusy) return;
         setLobbyBusy(true);
         join.textContent = "Joining...";
-        join.disabled = true;
+        setButtonDisabled(join, true, "Connecting…");
         setMode("online");
         const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
         setLobbyBusy(false);
@@ -815,7 +831,7 @@ async function refreshLobby() {
           return;
         }
         join.textContent = open ? "Join" : "Full";
-        join.disabled = !open;
+        setButtonDisabled(join, !open, open ? undefined : "Room is full");
         statusEl.textContent = "Room unavailable. Refreshing lobby…";
         refreshLobby();
       });
@@ -829,7 +845,7 @@ async function refreshLobby() {
           />
         </svg>
       `;
-      spectate.disabled = !started;
+      setButtonDisabled(spectate, !started, started ? undefined : "Spectate available once the match starts");
       spectate.addEventListener("click", async () => {
         if (lobbyBusy) return;
         if (!started) return;
@@ -988,6 +1004,10 @@ function renderCards() {
   const hasWinner = Boolean(latestState.winnerId);
   playerSection.classList.toggle("active", !hasWinner && isPlayerActive);
   opponentSection.classList.toggle("active", !hasWinner && !isPlayerActive);
+  if (canvasNameTop && canvasNameBottom) {
+    canvasNameTop.classList.toggle("active", !hasWinner && !isPlayerActive);
+    canvasNameBottom.classList.toggle("active", !hasWinner && isPlayerActive);
+  }
   renderCaptured(viewPlayerId);
 
   handEl.innerHTML = "";

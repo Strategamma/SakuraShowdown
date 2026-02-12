@@ -373,6 +373,13 @@ body[data-cards="canvas"] #canvas-container {
   bottom: 12px;
 }
 
+.canvas-nameplate.active {
+  color: #f9c7d3;
+  border-color: rgba(226, 74, 127, 0.55);
+  box-shadow: 0 0 18px rgba(226, 74, 127, 0.35);
+  background: rgba(28, 18, 24, 0.85);
+}
+
 #right-panel {
   position: fixed;
   top: 96px;
@@ -401,6 +408,7 @@ body[data-cards="canvas"] #canvas-container {
   flex-direction: column;
   gap: 10px;
   min-height: 0;
+  position: relative;
 }
 
 .opponent-rail {
@@ -479,6 +487,29 @@ body[data-cards="canvas"] #canvas-container {
   background: rgba(227, 86, 130, 0.14);
   border-color: rgba(227, 86, 130, 0.5);
   box-shadow: 0 0 0 1px rgba(227, 86, 130, 0.4), 0 16px 28px rgba(227, 86, 130, 0.25);
+}
+
+.card-rail.active::after {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(226, 74, 127, 0.2);
+  border: 1px solid rgba(226, 74, 127, 0.45);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f7dbe6;
+  content: "Turn";
+}
+
+#player-section.active::after {
+  content: "Your turn";
+}
+
+#opponent-section.active::after {
+  content: "Opponent turn";
 }
 
 #opponent-hand,
@@ -621,6 +652,11 @@ button {
   color: white;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
   transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out), filter 0.12s var(--ease-out);
 }
 
@@ -632,6 +668,11 @@ button:hover {
 button:active {
   transform: translateY(1px) scale(0.98);
   filter: brightness(0.96);
+}
+
+.button-disabled,
+button:disabled {
+  pointer-events: auto;
 }
 
 .ghost-button {
@@ -649,6 +690,36 @@ button:active {
   opacity: 0.6;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.button-disabled[data-tooltip],
+button:disabled[data-tooltip] {
+  position: relative;
+}
+
+.button-disabled[data-tooltip]:hover::after,
+button:disabled[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 14, 20, 0.95);
+  border: 1px solid rgba(226, 74, 127, 0.4);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: #f5e8ef;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 10px 20px rgba(12, 8, 12, 0.35);
 }
 
 .player-name {
@@ -1532,10 +1603,11 @@ body[data-mode="local"] .online-only {
 
 .landing-body {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 18px;
   padding: 18px 22px 22px;
   min-height: 0;
+  flex: 1;
   overflow: auto;
 }
 
@@ -1612,11 +1684,12 @@ body[data-mode="local"] .online-only {
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  flex: 1;
 }
 
 #landing-panel-online {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.4fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "name name"
@@ -1624,7 +1697,8 @@ body[data-mode="local"] .online-only {
     "actions actions";
   gap: 16px;
   min-height: 0;
-  align-items: start;
+  height: 100%;
+  align-content: stretch;
 }
 
 #landing-panel-online .landing-name {
@@ -1643,6 +1717,17 @@ body[data-mode="local"] .online-only {
   grid-area: actions;
   display: flex;
   justify-content: flex-end;
+}
+
+#lobby-refresh {
+  min-height: 36px;
+  justify-content: center;
+}
+
+#lobby-refresh .button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .landing-name {
@@ -1724,9 +1809,9 @@ body[data-mode="local"] .online-only {
   border-radius: 16px;
   padding: 16px 18px;
   display: grid;
-  grid-template-rows: auto minmax(260px, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
-  min-height: 0;
+  min-height: clamp(420px, 55vh, 780px);
   overflow: hidden;
   flex: 1;
   box-shadow: 0 18px 36px rgba(6, 4, 10, 0.45);
@@ -1809,8 +1894,7 @@ body[data-mode="local"] .online-only {
   gap: 10px;
   overflow: auto;
   padding-right: 4px;
-  min-height: clamp(360px, 45vh, 560px);
-  max-height: min(60vh, 640px);
+  min-height: 0;
 }
 
 .lobby-card {
@@ -2431,7 +2515,7 @@ body[data-mode="local"] .online-only {
 
 @media (max-width: 600px) {
   #landing-panel-online {
-    grid-template-rows: auto minmax(260px, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .draft-grid {
@@ -2448,6 +2532,7 @@ body[data-mode="local"] .online-only {
 
   .landing-lobby {
     padding: 12px;
+    min-height: min(70vh, 520px);
   }
 
   .landing-private {
