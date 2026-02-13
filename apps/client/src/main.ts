@@ -477,11 +477,11 @@ function updateBoardSize() {
   const availableWidth = rect.width - poolWidth - (isStacked ? 0 : gap);
   const availableHeight =
     rect.height - opponentHeight - playerHeight - poolHeight - gap * (isStacked ? 3 : 2);
-  const size = Math.max(0, Math.min(availableWidth, availableHeight));
-  if (size > 0) {
-    canvasContainer.style.width = `${size}px`;
-    canvasContainer.style.height = `${size}px`;
-  }
+  const size = Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
+  const fallback = Math.floor(Math.max(240, Math.min(rect.width, rect.height)));
+  const finalSize = size > 0 ? size : fallback;
+  canvasContainer.style.width = `${finalSize}px`;
+  canvasContainer.style.height = `${finalSize}px`;
 }
 
 if (gameArea) {

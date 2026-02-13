@@ -247,7 +247,7 @@ body[data-mode="online"] #open-customize {
     "player player";
   gap: 10px;
   padding: 6px 8px 10px;
-  min-height: 0;
+  min-height: calc(100dvh - var(--topbar-height));
   align-items: stretch;
 }
 
