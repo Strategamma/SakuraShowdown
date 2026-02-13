@@ -221,6 +221,12 @@ const controller = new GameController({
     const previous = latestState;
     latestState = state;
     latestMoves = controller.getLegalMoves();
+    if (state.winnerId && (!previous || previous.winnerId !== state.winnerId) && latestConfig) {
+      const winnerName =
+        latestConfig.players.find((p) => p.id === state.winnerId)?.name ?? state.winnerId;
+      showVictory(winnerName);
+      lastWinnerId = state.winnerId;
+    }
     if (previous) {
       const prevPieces = new Map(previous.pieces.map((piece) => [piece.id, piece]));
       const nextPieces = new Map(state.pieces.map((piece) => [piece.id, piece]));

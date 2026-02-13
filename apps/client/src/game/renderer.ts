@@ -1547,14 +1547,22 @@ export class GameRenderer {
     const extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
     const boardRadius = Math.max(extentX, extentZ);
     const fov = (this.camera.fov * Math.PI) / 180;
-    const distance = boardRadius / Math.tan(fov / 2) + 1.2;
+    const isCompact =
+      this.container.clientWidth < 720 ||
+      this.container.clientHeight < 680 ||
+      this.container.clientHeight > this.container.clientWidth * 1.2;
+    const distance = boardRadius / Math.tan(fov / 2) + (isCompact ? 0.6 : 1.2);
 
     if (this.viewMode === "2d") {
       this.camera.fov = 35;
-      this.camera.position.set(0, distance * 0.95, 0.01);
+      this.camera.position.set(0, distance * (isCompact ? 0.82 : 0.95), 0.01);
     } else {
       this.camera.fov = 40;
-      this.camera.position.set(0, distance * 0.55, distance * 0.7);
+      this.camera.position.set(
+        0,
+        distance * (isCompact ? 0.48 : 0.55),
+        distance * (isCompact ? 0.62 : 0.7)
+      );
     }
     this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();

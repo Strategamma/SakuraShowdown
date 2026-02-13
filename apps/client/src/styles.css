@@ -23,6 +23,7 @@
   --ease-in: cubic-bezier(0.32, 0, 0.67, 0);
   --font-display: "Cinzel", serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;
+  --topbar-height: 78px;
 }
 
 * {
@@ -258,7 +259,8 @@ body[data-cards="canvas"] #game-area {
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "board";
   gap: 8px;
-  padding: 6px 8px 10px;
+  padding: 4px 6px 6px;
+  min-height: calc(100dvh - var(--topbar-height));
 }
 
 body[data-cards="canvas"] .card-rail {
@@ -267,7 +269,7 @@ body[data-cards="canvas"] .card-rail {
 
 body[data-cards="canvas"] #canvas-container {
   width: min(100vw, 1800px);
-  height: min(96vh, 100vw);
+  height: 100%;
   aspect-ratio: auto;
 }
 
@@ -286,6 +288,7 @@ body[data-cards="canvas"] #canvas-container {
   #top-bar {
     padding: 10px 14px;
     min-height: 68px;
+    --topbar-height: 68px;
   }
 
   .toolbar {
@@ -294,6 +297,12 @@ body[data-cards="canvas"] #canvas-container {
 
   #canvas-container {
     min-height: 480px;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --topbar-height: 64px;
   }
 }
 
@@ -403,7 +412,7 @@ body[data-cards="canvas"] #canvas-container {
 
 @media (max-width: 640px) {
   body[data-cards="canvas"] #canvas-container {
-    height: min(98vh, 100vw);
+    height: 100%;
   }
 }
 
