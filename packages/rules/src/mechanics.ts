@@ -17,13 +17,31 @@ const swapWithPool: Mechanic = {
   }
 };
 
+function resolveTargetTypeIds(
+  ctx: MechanicContext,
+  pieceTypeIdParam: unknown
+): Set<string> {
+  const requested = typeof pieceTypeIdParam === "string" ? pieceTypeIdParam : "master";
+  const direct = ctx.config.pieceTypes.find((type) => type.id === requested);
+  if (direct) {
+    return new Set([direct.id]);
+  }
+  const masterIds = new Set(
+    ctx.config.pieceTypes
+      .filter((type) => type.tag === "king" || type.id === "master")
+      .map((type) => type.id)
+  );
+  if (masterIds.size === 0) masterIds.add(requested);
+  return masterIds;
+}
+
 const winCapturePiece: Mechanic = {
   id: "win_capture_piece",
   checkWinner(state, ctx, params) {
-    const pieceTypeId = typeof params?.pieceTypeId === "string" ? params.pieceTypeId : "master";
+    const targetTypeIds = resolveTargetTypeIds(ctx, params?.pieceTypeId);
     for (const player of ctx.config.players) {
       const alive = state.pieces.some(
-        (piece) => piece.alive && piece.ownerId === player.id && piece.typeId === pieceTypeId
+        (piece) => piece.alive && piece.ownerId === player.id && targetTypeIds.has(piece.typeId)
       );
       if (!alive) {
         const opponent = ctx.config.players.find((p) => p.id !== player.id);
@@ -37,7 +55,7 @@ const winCapturePiece: Mechanic = {
 const winReachTemple: Mechanic = {
   id: "win_reach_temple",
   checkWinner(state, ctx, params) {
-    const pieceTypeId = typeof params?.pieceTypeId === "string" ? params.pieceTypeId : "master";
+    const targetTypeIds = resolveTargetTypeIds(ctx, params?.pieceTypeId);
     for (const player of ctx.config.players) {
       const targetTemple = ctx.config.players.find((p) => p.id !== player.id)?.temple;
       if (!targetTemple) continue;
@@ -45,7 +63,7 @@ const winReachTemple: Mechanic = {
         (piece) =>
           piece.alive &&
           piece.ownerId === player.id &&
-          piece.typeId === pieceTypeId &&
+          targetTypeIds.has(piece.typeId) &&
           piece.x === targetTemple.x &&
           piece.y === targetTemple.y
       );

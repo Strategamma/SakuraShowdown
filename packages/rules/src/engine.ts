@@ -136,11 +136,18 @@ export function applyMove(state: GameState, move: Move, config: GameConfig): Gam
   const piece = next.pieces.find((p: Piece) => p.id === move.pieceId);
   if (!piece) throw new Error("Piece not found.");
 
+  const masterTypeIds = new Set(
+    config.pieceTypes
+      .filter((type) => type.tag === "king" || type.id === "master")
+      .map((type) => type.id)
+  );
+  if (masterTypeIds.size === 0) masterTypeIds.add("master");
+
   const target = getPieceAt(next, move.to);
   let capturedMaster = false;
   if (target && target.ownerId !== piece.ownerId) {
     target.alive = false;
-    if (target.typeId === "master") capturedMaster = true;
+    if (masterTypeIds.has(target.typeId)) capturedMaster = true;
   }
 
   piece.x = move.to.x;
@@ -151,7 +158,15 @@ export function applyMove(state: GameState, move: Move, config: GameConfig): Gam
     if (!other.alive) continue;
     if (other.x === piece.x && other.y === piece.y && other.ownerId !== piece.ownerId) {
       other.alive = false;
-      if (other.typeId === "master") capturedMaster = true;
+      if (masterTypeIds.has(other.typeId)) capturedMaster = true;
+    }
+  }
+
+  let reachedTemple = false;
+  if (masterTypeIds.has(piece.typeId)) {
+    const targetTemple = config.players.find((p) => p.id !== piece.ownerId)?.temple;
+    if (targetTemple && piece.x === targetTemple.x && piece.y === targetTemple.y) {
+      reachedTemple = true;
     }
   }
 
@@ -163,7 +178,7 @@ export function applyMove(state: GameState, move: Move, config: GameConfig): Gam
   withMechanics.turn += 1;
   withMechanics.activePlayerId = nextPlayerId(config, move.playerId);
 
-  if (capturedMaster) {
+  if (capturedMaster || reachedTemple) {
     withMechanics.winnerId = move.playerId;
   } else {
     const winner = checkMechanicWinners(withMechanics, { config, state: withMechanics }, config.mechanics);

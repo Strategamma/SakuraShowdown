@@ -267,7 +267,7 @@ body[data-cards="canvas"] .card-rail {
 
 body[data-cards="canvas"] #canvas-container {
   width: min(100vw, 1800px);
-  height: min(94vh, 100vw);
+  height: min(96vh, 100vw);
   aspect-ratio: auto;
 }
 
@@ -403,7 +403,7 @@ body[data-cards="canvas"] #canvas-container {
 
 @media (max-width: 640px) {
   body[data-cards="canvas"] #canvas-container {
-    height: min(94vh, 100vw);
+    height: min(98vh, 100vw);
   }
 }
 
@@ -416,8 +416,8 @@ body[data-cards="canvas"] #canvas-container {
   align-items: center;
   justify-content: center;
   min-height: 520px;
-  height: min(90vh, 100vw);
-  max-height: 1500px;
+  height: min(92vh, 100vw);
+  max-height: 1600px;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;

@@ -719,13 +719,19 @@ export class GameRenderer {
     const boardW = this.boardSize.width * this.cellSize;
     const boardD = this.boardSize.height * this.cellSize;
     const ratio = this.cardSize.height / this.cardSize.width;
+    const isCompact =
+      this.container.clientWidth < 720 ||
+      this.container.clientHeight < 680 ||
+      this.container.clientHeight > this.container.clientWidth * 1.2;
     const gap = Math.max(boardW * 0.04, this.cellSize * 0.2);
     const cardWidth = (boardW - gap) / 2;
     const cardHeight = cardWidth * ratio;
-    const rowOffset = boardD / 2 + cardHeight / 2 + this.cellSize * 0.4;
+    const rowOffset =
+      boardD / 2 + cardHeight / 2 + this.cellSize * (isCompact ? 0.22 : 0.4);
     const xOffset = boardW / 2 - cardWidth / 2;
     const cardY = 0.2;
-    const poolX = boardW / 2 + cardWidth * 0.65 + this.cellSize * 0.5;
+    const poolX =
+      boardW / 2 + cardWidth * (isCompact ? 0.55 : 0.65) + this.cellSize * (isCompact ? 0.32 : 0.5);
     return {
       cardWidth,
       cardHeight,
