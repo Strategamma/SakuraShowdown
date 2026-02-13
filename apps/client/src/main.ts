@@ -1,5 +1,5 @@
 import "./styles.css";
-import { validateConfig } from "@game/rules";
+import { listLegalMoves, validateConfig } from "@game/rules";
 import type { GameConfig, GameState, LegalMove } from "@game/rules";
 import { GameController } from "./game/controller";
 import { GameRenderer } from "./game/renderer";
@@ -478,10 +478,12 @@ function renderAll() {
   }
   const selection = controller.getSelection();
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
+  const checkOwners = computeCheckOwners(latestState, latestConfig);
   renderer.render(latestState, moves, {
     ...selection,
     pendingCardIds: pendingMove?.cardIds,
-    viewerId: viewPlayerId
+    viewerId: viewPlayerId,
+    checkOwners
   });
   const primaryId = latestConfig.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
@@ -506,6 +508,29 @@ function renderAll() {
   }
 
   updateStartedUI();
+}
+
+function computeCheckOwners(state: GameState, config: GameConfig): string[] {
+  const masterTypeIds = new Set(
+    config.pieceTypes
+      .filter((type) => type.tag === "king" || type.id === "master")
+      .map((type) => type.id)
+  );
+  const checkOwners = new Set<string>();
+  for (const player of config.players) {
+    const master = state.pieces.find(
+      (piece) => piece.alive && piece.ownerId === player.id && masterTypeIds.has(piece.typeId)
+    );
+    if (!master) continue;
+    const opponent = config.players.find((p) => p.id !== player.id);
+    if (!opponent) continue;
+    const threatState: GameState = { ...state, activePlayerId: opponent.id };
+    const threats = listLegalMoves(threatState, config);
+    if (threats.some((move) => move.capture && move.to.x === master.x && move.to.y === master.y)) {
+      checkOwners.add(player.id);
+    }
+  }
+  return Array.from(checkOwners);
 }
 
 function updateStartedUI() {

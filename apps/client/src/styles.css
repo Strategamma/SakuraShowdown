@@ -131,6 +131,10 @@ body[data-mode="online"] .online-only {
   display: inline-flex;
 }
 
+body[data-mode="online"] #open-customize {
+  display: none;
+}
+
 .toolbar > * {
   flex-shrink: 0;
 }
@@ -235,8 +239,8 @@ body[data-mode="online"] .online-only {
     "board"
     "pool"
     "player";
-  gap: 14px;
-  padding: 10px 16px 16px;
+  gap: 12px;
+  padding: 8px 12px 12px;
   min-height: 0;
   align-items: stretch;
 }
@@ -247,7 +251,7 @@ body[data-mode="online"] .online-only {
 
 #game-area.board-layout #canvas-container,
 #game-area.board-layout .card-rail {
-  width: min(96vw, 1080px);
+  width: min(98vw, 1280px);
 }
 
 body[data-cards="canvas"] #game-area {
@@ -262,8 +266,8 @@ body[data-cards="canvas"] .card-rail {
 }
 
 body[data-cards="canvas"] #canvas-container {
-  width: min(98vw, 1400px);
-  height: min(86vh, 98vw);
+  width: min(98vw, 1600px);
+  height: min(88vh, 98vw);
   aspect-ratio: auto;
 }
 
@@ -412,8 +416,8 @@ body[data-cards="canvas"] #canvas-container {
   align-items: center;
   justify-content: center;
   min-height: 520px;
-  height: min(74vh, 92vw);
-  max-height: 1100px;
+  height: min(80vh, 94vw);
+  max-height: 1200px;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
@@ -698,6 +702,12 @@ body[data-cards="canvas"] #canvas-container {
   padding: 6px 10px;
   font-size: 0.9rem;
   min-height: 28px;
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
 }
 
 .icon-button.active {

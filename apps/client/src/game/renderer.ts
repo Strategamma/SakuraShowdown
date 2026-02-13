@@ -7,6 +7,7 @@ export type RendererSelection = {
   selectedCardId?: string;
   pendingCardIds?: string[];
   viewerId?: string;
+  checkOwners?: string[];
 };
 
 export type RendererCallbacks = {
@@ -109,6 +110,7 @@ export class GameRenderer {
   private opponentShelf?: THREE.Mesh;
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
+  private masterTypeIds = new Set<string>();
   private loader = new GLTFLoader();
   private models = new Map<string, ModelEntry>();
   private woodTexture = this.createWoodTexture();
@@ -202,6 +204,11 @@ export class GameRenderer {
   setConfig(config: GameConfig) {
     this.config = config;
     this.boardSize = { width: config.board.width, height: config.board.height };
+    this.masterTypeIds = new Set(
+      config.pieceTypes
+        .filter((type) => type.tag === "king" || type.id === "master")
+        .map((type) => type.id)
+    );
     this.buildBoard();
     this.buildTempleMarkers();
     this.buildHighlights();
@@ -489,6 +496,7 @@ export class GameRenderer {
   private updatePieces(state: GameState, selection: RendererSelection) {
     if (!this.config) return;
 
+    const checkOwners = new Set(selection.checkOwners ?? []);
     const lastMove = state.lastMove;
     const lastMoveKey = lastMove
       ? `${state.turn}:${lastMove.pieceId}:${lastMove.cardId}`
@@ -519,9 +527,20 @@ export class GameRenderer {
       }
 
       const bodyMat = visual.body.material as THREE.MeshStandardMaterial;
+      const ringMat = visual.ring.material as THREE.MeshBasicMaterial;
+      const isMaster = this.masterTypeIds.has(piece.typeId);
+      const inCheck = isMaster && checkOwners.has(piece.ownerId);
       if (visual.selected) {
         bodyMat.emissive.setHex(0xf4a261);
         bodyMat.emissiveIntensity = 0.5;
+        ringMat.color.setHex(0xf4a261);
+        ringMat.opacity = 0.75;
+        visual.ring.visible = true;
+      } else if (inCheck) {
+        bodyMat.emissive.setHex(0xf2c15f);
+        bodyMat.emissiveIntensity = 0.3;
+        ringMat.color.setHex(0xf2c15f);
+        ringMat.opacity = 0.85;
         visual.ring.visible = true;
       } else {
         bodyMat.emissive.setHex(0x000000);
