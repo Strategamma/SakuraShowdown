@@ -111,6 +111,7 @@ export class GameRenderer {
   private cellSize = 1;
   private boardSize = { width: 5, height: 5 };
   private masterTypeIds = new Set<string>();
+  private cardsEnabled = true;
   private loader = new GLTFLoader();
   private models = new Map<string, ModelEntry>();
   private woodTexture = this.createWoodTexture();
@@ -201,6 +202,15 @@ export class GameRenderer {
     this.startLoop();
   }
 
+  setCardsEnabled(enabled: boolean) {
+    this.cardsEnabled = enabled;
+    if (!enabled) {
+      this.cardGroup.clear();
+      this.cards.clear();
+      this.cardFly = [];
+    }
+  }
+
   setConfig(config: GameConfig) {
     this.config = config;
     this.boardSize = { width: config.board.width, height: config.board.height };
@@ -229,7 +239,9 @@ export class GameRenderer {
 
     this.updateHighlights(legalMoves);
     this.updatePieces(state, selection);
-    this.updateCards(state, selection);
+    if (this.cardsEnabled) {
+      this.updateCards(state, selection);
+    }
   }
 
   setBoardFlip(flipped: boolean) {

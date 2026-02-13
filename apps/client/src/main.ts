@@ -29,6 +29,7 @@ const RECONNECT_KEY = "sakura.reconnectToken";
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
+const gameArea = document.getElementById("game-area") as HTMLElement | null;
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const localOpponentNameInput = document.getElementById("local-opponent-name") as HTMLInputElement;
 const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
@@ -52,6 +53,7 @@ const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
+const poolSection = poolEl?.closest(".pool-rail") as HTMLElement | null;
 const opponentCapturedEl = document.getElementById("opponent-captured") as HTMLElement;
 const playerCapturedEl = document.getElementById("player-captured") as HTMLElement;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
@@ -128,7 +130,7 @@ const privateCreateBtn = document.getElementById("private-create") as HTMLButton
 
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
-document.body.dataset.cards = "canvas";
+document.body.dataset.cards = "rails";
 
 const unlockSound = () => sound.unlock();
 window.addEventListener("pointerdown", unlockSound, { once: true });
@@ -460,6 +462,37 @@ const renderer = new GameRenderer(canvasContainer, {
     renderAll();
   }
 });
+renderer.setCardsEnabled(false);
+
+function updateBoardSize() {
+  if (!canvasContainer || !gameArea) return;
+  const isStacked = window.matchMedia("(max-width: 900px)").matches;
+  const gap = 10;
+  const rect = gameArea.getBoundingClientRect();
+  const opponentHeight = opponentSection?.getBoundingClientRect().height ?? 0;
+  const playerHeight = playerSection?.getBoundingClientRect().height ?? 0;
+  const poolRect = poolSection?.getBoundingClientRect();
+  const poolHeight = isStacked ? poolRect?.height ?? 0 : 0;
+  const poolWidth = !isStacked ? poolRect?.width ?? 0 : 0;
+  const availableWidth = rect.width - poolWidth - (isStacked ? 0 : gap);
+  const availableHeight =
+    rect.height - opponentHeight - playerHeight - poolHeight - gap * (isStacked ? 3 : 2);
+  const size = Math.max(0, Math.min(availableWidth, availableHeight));
+  if (size > 0) {
+    canvasContainer.style.width = `${size}px`;
+    canvasContainer.style.height = `${size}px`;
+  }
+}
+
+if (gameArea) {
+  const layoutObserver = new ResizeObserver(updateBoardSize);
+  layoutObserver.observe(gameArea);
+  if (opponentSection) layoutObserver.observe(opponentSection);
+  if (playerSection) layoutObserver.observe(playerSection);
+  if (poolSection) layoutObserver.observe(poolSection);
+  window.addEventListener("resize", updateBoardSize);
+  updateBoardSize();
+}
 renderer.setViewMode(viewMode);
 rotateBoardBtn?.addEventListener("click", () => {
   renderer.rotateBoardQuarter();
@@ -521,6 +554,7 @@ function renderAll() {
   }
 
   updateStartedUI();
+  updateBoardSize();
 }
 
 function computeCheckOwners(state: GameState, config: GameConfig): string[] {

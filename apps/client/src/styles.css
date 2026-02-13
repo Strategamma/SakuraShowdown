@@ -239,13 +239,12 @@ body[data-mode="online"] #open-customize {
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) clamp(140px, 18vw, 230px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "opponent"
-    "board"
-    "pool"
-    "player";
+    "opponent opponent"
+    "board pool"
+    "player player";
   gap: 10px;
   padding: 6px 8px 10px;
   min-height: 0;
@@ -256,9 +255,14 @@ body[data-mode="online"] #open-customize {
   justify-items: center;
 }
 
+#game-area.board-layout #canvas-container {
+  justify-self: center;
+  align-self: center;
+}
+
 #game-area.board-layout #canvas-container,
 #game-area.board-layout .card-rail {
-  width: min(99vw, 1400px);
+  width: 100%;
 }
 
 body[data-cards="canvas"] #game-area {
@@ -313,6 +317,16 @@ body[data-cards="canvas"] #canvas-container {
 }
 
 @media (max-width: 900px) {
+  #game-area {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "opponent"
+      "board"
+      "pool"
+      "player";
+  }
+
   #player-section .card {
     min-height: 120px;
   }
@@ -362,24 +376,24 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   .card-rail {
-    padding: 14px 16px;
+    padding: 10px 12px;
   }
 
   #hand,
   #opponent-hand {
-    gap: 14px;
+    gap: 10px;
   }
 
   .card {
-    min-height: 140px;
+    min-height: 110px;
   }
 
   #opponent-hand .card {
-    min-height: 120px;
+    min-height: 100px;
   }
 
   #pool .card {
-    min-height: 120px;
+    min-height: 100px;
   }
 
   .card-title {
@@ -387,8 +401,8 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   .card-pattern {
-    width: clamp(88px, 30vw, 128px);
-    height: clamp(88px, 30vw, 128px);
+    width: clamp(72px, 22vw, 110px);
+    height: clamp(72px, 22vw, 110px);
   }
 
   .lobby-item {
@@ -430,9 +444,8 @@ body[data-cards="canvas"] #canvas-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 520px;
-  height: min(92vh, 100vw);
-  max-height: 1600px;
+  min-height: 320px;
+  height: 100%;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
