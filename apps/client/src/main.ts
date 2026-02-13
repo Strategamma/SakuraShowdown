@@ -160,6 +160,16 @@ if (canvasContainer) {
   canvasNameBottom.className = "canvas-nameplate bottom";
   canvasContainer.appendChild(canvasNameBottom);
 
+  canvasCheckTop = document.createElement("div");
+  canvasCheckTop.className = "canvas-check top";
+  canvasCheckTop.textContent = "CHECK";
+  canvasContainer.appendChild(canvasCheckTop);
+
+  canvasCheckBottom = document.createElement("div");
+  canvasCheckBottom.className = "canvas-check bottom";
+  canvasCheckBottom.textContent = "CHECK";
+  canvasContainer.appendChild(canvasCheckBottom);
+
   canvasContainer.dataset.rotation = String(boardRotation);
 }
 
@@ -168,6 +178,8 @@ let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
+let canvasCheckTop: HTMLElement | null = null;
+let canvasCheckBottom: HTMLElement | null = null;
 let currentRoomId: string | undefined;
 let currentRoomCode: string | undefined;
 let currentRoomPrivate = false;
@@ -485,6 +497,7 @@ function renderAll() {
     viewerId: viewPlayerId,
     checkOwners
   });
+  updateCheckIndicators(checkOwners, viewPlayerId);
   const primaryId = latestConfig.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
   renderer.setBoardFlip(flip);
@@ -503,7 +516,8 @@ function renderAll() {
     const activeName =
       latestConfig.players.find((p) => p.id === latestState.activePlayerId)?.name ??
       latestState.activePlayerId;
-    statusEl.textContent = `Turn ${latestState.turn} · ${activeName}`;
+    const isChecked = checkOwners.includes(latestState.activePlayerId);
+    statusEl.textContent = `Turn ${latestState.turn} · ${activeName}${isChecked ? " · CHECK" : ""}`;
     lastWinnerId = undefined;
   }
 
@@ -531,6 +545,16 @@ function computeCheckOwners(state: GameState, config: GameConfig): string[] {
     }
   }
   return Array.from(checkOwners);
+}
+
+function updateCheckIndicators(checkOwners: string[], viewPlayerId: string | undefined) {
+  if (!canvasCheckTop || !canvasCheckBottom || !latestConfig) return;
+  const playerId = viewPlayerId ?? latestState?.activePlayerId;
+  const opponentId = latestConfig.players.find((p) => p.id !== playerId)?.id;
+  const playerInCheck = Boolean(playerId && checkOwners.includes(playerId));
+  const opponentInCheck = Boolean(opponentId && checkOwners.includes(opponentId));
+  canvasCheckTop.classList.toggle("active", opponentInCheck);
+  canvasCheckBottom.classList.toggle("active", playerInCheck);
 }
 
 function updateStartedUI() {

@@ -239,8 +239,8 @@ body[data-mode="online"] #open-customize {
     "board"
     "pool"
     "player";
-  gap: 12px;
-  padding: 8px 12px 12px;
+  gap: 10px;
+  padding: 6px 8px 10px;
   min-height: 0;
   align-items: stretch;
 }
@@ -251,14 +251,14 @@ body[data-mode="online"] #open-customize {
 
 #game-area.board-layout #canvas-container,
 #game-area.board-layout .card-rail {
-  width: min(98vw, 1280px);
+  width: min(99vw, 1400px);
 }
 
 body[data-cards="canvas"] #game-area {
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "board";
-  gap: 12px;
-  padding: 12px 16px 16px;
+  gap: 8px;
+  padding: 6px 8px 10px;
 }
 
 body[data-cards="canvas"] .card-rail {
@@ -266,8 +266,8 @@ body[data-cards="canvas"] .card-rail {
 }
 
 body[data-cards="canvas"] #canvas-container {
-  width: min(98vw, 1600px);
-  height: min(88vh, 98vw);
+  width: min(99vw, 1800px);
+  height: min(92vh, 99vw);
   aspect-ratio: auto;
 }
 
@@ -278,7 +278,7 @@ body[data-cards="canvas"] #canvas-container {
 
   #canvas-container {
     min-height: 480px;
-    height: min(78vh, 92vw);
+    height: min(84vh, 96vw);
   }
 }
 
@@ -403,7 +403,7 @@ body[data-cards="canvas"] #canvas-container {
 
 @media (max-width: 640px) {
   body[data-cards="canvas"] #canvas-container {
-    height: min(78vh, 98vw);
+    height: min(86vh, 99vw);
   }
 }
 
@@ -416,8 +416,8 @@ body[data-cards="canvas"] #canvas-container {
   align-items: center;
   justify-content: center;
   min-height: 520px;
-  height: min(80vh, 94vw);
-  max-height: 1200px;
+  height: min(88vh, 98vw);
+  max-height: 1400px;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
@@ -447,6 +447,37 @@ body[data-cards="canvas"] #canvas-container {
   pointer-events: none;
 }
 
+.canvas-check {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(242, 193, 95, 0.92);
+  color: #3a2814;
+  border: 1px solid rgba(242, 193, 95, 0.65);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+  box-shadow: 0 8px 18px rgba(10, 6, 10, 0.35);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.canvas-check.active {
+  opacity: 1;
+}
+
+.canvas-check.top {
+  top: 46px;
+}
+
+.canvas-check.bottom {
+  bottom: 46px;
+}
+
 .canvas-nameplate.top {
   top: 12px;
 }
@@ -469,6 +500,20 @@ body[data-cards="canvas"] #canvas-container {
   transform: translateY(-50%) rotate(90deg);
 }
 
+#canvas-container[data-rotation="90"] .canvas-check.top {
+  top: 50%;
+  right: 50px;
+  left: auto;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+#canvas-container[data-rotation="90"] .canvas-check.bottom {
+  top: 50%;
+  left: 50px;
+  bottom: auto;
+  transform: translateY(-50%) rotate(90deg);
+}
+
 #canvas-container[data-rotation="180"] .canvas-nameplate.top {
   top: auto;
   bottom: 12px;
@@ -478,6 +523,18 @@ body[data-cards="canvas"] #canvas-container {
 #canvas-container[data-rotation="180"] .canvas-nameplate.bottom {
   bottom: auto;
   top: 12px;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+#canvas-container[data-rotation="180"] .canvas-check.top {
+  top: auto;
+  bottom: 46px;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+#canvas-container[data-rotation="180"] .canvas-check.bottom {
+  bottom: auto;
+  top: 46px;
   transform: translateX(-50%) rotate(180deg);
 }
 
@@ -491,6 +548,20 @@ body[data-cards="canvas"] #canvas-container {
 #canvas-container[data-rotation="270"] .canvas-nameplate.bottom {
   top: 50%;
   right: 12px;
+  left: auto;
+  bottom: auto;
+  transform: translateY(-50%) rotate(270deg);
+}
+
+#canvas-container[data-rotation="270"] .canvas-check.top {
+  top: 50%;
+  left: 50px;
+  transform: translateY(-50%) rotate(270deg);
+}
+
+#canvas-container[data-rotation="270"] .canvas-check.bottom {
+  top: 50%;
+  right: 50px;
   left: auto;
   bottom: auto;
   transform: translateY(-50%) rotate(270deg);
