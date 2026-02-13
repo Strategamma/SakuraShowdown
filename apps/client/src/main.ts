@@ -137,6 +137,8 @@ window.addEventListener("keydown", unlockSound, { once: true });
 let cardHintOverlay: HTMLElement | null = null;
 let canvasNameTop: HTMLElement | null = null;
 let canvasNameBottom: HTMLElement | null = null;
+let canvasCheckTop: HTMLElement | null = null;
+let canvasCheckBottom: HTMLElement | null = null;
 let boardRotation = 0;
 if (
   typeof window !== "undefined" &&
@@ -178,8 +180,6 @@ let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
-let canvasCheckTop: HTMLElement | null = null;
-let canvasCheckBottom: HTMLElement | null = null;
 let currentRoomId: string | undefined;
 let currentRoomCode: string | undefined;
 let currentRoomPrivate = false;
