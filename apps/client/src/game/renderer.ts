@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { GameConfig, GameState, LegalMove } from "@game/rules";
 
+const MODEL_BASE_RAW = import.meta.env.VITE_MODEL_BASE ?? "";
+const MODEL_BASE = MODEL_BASE_RAW
+  ? MODEL_BASE_RAW.endsWith("/") ? MODEL_BASE_RAW : `${MODEL_BASE_RAW}/`
+  : "";
+
 export type RendererSelection = {
   selectedPieceId?: string;
   selectedCardId?: string;
@@ -1213,9 +1218,10 @@ export class GameRenderer {
   }
 
   private async loadModels() {
+    if (!MODEL_BASE) return;
     const modelPaths: Record<string, string> = {
-      master: "/models/master.glb",
-      student: "/models/student.glb"
+      master: `${MODEL_BASE}master.glb`,
+      student: `${MODEL_BASE}student.glb`
     };
 
     await Promise.all(
