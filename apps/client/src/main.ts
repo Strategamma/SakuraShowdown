@@ -465,31 +465,25 @@ const renderer = new GameRenderer(canvasContainer, {
 renderer.setCardsEnabled(false);
 
 function updateBoardSize() {
-  if (!canvasContainer || !gameArea) return;
-  const isStacked = window.matchMedia("(max-width: 900px)").matches;
-  const gap = 10;
-  const rect = gameArea.getBoundingClientRect();
-  const opponentHeight = opponentSection?.getBoundingClientRect().height ?? 0;
-  const playerHeight = playerSection?.getBoundingClientRect().height ?? 0;
-  const poolRect = poolSection?.getBoundingClientRect();
-  const poolHeight = isStacked ? poolRect?.height ?? 0 : 0;
-  const poolWidth = !isStacked ? poolRect?.width ?? 0 : 0;
-  const availableWidth = rect.width - poolWidth - (isStacked ? 0 : gap);
-  const availableHeight =
-    rect.height - opponentHeight - playerHeight - poolHeight - gap * (isStacked ? 3 : 2);
-  const size = Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
-  const fallback = Math.floor(Math.max(240, Math.min(rect.width, rect.height)));
+  if (!canvasContainer) return;
+  const rect = canvasContainer.getBoundingClientRect();
+  const size = Math.floor(Math.max(0, Math.min(rect.width, rect.height)));
+  const fallback = Math.floor(Math.max(260, Math.min(window.innerWidth, window.innerHeight)));
   const finalSize = size > 0 ? size : fallback;
-  canvasContainer.style.width = `${finalSize}px`;
-  canvasContainer.style.height = `${finalSize}px`;
+  const prev = canvasContainer.dataset.size;
+  const next = String(finalSize);
+  if (prev !== next) {
+    canvasContainer.style.width = `${finalSize}px`;
+    canvasContainer.style.height = `${finalSize}px`;
+    canvasContainer.dataset.size = next;
+    window.dispatchEvent(new Event("resize"));
+  }
 }
 
-if (gameArea) {
+if (canvasContainer) {
   const layoutObserver = new ResizeObserver(updateBoardSize);
-  layoutObserver.observe(gameArea);
-  if (opponentSection) layoutObserver.observe(opponentSection);
-  if (playerSection) layoutObserver.observe(playerSection);
-  if (poolSection) layoutObserver.observe(poolSection);
+  layoutObserver.observe(canvasContainer);
+  if (gameArea) layoutObserver.observe(gameArea);
   window.addEventListener("resize", updateBoardSize);
   updateBoardSize();
 }
