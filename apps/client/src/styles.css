@@ -1645,6 +1645,13 @@ body[data-mode="local"] .online-only {
   gap: 18px;
 }
 
+.victory-hint {
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249, 199, 211, 0.85);
+}
+
 .victory-actions {
   display: flex;
   gap: 12px;
@@ -1670,35 +1677,6 @@ body[data-mode="local"] .online-only {
 
 .victory-wait.hidden {
   display: none;
-}
-
-.victory-emblem {
-  width: 86px;
-  height: 86px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #f9c7d3 0%, #e0565b 45%, #7a2236 100%);
-  box-shadow: 0 0 24px rgba(226, 74, 127, 0.5), inset 0 0 18px rgba(255, 255, 255, 0.2);
-  position: relative;
-}
-
-.victory-emblem::before {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-}
-
-.victory-emblem::after {
-  content: "";
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.9);
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 #victory-title {
