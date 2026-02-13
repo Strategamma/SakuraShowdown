@@ -140,13 +140,6 @@ let canvasNameBottom: HTMLElement | null = null;
 let canvasCheckTop: HTMLElement | null = null;
 let canvasCheckBottom: HTMLElement | null = null;
 let boardRotation = 0;
-if (
-  typeof window !== "undefined" &&
-  window.matchMedia &&
-  window.matchMedia("(pointer: coarse)").matches
-) {
-  boardRotation = 90;
-}
 if (canvasContainer) {
   cardHintOverlay = document.createElement("div");
   cardHintOverlay.id = "card-choice-overlay";

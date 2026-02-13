@@ -724,7 +724,8 @@ export class GameRenderer {
       this.container.clientHeight < 680 ||
       this.container.clientHeight > this.container.clientWidth * 1.2;
     const gap = Math.max(boardW * 0.04, this.cellSize * 0.2);
-    const cardWidth = (boardW - gap) / 2;
+    const cardScale = isCompact ? 0.7 : 0.85;
+    const cardWidth = ((boardW - gap) / 2) * cardScale;
     const cardHeight = cardWidth * ratio;
     const rowOffset =
       boardD / 2 + cardHeight / 2 + this.cellSize * (isCompact ? 0.22 : 0.4);
