@@ -507,7 +507,7 @@ function renderAll() {
       latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
       latestState.winnerId;
     statusEl.textContent = `Winner: ${winnerName}`;
-    if (!isSpectator && lastWinnerId !== latestState.winnerId) {
+    if (lastWinnerId !== latestState.winnerId) {
       showVictory(winnerName);
       lastWinnerId = latestState.winnerId;
     }
@@ -1506,6 +1506,7 @@ function showVictory(winnerName: string) {
   victoryTitle.textContent = `${winnerName} Wins!`;
   victorySubtitle.textContent = "A masterful duel.";
   rematchPending = false;
+  victoryOverlay.classList.toggle("spectator", isSpectator);
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
   if (victoryRematchBtn) victoryRematchBtn.disabled = false;
   victoryOverlay.classList.remove("hidden");
