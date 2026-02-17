@@ -2828,6 +2828,72 @@ body[data-mode="local"] .online-only {
   }
 }
 
+/* --- Game console hard overrides to prevent overlap --- */
+#game-area .game-console {
+  --card-size: clamp(84px, 11vh, 130px);
+  --rail-height: calc(var(--card-size) + 44px);
+  --pool-width: clamp(150px, 20vw, 240px);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--pool-width) !important;
+  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) !important;
+  grid-template-areas:
+    "opponent opponent pool"
+    "board board pool"
+    "player player pool" !important;
+  gap: 14px;
+  align-items: stretch;
+  align-content: stretch;
+}
+
+#game-area .game-console .card-rail {
+  display: grid !important;
+  grid-template-rows: auto 1fr;
+  height: var(--rail-height);
+  overflow: hidden;
+  padding: 6px 8px;
+}
+
+#game-area .game-console .rail-cards {
+  height: 100%;
+  grid-auto-rows: 1fr;
+  align-content: center;
+}
+
+#game-area .game-console .card {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+#game-area .game-console .card-pattern {
+  width: calc(var(--card-size) * 0.7);
+  height: calc(var(--card-size) * 0.7);
+}
+
+#game-area .game-console #canvas-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  justify-self: center;
+  align-self: center;
+}
+
+@media (max-width: 900px) {
+  #game-area .game-console {
+    --card-size: clamp(74px, 10vh, 115px);
+    --rail-height: calc(var(--card-size) + 40px);
+    grid-template-columns: 1fr !important;
+    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height) !important;
+    grid-template-areas:
+      "opponent"
+      "board"
+      "pool"
+      "player" !important;
+  }
+}
+
 @media (max-width: 600px) {
   #landing-panel-online {
     grid-template-rows: auto minmax(0, 1fr) auto;
