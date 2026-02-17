@@ -2830,12 +2830,11 @@ body[data-mode="local"] .online-only {
 
 /* --- Game console hard overrides to prevent overlap --- */
 #game-area .game-console {
-  --card-size: clamp(84px, 11vh, 130px);
-  --rail-height: calc(var(--card-size) + 44px);
-  --pool-width: clamp(150px, 20vw, 240px);
+  --card-height: clamp(88px, 12vmin, 140px);
+  --pool-width: clamp(140px, 18vw, 220px);
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--pool-width) !important;
-  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
   grid-template-areas:
     "opponent opponent pool"
     "board board pool"
@@ -2848,27 +2847,28 @@ body[data-mode="local"] .online-only {
 #game-area .game-console .card-rail {
   display: grid !important;
   grid-template-rows: auto 1fr;
-  height: var(--rail-height);
+  height: auto !important;
+  max-height: none !important;
   overflow: hidden;
   padding: 6px 8px;
 }
 
 #game-area .game-console .rail-cards {
-  height: 100%;
-  grid-auto-rows: 1fr;
+  height: auto;
+  grid-auto-rows: auto;
   align-content: center;
 }
 
 #game-area .game-console .card {
-  height: 100% !important;
+  height: var(--card-height) !important;
   min-height: 0 !important;
   display: grid;
   grid-template-rows: auto 1fr;
 }
 
 #game-area .game-console .card-pattern {
-  width: calc(var(--card-size) * 0.7);
-  height: calc(var(--card-size) * 0.7);
+  width: calc(var(--card-height) * 0.7);
+  height: calc(var(--card-height) * 0.7);
 }
 
 #game-area .game-console #canvas-container {
@@ -2882,10 +2882,9 @@ body[data-mode="local"] .online-only {
 
 @media (max-width: 900px) {
   #game-area .game-console {
-    --card-size: clamp(74px, 10vh, 115px);
-    --rail-height: calc(var(--card-size) + 40px);
+    --card-height: clamp(72px, 10vmin, 120px);
     grid-template-columns: 1fr !important;
-    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height) !important;
+    grid-template-rows: auto minmax(0, 1fr) auto auto !important;
     grid-template-areas:
       "opponent"
       "board"

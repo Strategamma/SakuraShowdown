@@ -32,6 +32,9 @@ type CardConfig = GameConfig["cards"][number];
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
 const gameArea = document.getElementById("game-area") as HTMLElement | null;
+if (gameArea) {
+  gameArea.dataset.layout = "console";
+}
 const localNameInput = document.getElementById("local-name") as HTMLInputElement;
 const localOpponentNameInput = document.getElementById("local-opponent-name") as HTMLInputElement;
 const startingPlayerSelect = document.getElementById("starting-player") as HTMLSelectElement;
@@ -478,6 +481,8 @@ function updateBoardSize() {
   if (!Number.isFinite(size) || size < 120) return;
   const next = String(size);
   if (canvasContainer.dataset.size !== next) {
+    canvasContainer.style.width = `${size}px`;
+    canvasContainer.style.height = `${size}px`;
     canvasContainer.dataset.size = next;
     window.dispatchEvent(new Event("resize"));
   }
