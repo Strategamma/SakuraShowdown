@@ -245,10 +245,10 @@ body[data-mode="online"] #open-customize {
   flex: 1;
   height: 100%;
   display: grid;
-  --rail-height: clamp(120px, 16vh, 180px);
   --pool-width: clamp(140px, 18vw, 220px);
+  --card-size: clamp(90px, 13vh, 140px);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--pool-width);
-  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height);
+  grid-template-rows: max-content minmax(0, 1fr) max-content;
   grid-template-areas:
     "opponent opponent pool"
     "board board pool"
@@ -329,8 +329,8 @@ body[data-cards="canvas"] #canvas-container {
 @media (max-width: 900px) {
   .game-console {
     grid-template-columns: 1fr;
-    --rail-height: clamp(110px, 16vh, 160px);
-    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height);
+    --card-size: clamp(84px, 12vh, 120px);
+    grid-template-rows: max-content minmax(0, 1fr) max-content max-content;
     grid-template-areas:
       "opponent"
       "board"
@@ -664,12 +664,12 @@ body[data-cards="canvas"] #canvas-container {
 
 .opponent-rail {
   grid-area: opponent;
-  min-height: var(--rail-height);
+  max-height: clamp(120px, 18vh, 190px);
 }
 
 .player-rail {
   grid-area: player;
-  min-height: var(--rail-height);
+  max-height: clamp(120px, 18vh, 190px);
 }
 
 .pool-rail {
@@ -677,7 +677,7 @@ body[data-cards="canvas"] #canvas-container {
   align-items: center;
   justify-self: stretch;
   align-self: stretch;
-  min-height: var(--rail-height);
+  justify-content: center;
 }
 
 .embedded-rail {
@@ -699,14 +699,12 @@ body[data-cards="canvas"] #canvas-container {
   gap: 10px;
   justify-items: stretch;
   align-content: center;
-  flex: 1;
-  grid-auto-rows: 1fr;
-  height: 100%;
+  grid-auto-rows: auto;
 }
 
 .game-console .card {
   min-height: 0;
-  height: 100%;
+  height: var(--card-size);
   display: grid;
   grid-template-rows: auto 1fr;
   justify-items: center;
@@ -714,19 +712,19 @@ body[data-cards="canvas"] #canvas-container {
 }
 
 .game-console .card-title {
-  font-size: clamp(0.72rem, 1.4vw, 0.9rem);
+  font-size: clamp(0.7rem, 1.2vw, 0.88rem);
 }
 
 .game-console .card-pattern {
-  width: min(78%, 140px);
-  aspect-ratio: 1 / 1;
-  height: auto;
+  width: calc(var(--card-size) * 0.7);
+  height: calc(var(--card-size) * 0.7);
   margin-top: 4px;
 }
 
 .pool-rail .rail-cards {
   grid-template-columns: minmax(0, 1fr);
   justify-items: center;
+  align-content: center;
 }
 
 .rail-cards .card {
@@ -1305,7 +1303,6 @@ body[data-mode="local"] .online-only {
 .game-console #opponent-hand .card,
 .game-console #pool .card {
   min-height: 0 !important;
-  height: 100%;
 }
 
 .card-hint.hidden {
