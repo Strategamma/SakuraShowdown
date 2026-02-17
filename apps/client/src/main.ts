@@ -27,6 +27,8 @@ const VIEW_MODE_KEY = "sakura.viewMode";
 const ONLINE_NAME_KEY = "sakura.onlineName";
 const RECONNECT_KEY = "sakura.reconnectToken";
 
+type CardConfig = GameConfig["cards"][number];
+
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
 const gameArea = document.getElementById("game-area") as HTMLElement | null;
@@ -48,7 +50,7 @@ const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLBut
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
 const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
-const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement;
+const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement | null;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
@@ -421,6 +423,27 @@ function handleCellTap(x: number, y: number) {
   renderAll();
 }
 
+function handleCardClick(cardId: string, role: "player" | "opponent" | "pool") {
+  if (!latestState || !latestConfig) return;
+  if (!controller.canAct()) return;
+  if (role !== "player") return;
+
+  if (pendingMove && pendingMove.cardIds.includes(cardId)) {
+    controller.selectCard(cardId);
+    controller.tryMove(pendingMove.to.x, pendingMove.to.y);
+    controller.clearSelection();
+    pendingMove = undefined;
+    renderAll();
+    return;
+  }
+
+  const selection = controller.getSelection();
+  const next = selection.selectedCardId === cardId ? undefined : cardId;
+  pendingMove = undefined;
+  controller.selectCard(next);
+  renderAll();
+}
+
 const renderer = new GameRenderer(canvasContainer, {
   onCellTap: (x, y) => {
     handleCellTap(x, y);
@@ -442,24 +465,8 @@ const renderer = new GameRenderer(canvasContainer, {
     renderAll();
   },
   onCardTap: (cardId, ownerId, role) => {
-    if (!latestState || !latestConfig) return;
-    if (!controller.canAct()) return;
-    if (role !== "player") return;
-
-    if (pendingMove && pendingMove.cardIds.includes(cardId)) {
-      controller.selectCard(cardId);
-      controller.tryMove(pendingMove.to.x, pendingMove.to.y);
-      controller.clearSelection();
-      pendingMove = undefined;
-      renderAll();
-      return;
-    }
-
-    const selection = controller.getSelection();
-    const next = selection.selectedCardId === cardId ? undefined : cardId;
-    pendingMove = undefined;
-    controller.selectCard(next);
-    renderAll();
+    if (!role) return;
+    handleCardClick(cardId, role);
   }
 });
 renderer.setCardsEnabled(false);
@@ -469,7 +476,7 @@ function updateBoardSize() {
   const rect = canvasContainer.getBoundingClientRect();
   const size = Math.floor(Math.max(0, Math.min(rect.width, rect.height)));
   const fallback = Math.floor(Math.max(260, Math.min(window.innerWidth, window.innerHeight)));
-  const finalSize = size > 0 ? size : fallback;
+  const finalSize = size >= 200 ? size : fallback;
   const prev = canvasContainer.dataset.size;
   const next = String(finalSize);
   if (prev !== next) {
@@ -1193,6 +1200,46 @@ function renderCards() {
   if (cardHintOverlay) {
     cardHintOverlay.classList.toggle("hidden", !showHint);
   }
+
+  const cardsById = new Map(latestConfig.cards.map((card) => [card.id, card]));
+  const selection = controller.getSelection();
+  const pendingCardIds = pendingMove?.cardIds ?? [];
+  const playerState = latestState.players.find((p) => p.id === viewPlayerId);
+  const opponentState = latestState.players.find((p) => p.id !== viewPlayerId);
+
+  if (opponentState) {
+    opponentState.hand.forEach((cardId) => {
+      const card = cardsById.get(cardId);
+      if (!card) return;
+      const el = createCardElement(card, opponentState.id, "opponent", viewPlayerId);
+      opponentHandEl.appendChild(el);
+    });
+  }
+
+  if (playerState) {
+    playerState.hand.forEach((cardId) => {
+      const card = cardsById.get(cardId);
+      if (!card) return;
+      const el = createCardElement(card, playerState.id, "player", viewPlayerId);
+      if (selection.selectedCardId === cardId) {
+        el.classList.add("active");
+      }
+      if (pendingCardIds.includes(cardId)) {
+        el.classList.add("choice");
+      }
+      if (!controller.canAct()) {
+        el.classList.add("disabled");
+      }
+      handEl.appendChild(el);
+    });
+  }
+
+  const poolCard = cardsById.get(latestState.poolCard);
+  if (poolCard) {
+    const poolOwner = opponentMeta?.id ?? latestConfig.players[0]?.id ?? "pool";
+    const poolElCard = createCardElement(poolCard, poolOwner, "pool", viewPlayerId);
+    poolEl.appendChild(poolElCard);
+  }
 }
 
 function setNamesEditing(enabled: boolean) {
@@ -1320,6 +1367,41 @@ function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) 
   }
 
   return canvas;
+}
+
+function createCardElement(
+  card: CardConfig,
+  ownerId: string,
+  role: "player" | "opponent" | "pool",
+  viewPlayerId: string
+) {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.dataset.cardId = card.id;
+  el.dataset.ownerId = ownerId;
+  el.dataset.role = role;
+
+  const primaryId = latestConfig?.players[0]?.id;
+  const viewMul = viewPlayerId === primaryId ? 1 : -1;
+  const ownerForward =
+    latestConfig?.players.find((p) => p.id === ownerId)?.forward ?? -1;
+  const baseX = -ownerForward;
+  const baseY = ownerForward;
+  const xMul = baseX * viewMul;
+  const yMul = baseY * viewMul;
+
+  const title = document.createElement("div");
+  title.className = "card-title";
+  title.textContent = card.name || card.id;
+  const pattern = drawCardPattern(card.moves, xMul, yMul);
+  el.appendChild(title);
+  el.appendChild(pattern);
+
+  if (role === "player") {
+    el.addEventListener("click", () => handleCardClick(card.id, "player"));
+  }
+
+  return el;
 }
 
 function cloneConfig<T>(value: T): T {
@@ -1982,7 +2064,7 @@ startingPlayerSelect.addEventListener("change", () => {
 });
 
 customizeBtn.addEventListener("click", () => openCustomize("local"));
-openCustomizeBtn.addEventListener("click", () => openCustomize("local"));
+openCustomizeBtn?.addEventListener("click", () => openCustomize("local"));
 closeBtn.addEventListener("click", closeCustomize);
 overlay.addEventListener("click", (event) => {
   if (event.target === overlay) closeCustomize();

@@ -188,12 +188,12 @@ body[data-mode="online"] #open-customize {
 
 #app[data-started="true"][data-editing="true"] #game-area,
 #app[data-started="true"] #game-area {
-  grid-template-columns: 1fr !important;
+  grid-template-columns: minmax(0, 1fr) clamp(140px, 18vw, 230px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "opponent"
-    "board"
-    "pool"
-    "player" !important;
+    "opponent opponent"
+    "board pool"
+    "player player";
 }
 
 .status {
