@@ -475,13 +475,9 @@ function updateBoardSize() {
   if (!canvasContainer) return;
   const rect = canvasContainer.getBoundingClientRect();
   const size = Math.floor(Math.max(0, Math.min(rect.width, rect.height)));
-  if (!Number.isFinite(size) || size < 200) return;
-  const finalSize = size;
-  const prev = canvasContainer.dataset.size;
-  const next = String(finalSize);
-  if (prev !== next) {
-    canvasContainer.style.width = `${finalSize}px`;
-    canvasContainer.style.height = `${finalSize}px`;
+  if (!Number.isFinite(size) || size < 120) return;
+  const next = String(size);
+  if (canvasContainer.dataset.size !== next) {
     canvasContainer.dataset.size = next;
     window.dispatchEvent(new Event("resize"));
   }

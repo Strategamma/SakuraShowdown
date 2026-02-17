@@ -246,9 +246,10 @@ body[data-mode="online"] #open-customize {
   height: 100%;
   display: grid;
   --pool-width: clamp(140px, 18vw, 220px);
-  --card-size: clamp(90px, 13vh, 140px);
+  --card-size: clamp(84px, 12vh, 120px);
+  --rail-height: calc(var(--card-size) + 44px);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--pool-width);
-  grid-template-rows: max-content minmax(0, 1fr) max-content;
+  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height);
   grid-template-areas:
     "opponent opponent pool"
     "board board pool"
@@ -329,8 +330,9 @@ body[data-cards="canvas"] #canvas-container {
 @media (max-width: 900px) {
   .game-console {
     grid-template-columns: 1fr;
-    --card-size: clamp(84px, 12vh, 120px);
-    grid-template-rows: max-content minmax(0, 1fr) max-content max-content;
+    --card-size: clamp(74px, 11vh, 110px);
+    --rail-height: calc(var(--card-size) + 40px);
+    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height);
     grid-template-areas:
       "opponent"
       "board"
@@ -460,14 +462,16 @@ body[data-cards="canvas"] #canvas-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 360px;
+  min-height: 0;
   height: 100%;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
   overflow: hidden;
-  justify-self: stretch;
-  align-self: stretch;
+  justify-self: center;
+  align-self: center;
 }
 
 .game-console #canvas-container {
@@ -660,16 +664,15 @@ body[data-cards="canvas"] #canvas-container {
   min-height: 0;
   position: relative;
   overflow: hidden;
+  height: var(--rail-height);
 }
 
 .opponent-rail {
   grid-area: opponent;
-  max-height: clamp(120px, 18vh, 190px);
 }
 
 .player-rail {
   grid-area: player;
-  max-height: clamp(120px, 18vh, 190px);
 }
 
 .pool-rail {
@@ -681,15 +684,30 @@ body[data-cards="canvas"] #canvas-container {
 }
 
 .embedded-rail {
-  background: rgba(18, 12, 18, 0.55);
-  border-color: rgba(120, 78, 96, 0.4);
-  box-shadow: inset 0 0 0 1px rgba(60, 40, 52, 0.4), 0 12px 20px rgba(10, 6, 12, 0.45);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .rail-header {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* Make rails feel like one unified console with the board */
+.game-console .card-rail {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 6px 8px;
+}
+
+.game-console .pool-rail {
+  background: rgba(20, 14, 20, 0.25);
+  border: 1px solid rgba(120, 78, 96, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(60, 40, 52, 0.25);
+  border-radius: var(--radius-lg);
 }
 
 .rail-cards {
@@ -699,7 +717,7 @@ body[data-cards="canvas"] #canvas-container {
   gap: 10px;
   justify-items: stretch;
   align-content: center;
-  grid-auto-rows: auto;
+  grid-auto-rows: var(--card-size);
 }
 
 .game-console .card {
