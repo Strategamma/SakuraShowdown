@@ -1556,14 +1556,19 @@ export class GameRenderer {
   private fitCamera() {
     const width = this.boardSize.width * this.cellSize;
     const depth = this.boardSize.height * this.cellSize;
-    const layout = this.computeCardLayout();
-    const poolExtent = Math.abs(layout.poolSlot.x) + layout.cardWidth / 2;
-    const cardXExtent = Math.max(
-      Math.abs(layout.playerSlots[1]?.x ?? 0) + layout.cardWidth / 2,
-      poolExtent
-    );
-    const extentX = Math.max(width / 2, cardXExtent);
-    const extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
+    let extentX = width / 2;
+    let extentZ = depth / 2;
+
+    if (this.cardsEnabled) {
+      const layout = this.computeCardLayout();
+      const poolExtent = Math.abs(layout.poolSlot.x) + layout.cardWidth / 2;
+      const cardXExtent = Math.max(
+        Math.abs(layout.playerSlots[1]?.x ?? 0) + layout.cardWidth / 2,
+        poolExtent
+      );
+      extentX = Math.max(width / 2, cardXExtent);
+      extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
+    }
     const boardRadius = Math.max(extentX, extentZ);
     const fov = (this.camera.fov * Math.PI) / 180;
     const isCompact =
