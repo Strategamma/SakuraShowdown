@@ -188,8 +188,8 @@ body[data-mode="online"] #open-customize {
 
 #app[data-started="true"][data-editing="true"] #game-area,
 #app[data-started="true"] #game-area {
-  grid-template-columns: minmax(0, 1fr) clamp(140px, 18vw, 230px);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 18vw, 240px);
+  grid-template-rows: minmax(160px, max-content) minmax(320px, 1fr) minmax(160px, max-content);
   grid-template-areas:
     "opponent opponent"
     "board pool"
@@ -239,16 +239,17 @@ body[data-mode="online"] #open-customize {
 #game-area {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(140px, 18vw, 230px);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 18vw, 240px);
+  grid-template-rows: minmax(160px, max-content) minmax(320px, 1fr) minmax(160px, max-content);
   grid-template-areas:
     "opponent opponent"
     "board pool"
     "player player";
-  gap: 10px;
-  padding: 6px 8px 10px;
+  gap: 14px;
+  padding: 8px 10px 14px;
   min-height: calc(100dvh - var(--topbar-height));
   align-items: stretch;
+  align-content: stretch;
 }
 
 #game-area.board-layout {
@@ -319,7 +320,7 @@ body[data-cards="canvas"] #canvas-container {
 @media (max-width: 900px) {
   #game-area {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: minmax(140px, max-content) minmax(280px, 1fr) minmax(140px, max-content) minmax(140px, max-content);
     grid-template-areas:
       "opponent"
       "board"
@@ -359,8 +360,8 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   #canvas-container {
-    min-height: 380px;
-    height: min(70vh, 98vw);
+    min-height: 320px;
+    height: min(62vh, 96vw);
   }
 
   #player-section .card {
@@ -444,12 +445,14 @@ body[data-cards="canvas"] #canvas-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
+  min-height: 360px;
   height: 100%;
   width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
   overflow: hidden;
+  justify-self: stretch;
+  align-self: stretch;
 }
 
 #canvas-container canvas {
@@ -644,6 +647,8 @@ body[data-cards="canvas"] #canvas-container {
 .pool-rail {
   grid-area: pool;
   align-items: center;
+  justify-self: stretch;
+  align-self: stretch;
 }
 
 .rail-header {
