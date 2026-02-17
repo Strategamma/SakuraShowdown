@@ -475,8 +475,8 @@ function updateBoardSize() {
   if (!canvasContainer) return;
   const rect = canvasContainer.getBoundingClientRect();
   const size = Math.floor(Math.max(0, Math.min(rect.width, rect.height)));
-  const fallback = Math.floor(Math.max(260, Math.min(window.innerWidth, window.innerHeight)));
-  const finalSize = size >= 200 ? size : fallback;
+  if (!Number.isFinite(size) || size < 200) return;
+  const finalSize = size;
   const prev = canvasContainer.dataset.size;
   const next = String(finalSize);
   if (prev !== next) {

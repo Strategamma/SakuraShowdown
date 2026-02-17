@@ -468,6 +468,11 @@ body[data-cards="canvas"] #canvas-container {
   align-self: stretch;
 }
 
+.game-console #canvas-container {
+  min-height: 0;
+  height: 100%;
+}
+
 #canvas-container canvas {
   touch-action: none;
   width: 100%;
@@ -669,23 +674,45 @@ body[data-cards="canvas"] #canvas-container {
 }
 
 .embedded-rail {
-  background: rgba(20, 14, 20, 0.6);
-  box-shadow: inset 0 0 0 1px rgba(60, 40, 52, 0.55), 0 14px 24px rgba(10, 6, 12, 0.5);
+  background: rgba(18, 12, 18, 0.55);
+  border-color: rgba(120, 78, 96, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(60, 40, 52, 0.4), 0 12px 20px rgba(10, 6, 12, 0.45);
 }
 
 .rail-header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .rail-cards {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   justify-items: stretch;
   align-content: center;
+  flex: 1;
+  grid-auto-rows: 1fr;
+}
+
+.game-console .card {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  align-content: start;
+}
+
+.game-console .card-title {
+  font-size: clamp(0.72rem, 1.4vw, 0.9rem);
+}
+
+.game-console .card-pattern {
+  width: min(72%, 150px);
+  height: min(72%, 150px);
+  margin-top: 4px;
 }
 
 .pool-rail .rail-cards {
