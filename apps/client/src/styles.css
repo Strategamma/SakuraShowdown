@@ -2830,8 +2830,9 @@ body[data-mode="local"] .online-only {
 
 /* --- Game console hard overrides to prevent overlap --- */
 #game-area[data-layout="console"] .game-console {
-  --card-height: clamp(90px, 11vmin, 160px);
+  --card-height: clamp(80px, 9vmin, 150px);
   --pool-width: clamp(140px, 18vw, 230px);
+  --card-size: var(--card-height);
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) var(--pool-width) !important;
   grid-template-rows: auto minmax(0, 1fr) auto !important;
@@ -2873,11 +2874,12 @@ body[data-mode="local"] .online-only {
 #game-area[data-layout="console"] .game-console .card {
   height: var(--card-height) !important;
   min-height: 0 !important;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 6px 12px;
 }
 
 #game-area[data-layout="console"] .game-console .card-title {
@@ -2888,8 +2890,8 @@ body[data-mode="local"] .online-only {
 }
 
 #game-area[data-layout="console"] .game-console .card-pattern {
-  height: 100%;
-  width: auto;
+  height: 100% !important;
+  width: auto !important;
   aspect-ratio: 1 / 1;
   flex-shrink: 0;
   display: block;
