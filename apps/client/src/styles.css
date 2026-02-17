@@ -238,10 +238,12 @@ body[data-mode="online"] #open-customize {
   gap: 12px;
   padding: 8px 10px 14px;
   min-height: calc(100dvh - var(--topbar-height));
+  height: calc(100dvh - var(--topbar-height));
 }
 
 .game-console {
   flex: 1;
+  height: 100%;
   display: grid;
   --rail-height: clamp(120px, 16vh, 180px);
   --pool-width: clamp(140px, 18vw, 220px);
@@ -297,8 +299,8 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   #canvas-container {
-    min-height: 480px;
-    height: min(84vh, 96vw);
+    min-height: 0;
+    height: 100%;
   }
 }
 
@@ -314,7 +316,7 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   #canvas-container {
-    min-height: 480px;
+    min-height: 0;
   }
 }
 
@@ -373,8 +375,8 @@ body[data-cards="canvas"] #canvas-container {
   }
 
   #canvas-container {
-    min-height: 300px;
-    height: min(58vh, 96vw);
+    min-height: 0;
+    height: 100%;
   }
 
   #player-section .card {
@@ -466,6 +468,11 @@ body[data-cards="canvas"] #canvas-container {
   overflow: hidden;
   justify-self: stretch;
   align-self: stretch;
+}
+
+.game-console #canvas-container {
+  min-height: 0;
+  height: 100%;
 }
 
 .game-console #canvas-container {
@@ -694,6 +701,7 @@ body[data-cards="canvas"] #canvas-container {
   align-content: center;
   flex: 1;
   grid-auto-rows: 1fr;
+  height: 100%;
 }
 
 .game-console .card {
@@ -710,8 +718,9 @@ body[data-cards="canvas"] #canvas-container {
 }
 
 .game-console .card-pattern {
-  width: min(72%, 150px);
-  height: min(72%, 150px);
+  width: min(78%, 140px);
+  aspect-ratio: 1 / 1;
+  height: auto;
   margin-top: 4px;
 }
 
@@ -730,6 +739,11 @@ body[data-cards="canvas"] #canvas-container {
 
 #player-section .card {
   min-height: 140px;
+}
+
+.game-console #opponent-hand .card,
+.game-console #player-section .card {
+  min-height: 0;
 }
 
 .card-house-section {
@@ -1286,6 +1300,14 @@ body[data-mode="local"] .online-only {
   padding: 4px 12px;
 }
 
+/* Ensure embedded card rails never overflow the game console */
+.game-console #player-section .card,
+.game-console #opponent-hand .card,
+.game-console #pool .card {
+  min-height: 0 !important;
+  height: 100%;
+}
+
 .card-hint.hidden {
   display: none;
 }
@@ -1418,13 +1440,9 @@ body[data-mode="local"] .online-only {
 }
 
 @media (max-width: 1200px) {
-  #game-area {
-    gap: 12px;
-  }
-
   #canvas-container {
-    min-height: 480px;
-    height: min(78vh, 92vw);
+    min-height: 0;
+    height: 100%;
   }
 }
 
@@ -1458,8 +1476,8 @@ body[data-mode="local"] .online-only {
 
 @media (max-width: 900px) {
   #canvas-container {
-    min-height: 460px;
-    height: min(80vh, 92vw);
+    min-height: 0;
+    height: 100%;
   }
 
   #right-panel {
@@ -2790,8 +2808,8 @@ body[data-mode="local"] .online-only {
   }
 
   #canvas-container {
-    height: min(68vh, 92vw);
-    min-height: 300px;
+    height: 100%;
+    min-height: 0;
   }
 }
 
@@ -2873,7 +2891,7 @@ body[data-mode="local"] .online-only {
   }
 
   #canvas-container {
-    height: min(80vh, 92vw);
-    min-height: 300px;
+    height: 100%;
+    min-height: 0;
   }
 }
