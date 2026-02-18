@@ -2831,15 +2831,14 @@ body[data-mode="local"] .online-only {
 /* --- Game console hard overrides to prevent overlap --- */
 #game-area[data-layout="console"] .game-console {
   --card-height: clamp(80px, 9vmin, 150px);
-  --pool-width: clamp(140px, 18vw, 230px);
+  --side-width: clamp(200px, 22vw, 280px);
   --card-size: var(--card-height);
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) var(--pool-width) !important;
-  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  grid-template-columns: var(--side-width) minmax(0, 1fr) var(--side-width) !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
   grid-template-areas:
-    "opponent pool"
-    "board pool"
-    "player pool" !important;
+    "player board opponent"
+    "player board pool" !important;
   gap: 14px;
   align-items: stretch;
   align-content: stretch;
@@ -2849,6 +2848,7 @@ body[data-mode="local"] .online-only {
   display: flex !important;
   flex-direction: column;
   height: auto !important;
+  min-height: calc(var(--card-height) + 44px);
   max-height: none !important;
   overflow: visible !important;
   padding: 6px 8px;
@@ -2867,6 +2867,7 @@ body[data-mode="local"] .online-only {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: var(--card-height);
+  min-height: var(--card-height);
   align-content: center;
   gap: 12px;
 }
