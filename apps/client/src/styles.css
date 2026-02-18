@@ -2830,18 +2830,19 @@ body[data-mode="local"] .online-only {
 
 /* --- Game console hard overrides to prevent overlap --- */
 #game-area[data-layout="console"] .game-console {
-  --card-height: clamp(80px, 9vmin, 150px);
-  --side-width: clamp(200px, 22vw, 280px);
+  --card-height: clamp(88px, 10vmin, 160px);
+  --side-width: clamp(220px, 24vw, 320px);
   --card-size: var(--card-height);
   display: grid !important;
-  grid-template-columns: var(--side-width) minmax(0, 1fr) var(--side-width) !important;
+  grid-template-columns: var(--side-width) minmax(360px, 1fr) var(--side-width) !important;
   grid-template-rows: minmax(0, 1fr) auto !important;
   grid-template-areas:
     "player board opponent"
     "player board pool" !important;
-  gap: 14px;
+  gap: 16px;
   align-items: stretch;
   align-content: stretch;
+  max-width: 100%;
 }
 
 #game-area[data-layout="console"] .game-console .card-rail {
@@ -2881,6 +2882,9 @@ body[data-mode="local"] .online-only {
   align-items: center;
   gap: 12px;
   padding: 6px 12px;
+  background: rgba(22, 14, 20, 0.6);
+  border: 1px solid rgba(140, 90, 110, 0.4);
+  border-radius: var(--radius-md);
 }
 
 #game-area[data-layout="console"] .game-console .card-title {
@@ -2931,6 +2935,10 @@ body[data-mode="local"] .online-only {
 
   #game-area[data-layout="console"] .game-console .rail-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #game-area[data-layout="console"] .game-console {
+    --side-width: 1fr;
   }
 }
 
