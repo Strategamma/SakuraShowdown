@@ -488,16 +488,7 @@ renderer.setCardsEnabled(false);
 
 function updateBoardSize() {
   if (!canvasContainer) return;
-  const rect = canvasContainer.getBoundingClientRect();
-  const size = Math.floor(Math.max(0, Math.min(rect.width, rect.height)));
-  if (!Number.isFinite(size) || size < 120) return;
-  const next = String(size);
-  if (canvasContainer.dataset.size !== next) {
-    canvasContainer.style.width = `${size}px`;
-    canvasContainer.style.height = `${size}px`;
-    canvasContainer.dataset.size = next;
-    window.dispatchEvent(new Event("resize"));
-  }
+  window.dispatchEvent(new Event("resize"));
 }
 
 if (canvasContainer) {
@@ -1352,14 +1343,28 @@ function filterMoves(
   });
 }
 
-function drawCardPattern(moves: { x: number; y: number }[], xMul = 1, yMul = 1) {
-  const size = 120;
+function getCardPatternSize() {
+  const host = document.querySelector(".game-console") as HTMLElement | null;
+  if (!host) return 120;
+  const raw = getComputedStyle(host).getPropertyValue("--card-height");
+  const height = Number.parseFloat(raw);
+  if (!Number.isFinite(height) || height <= 0) return 120;
+  return Math.max(84, Math.min(220, height - 20));
+}
+
+function drawCardPattern(
+  moves: { x: number; y: number }[],
+  xMul = 1,
+  yMul = 1,
+  sizeOverride?: number
+) {
+  const size = sizeOverride ?? 120;
   const dpr = window.devicePixelRatio || 1;
   const canvas = document.createElement("canvas");
   canvas.width = size * dpr;
   canvas.height = size * dpr;
-  canvas.style.width = `${size}px`;
-  canvas.style.height = `${size}px`;
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
   canvas.className = "card-pattern";
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
@@ -1430,7 +1435,7 @@ function createCardElement(
   const title = document.createElement("div");
   title.className = "card-title";
   title.textContent = card.name || card.id;
-  const pattern = drawCardPattern(card.moves, xMul, yMul);
+  const pattern = drawCardPattern(card.moves, xMul, yMul, getCardPatternSize());
   el.appendChild(title);
   el.appendChild(pattern);
 
