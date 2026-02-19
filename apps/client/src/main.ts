@@ -140,6 +140,13 @@ document.body.dataset.cards = "rails";
 const unlockSound = () => sound.unlock();
 window.addEventListener("pointerdown", unlockSound, { once: true });
 window.addEventListener("keydown", unlockSound, { once: true });
+document.addEventListener("click", (event) => {
+  const target = event.target as HTMLElement | null;
+  if (!target) return;
+  const button = target.closest("button");
+  if (!button || (button as HTMLButtonElement).disabled) return;
+  sound.play("click");
+});
 
 let cardHintOverlay: HTMLElement | null = null;
 let canvasNameTop: HTMLElement | null = null;
@@ -215,6 +222,7 @@ let draftMode: "local" | "online" = "local";
 let draftConfig: GameConfig | undefined;
 let lastActivePlayerId: string | undefined;
 let lastReadyAll = false;
+let lastCheckOwners = new Set<string>();
 
 const controller = new GameController({
   onState: (state) => {
@@ -243,8 +251,10 @@ const controller = new GameController({
       }
       if (captured) {
         sound.play("slash");
+        sound.play("impact");
       } else if (moved) {
         sound.play("move");
+        sound.play("swap");
       }
       if (!previous.winnerId && state.winnerId) {
         sound.play("victory");
@@ -297,7 +307,7 @@ const controller = new GameController({
     showNotice(message);
     const lower = message.toLowerCase();
     if (lower.includes("joined")) {
-      sound.play("door");
+      sound.play("footstep");
     } else if (lower.includes("left") || lower.includes("disconnected")) {
       sound.play("disconnect");
     }
@@ -436,6 +446,7 @@ function handleCardClick(cardId: string, role: "player" | "opponent" | "pool") {
     controller.tryMove(pendingMove.to.x, pendingMove.to.y);
     controller.clearSelection();
     pendingMove = undefined;
+    sound.play("select");
     renderAll();
     return;
   }
@@ -444,6 +455,7 @@ function handleCardClick(cardId: string, role: "player" | "opponent" | "pool") {
   const next = selection.selectedCardId === cardId ? undefined : cardId;
   pendingMove = undefined;
   controller.selectCard(next);
+  sound.play(next ? "select" : "deselect");
   renderAll();
 }
 
@@ -497,6 +509,7 @@ if (canvasContainer) {
 }
 renderer.setViewMode(viewMode);
 rotateBoardBtn?.addEventListener("click", () => {
+  sound.play("toggle");
   renderer.rotateBoardQuarter();
   boardRotation = (boardRotation + 90) % 360;
   updateBoardRotation();
@@ -517,8 +530,11 @@ function renderAll() {
     const shouldPlay =
       currentMode === "local" ||
       (!isSpectator && viewPlayerId === activeId);
-    if (shouldPlay) {
-      sound.play("turn");
+    if (currentMode === "local") {
+      const primaryId = latestConfig.players[0]?.id;
+      sound.play(activeId === primaryId ? "turnRed" : "turnBlue");
+    } else if (!isSpectator) {
+      sound.play(activeId === viewPlayerId ? "turn" : "turnBlue");
     }
     lastActivePlayerId = activeId;
   }
@@ -532,6 +548,13 @@ function renderAll() {
     checkOwners
   });
   updateCheckIndicators(checkOwners, viewPlayerId);
+  const currentChecks = new Set(checkOwners);
+  for (const id of currentChecks) {
+    if (!lastCheckOwners.has(id)) {
+      sound.play("warning");
+    }
+  }
+  lastCheckOwners = currentChecks;
   const primaryId = latestConfig.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
   renderer.setBoardFlip(flip);
@@ -630,6 +653,9 @@ function setLandingTab(tab: "local" | "online") {
   applyLandingView();
   if (tab === "online") {
     refreshLobby();
+    sound.startAmbience();
+  } else {
+    sound.stopAmbience();
   }
 }
 
@@ -871,7 +897,7 @@ function updateRoomCode() {
 
 function showNotice(message: string) {
   statusEl.textContent = message;
-  sound.play("notice");
+  sound.play("info");
   if (noticeTimeout) window.clearTimeout(noticeTimeout);
   noticeTimeout = window.setTimeout(() => {
     noticeTimeout = undefined;
@@ -890,6 +916,12 @@ function showLanding(tab: "local" | "online" = "local") {
   setLobbyBusy(false);
   refreshLobby();
   lastReadyAll = false;
+  sound.play("modalOpen");
+  if (tab === "online") {
+    sound.startAmbience();
+  } else {
+    sound.stopAmbience();
+  }
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = window.setInterval(refreshLobby, 8000);
   if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -899,6 +931,8 @@ function showLanding(tab: "local" | "online" = "local") {
 
 function hideLanding() {
   landingOverlay.classList.add("hidden");
+  sound.play("modalClose");
+  sound.stopAmbience();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = undefined;
 }
@@ -945,6 +979,7 @@ async function refreshLobby() {
       empty.className = "lobby-empty";
       empty.textContent = "No public rooms yet. Create one below.";
       lobbyListEl.appendChild(empty);
+      sound.play("ting");
       return;
     }
     const reconnectRoomId = reconnectToken ? getReconnectRoomId(reconnectToken) : undefined;
@@ -1071,6 +1106,7 @@ async function refreshLobby() {
       row.appendChild(actions);
       lobbyListEl.appendChild(row);
     }
+    sound.play("ting");
   } catch {
     const empty = document.createElement("div");
     empty.className = "lobby-empty";
@@ -1419,10 +1455,12 @@ function openCustomize(scope: "local" | "lobby" = "local") {
   selectedCardIndex = 0;
   renderCustomize();
   overlay.classList.remove("hidden");
+  sound.play("modalOpen");
 }
 
 function closeCustomize() {
   overlay.classList.add("hidden");
+  sound.play("modalClose");
   if (returnToLobbyOnCustomizeClose) {
     returnToLobbyOnCustomizeClose = false;
     customizeScope = "local";
@@ -1620,11 +1658,13 @@ function showVictory(winnerName: string) {
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
   if (victoryRematchBtn) victoryRematchBtn.disabled = false;
   victoryOverlay.classList.remove("hidden");
+  sound.play("modalOpen");
   triggerConfetti();
 }
 
 function hideVictory() {
   victoryOverlay.classList.add("hidden");
+  sound.play("modalClose");
 }
 
 function setRematchPending(pending: boolean) {
@@ -1725,6 +1765,7 @@ function openDraft() {
     renderDraft();
     lobbyOverlay?.classList.add("hidden");
     draftOverlay.classList.remove("hidden");
+    sound.play("modalOpen");
     return;
   }
   if (!baseConfig) return;
@@ -1734,12 +1775,14 @@ function openDraft() {
   draftSelection = new Set();
   renderDraft();
   draftOverlay.classList.remove("hidden");
+  sound.play("modalOpen");
 }
 
 function maybeShowStartOverlay() {
   if (currentMode !== "local") return;
   if (startChoiceResolved) return;
   startOverlay.classList.remove("hidden");
+  sound.play("modalOpen");
 }
 
 function renderDraft() {
@@ -1879,6 +1922,7 @@ lobbyCreateBtn.addEventListener("click", async () => {
     setSpectatorMode(false);
     hideLanding();
     updateLobbyOverlay();
+    sound.play("door");
   }
 });
 privateCreateBtn?.addEventListener("click", async () => {
@@ -1893,8 +1937,10 @@ privateCreateBtn?.addEventListener("click", async () => {
     setSpectatorMode(false);
     hideLanding();
     updateLobbyOverlay();
+    sound.play("door");
   } else {
     statusEl.textContent = "Failed to create private lobby.";
+    sound.play("error");
   }
 });
 privateJoinBtn?.addEventListener("click", async () => {
@@ -1902,6 +1948,7 @@ privateJoinBtn?.addEventListener("click", async () => {
   const code = privateKeyInput?.value.trim().toLowerCase() ?? "";
   if (!code) {
     statusEl.textContent = "Enter a private lobby key.";
+    sound.play("question");
     return;
   }
   setMode("online");
@@ -1924,6 +1971,8 @@ privateJoinBtn?.addEventListener("click", async () => {
           ? "No game found."
           : "Private lobby unavailable.";
     statusEl.textContent = message;
+    sound.play("question");
+    sound.play("error");
   } finally {
     setLobbyBusy(false);
   }
@@ -1931,6 +1980,7 @@ privateJoinBtn?.addEventListener("click", async () => {
 
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
 toggleViewBtn.addEventListener("click", () => {
+  sound.play("toggle");
   viewMode = viewMode === "3d" ? "2d" : "3d";
   localStorage.setItem(VIEW_MODE_KEY, viewMode);
   renderer.setViewMode(viewMode);
@@ -2014,6 +2064,7 @@ lobbyReadyToggle?.addEventListener("change", () => {
     renderLobbyOverlay();
   }
   controller.setReady(lobbyReadyToggle.checked);
+  sound.play("ready");
 });
 lobbyBackBtn?.addEventListener("click", leaveOnlineLobby);
 lobbyCloseBtn?.addEventListener("click", leaveOnlineLobby);
@@ -2105,6 +2156,7 @@ startChooseBtn.addEventListener("click", openDraft);
 
 draftCloseBtn.addEventListener("click", () => {
   draftOverlay.classList.add("hidden");
+  sound.play("modalClose");
   if (draftMode === "online") {
     updateLobbyOverlay();
   }
@@ -2112,6 +2164,7 @@ draftCloseBtn.addEventListener("click", () => {
 draftOverlay.addEventListener("click", (event) => {
   if (event.target === draftOverlay) {
     draftOverlay.classList.add("hidden");
+    sound.play("modalClose");
     if (draftMode === "online") {
       updateLobbyOverlay();
     }

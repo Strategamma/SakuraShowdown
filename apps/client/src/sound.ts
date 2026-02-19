@@ -1,16 +1,34 @@
 type SoundType =
   | "turn"
+  | "turnRed"
+  | "turnBlue"
   | "ready"
+  | "ting"
   | "notice"
+  | "info"
+  | "warn"
+  | "error"
+  | "click"
+  | "modalOpen"
+  | "modalClose"
+  | "toggle"
+  | "select"
+  | "deselect"
+  | "swap"
   | "move"
   | "slash"
+  | "impact"
+  | "warning"
   | "victory"
   | "door"
-  | "disconnect";
+  | "disconnect"
+  | "footstep"
+  | "question";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
   private unlocked = false;
+  private ambienceTimer: number | null = null;
 
   unlock() {
     if (this.unlocked) return;
@@ -36,6 +54,14 @@ class SoundManager {
         this.tone(660, now, 0.12, 0.12);
         this.tone(880, now + 0.12, 0.14, 0.12);
         break;
+      case "turnRed":
+        this.tone(520, now, 0.12, 0.12);
+        this.tone(740, now + 0.12, 0.14, 0.12);
+        break;
+      case "turnBlue":
+        this.tone(440, now, 0.12, 0.12);
+        this.tone(640, now + 0.12, 0.14, 0.12);
+        break;
       case "move":
         this.tone(520, now, 0.08, 0.09);
         this.tone(640, now + 0.08, 0.1, 0.08);
@@ -43,6 +69,10 @@ class SoundManager {
       case "slash":
         this.noise(now, 0.14, 0.18, 1200, 600);
         this.toneSweep(900, 400, now, 0.12, 0.08);
+        break;
+      case "impact":
+        this.tone(180, now, 0.16, 0.16);
+        this.noise(now + 0.02, 0.12, 0.1, 120, 260);
         break;
       case "victory":
         this.tone(392, now, 0.16, 0.12);
@@ -59,14 +89,81 @@ class SoundManager {
         this.tone(200, now + 0.12, 0.16, 0.12);
         break;
       case "ready":
-        this.tone(440, now, 0.14, 0.12);
-        this.tone(660, now + 0.14, 0.14, 0.12);
-        this.tone(880, now + 0.28, 0.18, 0.13);
+        this.tone(740, now, 0.14, 0.1);
+        this.tone(980, now + 0.12, 0.16, 0.11);
         break;
+      case "ting":
+        this.tone(1200, now, 0.12, 0.12);
+        break;
+      case "click":
+        this.tone(900, now, 0.06, 0.08);
+        break;
+      case "modalOpen":
+        this.toneSweep(360, 620, now, 0.18, 0.1);
+        break;
+      case "modalClose":
+        this.toneSweep(620, 320, now, 0.18, 0.1);
+        break;
+      case "toggle":
+        this.tone(520, now, 0.08, 0.08);
+        this.tone(780, now + 0.08, 0.1, 0.08);
+        break;
+      case "select":
+        this.tone(820, now, 0.08, 0.08);
+        break;
+      case "deselect":
+        this.tone(520, now, 0.07, 0.07);
+        break;
+      case "swap":
+        this.noise(now, 0.12, 0.08, 900, 300);
+        break;
+      case "warning":
+        this.toneSweep(520, 880, now, 0.2, 0.12);
+        this.tone(1040, now + 0.18, 0.12, 0.08);
+        break;
+      case "footstep":
+        this.noise(now, 0.08, 0.08, 120, 220);
+        this.noise(now + 0.12, 0.08, 0.08, 120, 220);
+        break;
+      case "question":
+        this.tone(520, now, 0.1, 0.1);
+        this.tone(680, now + 0.1, 0.12, 0.1);
+        this.tone(520, now + 0.22, 0.12, 0.09);
+        break;
+      case "info":
       case "notice":
       default:
         this.tone(520, now, 0.12, 0.1);
         break;
+      case "warn":
+        this.tone(460, now, 0.12, 0.1);
+        this.tone(620, now + 0.12, 0.12, 0.1);
+        break;
+      case "error":
+        this.tone(240, now, 0.14, 0.12);
+        this.tone(180, now + 0.14, 0.16, 0.12);
+        break;
+    }
+  }
+
+  startAmbience() {
+    if (!this.ctx || this.ambienceTimer !== null) return;
+    const notes = [0, 3, 5, 7, 10];
+    let index = 0;
+    this.ambienceTimer = window.setInterval(() => {
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const step = notes[index % notes.length];
+      const freq = 220 * Math.pow(2, step / 12);
+      this.tone(freq, now, 0.4, 0.03);
+      index += 1;
+    }, 1800);
+  }
+
+  stopAmbience() {
+    if (this.ambienceTimer !== null) {
+      window.clearInterval(this.ambienceTimer);
+      this.ambienceTimer = null;
     }
   }
 
