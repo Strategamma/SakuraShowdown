@@ -61,6 +61,7 @@ const poolEl = document.getElementById("pool") as HTMLElement;
 const poolSection = poolEl?.closest(".pool-rail") as HTMLElement | null;
 const opponentCapturedEl = document.getElementById("opponent-captured") as HTMLElement;
 const playerCapturedEl = document.getElementById("player-captured") as HTMLElement;
+const gameConsole = document.getElementById("game-console") as HTMLElement | null;
 const boardStage = document.getElementById("board-stage") as HTMLElement | null;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
@@ -217,7 +218,7 @@ let spectatorNoticeHidden = false;
 let landingTab: "local" | "online" = "local";
 let rulesVisible = false;
 let onlineReadyIds = new Set<string>();
-let onlineGameStarted = true;
+let onlineGameStarted = false;
 let customizeScope: "local" | "lobby" = "local";
 let returnToLobbyOnCustomizeClose = false;
 let draftMode: "local" | "online" = "local";
@@ -496,8 +497,13 @@ function updateBoardSize() {
   if (!Number.isFinite(size) || size <= 0) return;
   if (Math.abs(size - lastBoardSize) < 1) return;
   lastBoardSize = size;
+  boardStage.style.width = `${size}px`;
+  boardStage.style.height = `${size}px`;
   canvasContainer.style.width = `${size}px`;
   canvasContainer.style.height = `${size}px`;
+  if (gameConsole) {
+    gameConsole.style.setProperty("--board-size", `${size}px`);
+  }
   window.dispatchEvent(new Event("resize"));
 }
 
@@ -1021,13 +1027,11 @@ async function refreshLobby() {
       join.className = "ghost-button";
       const open = room.open ?? players < maxPlayers;
       const canRejoin = Boolean(started);
-      const canResume = Boolean(
-        reconnectRoomId && reconnectRoomId === room.roomId && started && open
-      );
+      const canResume = Boolean(reconnectRoomId && reconnectRoomId === room.roomId && started);
       join.textContent = open ? "Join" : canRejoin ? "Rejoin" : "Full";
       setButtonDisabled(
         join,
-        !open && !canRejoin,
+        !open && !canRejoin && !canResume,
         open ? undefined : canRejoin ? "Rejoin with the same display name" : "Room is full"
       );
       if (canResume) {
@@ -1071,7 +1075,7 @@ async function refreshLobby() {
         join.textContent = open ? "Join" : canRejoin ? "Rejoin" : "Full";
         setButtonDisabled(
           join,
-          !open && !canRejoin,
+          !open && !canRejoin && !canResume,
           open ? undefined : canRejoin ? "Rejoin with the same display name" : "Room is full"
         );
         statusEl.textContent = "Room unavailable. Refreshing lobby…";
