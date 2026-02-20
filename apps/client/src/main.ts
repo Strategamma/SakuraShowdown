@@ -61,6 +61,7 @@ const poolEl = document.getElementById("pool") as HTMLElement;
 const poolSection = poolEl?.closest(".pool-rail") as HTMLElement | null;
 const opponentCapturedEl = document.getElementById("opponent-captured") as HTMLElement;
 const playerCapturedEl = document.getElementById("player-captured") as HTMLElement;
+const boardStage = document.getElementById("board-stage") as HTMLElement | null;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
 const overlay = document.getElementById("customize-overlay") as HTMLElement;
@@ -154,6 +155,7 @@ let canvasNameBottom: HTMLElement | null = null;
 let canvasCheckTop: HTMLElement | null = null;
 let canvasCheckBottom: HTMLElement | null = null;
 let boardRotation = 0;
+let lastBoardSize = 0;
 if (canvasContainer) {
   cardHintOverlay = document.createElement("div");
   cardHintOverlay.id = "card-choice-overlay";
@@ -488,13 +490,24 @@ const renderer = new GameRenderer(canvasContainer, {
 renderer.setCardsEnabled(false);
 
 function updateBoardSize() {
-  if (!canvasContainer) return;
+  if (!canvasContainer || !boardStage) return;
+  const rect = boardStage.getBoundingClientRect();
+  const size = Math.floor(Math.min(rect.width, rect.height));
+  if (!Number.isFinite(size) || size <= 0) return;
+  if (Math.abs(size - lastBoardSize) < 1) return;
+  lastBoardSize = size;
+  canvasContainer.style.width = `${size}px`;
+  canvasContainer.style.height = `${size}px`;
   window.dispatchEvent(new Event("resize"));
 }
 
 if (canvasContainer) {
   const layoutObserver = new ResizeObserver(updateBoardSize);
-  layoutObserver.observe(canvasContainer);
+  if (boardStage) {
+    layoutObserver.observe(boardStage);
+  } else {
+    layoutObserver.observe(canvasContainer);
+  }
   if (gameArea) layoutObserver.observe(gameArea);
   window.addEventListener("resize", updateBoardSize);
   updateBoardSize();
@@ -1346,12 +1359,15 @@ function filterMoves(
 }
 
 function getCardPatternSize() {
-  const host = document.querySelector(".game-console") as HTMLElement | null;
-  if (!host) return 120;
-  const raw = getComputedStyle(host).getPropertyValue("--card-height");
-  const height = Number.parseFloat(raw);
-  if (!Number.isFinite(height) || height <= 0) return 120;
-  return Math.max(84, Math.min(220, height - 20));
+  const sample = document.querySelector(".card") as HTMLElement | null;
+  if (sample) {
+    const rect = sample.getBoundingClientRect();
+    const size = rect.height - 24;
+    if (Number.isFinite(size) && size > 40) {
+      return Math.max(70, Math.min(220, size));
+    }
+  }
+  return 180;
 }
 
 function drawCardPattern(

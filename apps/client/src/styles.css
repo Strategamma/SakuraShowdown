@@ -229,24 +229,27 @@ button:disabled {
   flex: 1;
   display: grid;
   --console-pad: 14px;
-  --console-gap: 16px;
-  --card-height-raw: calc(
-    (100vh - var(--topbar-height) - 24px - (2 * var(--console-pad)) - (2 * var(--console-gap))) / 3
+  --console-gap: 12px;
+  --rail-height: clamp(88px, 12vh, 140px);
+  --pool-width: clamp(160px, 18vw, 240px);
+  --card-grid: clamp(60px, calc(var(--rail-height) - 24px), 120px);
+  --board-max: calc(
+    100vh - var(--topbar-height) - (2 * var(--rail-height)) - (2 * var(--console-gap)) -
+      (2 * var(--console-pad)) - 24px
   );
-  --card-height: clamp(90px, var(--card-height-raw), 160px);
-  --pool-width: clamp(150px, 18vw, 230px);
   grid-template-columns: minmax(0, 1fr) var(--pool-width);
-  grid-template-rows: var(--card-height) minmax(0, 1fr) var(--card-height);
+  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height);
   grid-template-areas:
     "opponent pool"
     "board pool"
     "player pool";
-  gap: 16px;
-  padding: 14px;
+  gap: var(--console-gap);
+  padding: var(--console-pad);
   min-height: 0;
   min-width: 0;
   max-width: 100%;
   max-height: calc(100vh - var(--topbar-height) - 24px);
+  overflow: hidden;
   border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(62, 34, 38, 0.7), rgba(14, 9, 12, 0.92)),
@@ -263,7 +266,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: var(--card-height);
+  min-height: var(--rail-height);
   justify-content: center;
 }
 
@@ -299,7 +302,7 @@ button:disabled {
 .rail-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: var(--card-height);
+  grid-auto-rows: var(--rail-height);
   gap: 10px;
   align-items: stretch;
   justify-items: stretch;
@@ -313,10 +316,11 @@ button:disabled {
 .card {
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--card-height);
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) var(--card-grid);
+  grid-template-rows: 1fr;
+  align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   min-width: 0;
   background: linear-gradient(180deg, #f6efe3 0%, #eadbca 100%);
   border: 1px solid rgba(120, 80, 70, 0.45);
@@ -332,28 +336,35 @@ button:disabled {
 }
 
 .card-title {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #4b352b;
-  align-self: center;
+  justify-self: start;
 }
 
 .card-pattern {
-  height: 100% !important;
-  width: 100% !important;
+  height: var(--card-grid) !important;
+  width: var(--card-grid) !important;
   aspect-ratio: 1 / 1;
   display: block;
 }
 
-#canvas-container {
+#board-stage {
   grid-area: board;
   width: 100%;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
   min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+#canvas-container {
+  width: 100%;
+  height: 100%;
+  max-width: min(100%, max(0px, var(--board-max)));
+  max-height: min(100%, max(0px, var(--board-max)));
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg);
   background: rgba(30, 20, 18, 0.55);
   border: 1px solid rgba(160, 110, 100, 0.35);
@@ -362,8 +373,6 @@ button:disabled {
   justify-content: center;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(220, 170, 150, 0.15);
-  justify-self: center;
-  align-self: center;
 }
 
 #canvas-container canvas {
@@ -412,9 +421,10 @@ button:disabled {
   }
 
   .game-console {
-    --card-height: clamp(90px, 16vmin, 140px);
+    --rail-height: clamp(84px, 16vmin, 132px);
+    --pool-width: 1fr;
     grid-template-columns: 1fr;
-    grid-template-rows: var(--card-height) minmax(0, 1fr) var(--card-height) var(--card-height);
+    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height);
     grid-template-areas:
       "opponent"
       "board"
