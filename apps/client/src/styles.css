@@ -189,6 +189,8 @@ button:disabled {
   gap: 16px;
   padding: 14px;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
   max-height: calc(100vh - var(--topbar-height) - 24px);
   border-radius: var(--radius-lg);
   background:
@@ -260,6 +262,7 @@ button:disabled {
   align-items: stretch;
   gap: 12px;
   padding: 10px 14px;
+  min-width: 0;
   background: linear-gradient(180deg, #f6efe3 0%, #eadbca 100%);
   border: 1px solid rgba(120, 80, 70, 0.45);
   border-radius: 16px;

@@ -573,7 +573,6 @@ function renderAll() {
   }
 
   updateStartedUI();
-  updateBoardSize();
 }
 
 function computeCheckOwners(state: GameState, config: GameConfig): string[] {
