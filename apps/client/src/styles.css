@@ -161,6 +161,28 @@ button:disabled {
   gap: 10px;
 }
 
+.zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(15, 9, 12, 0.6);
+  border: 1px solid rgba(223, 90, 136, 0.35);
+}
+
+.zoom-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .ghost-button {
   background: rgba(20, 14, 20, 0.45);
   border: 1px solid rgba(223, 90, 136, 0.4);
@@ -224,8 +246,8 @@ button:disabled {
   flex: 1;
   display: flex;
   align-items: stretch;
-  padding: 12px;
-  gap: 12px;
+  padding: 16px;
+  gap: 14px;
   min-height: 0;
   overflow: hidden;
 }
@@ -239,15 +261,14 @@ button:disabled {
   display: grid;
   --console-pad: 14px;
   --console-gap: 12px;
-  --rail-height: clamp(88px, 12vh, 140px);
-  --pool-width: clamp(150px, 16vw, 220px);
-  --card-grid: clamp(60px, calc(var(--rail-height) - 24px), 120px);
+  --pool-width: clamp(170px, 18vw, 260px);
+  --card-grid: clamp(84px, 12vw, 160px);
+  --card-min-height: calc(var(--card-grid) + 26px);
   --board-max: calc(
-    100vh - var(--topbar-height) - (2 * var(--rail-height)) - (2 * var(--console-gap)) -
-      (2 * var(--console-pad)) - 24px
+    100vh - var(--topbar-height) - (2 * var(--console-gap)) - (2 * var(--console-pad)) - 24px
   );
   grid-template-columns: minmax(0, var(--board-size, 1fr)) var(--pool-width);
-  grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "opponent pool"
     "board pool"
@@ -268,14 +289,14 @@ button:disabled {
 }
 
 .card-rail {
-  background: transparent;
-  border: none;
+  background: rgba(14, 10, 14, 0.45);
+  border: 1px solid rgba(200, 120, 160, 0.22);
   border-radius: var(--radius-lg);
-  padding: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: var(--rail-height);
+  min-height: var(--card-min-height);
   justify-content: center;
 }
 
@@ -316,8 +337,8 @@ button:disabled {
 .rail-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: var(--rail-height);
-  gap: 10px;
+  grid-auto-rows: auto;
+  gap: 12px;
   align-items: stretch;
   justify-items: stretch;
 }
@@ -329,12 +350,13 @@ button:disabled {
 
 .card {
   height: 100%;
+  min-height: var(--card-min-height);
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--card-grid);
   grid-template-rows: 1fr;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 12px 14px;
   min-width: 0;
   background: linear-gradient(180deg, #f6efe3 0%, #eadbca 100%);
   border: 1px solid rgba(120, 80, 70, 0.45);
@@ -350,7 +372,7 @@ button:disabled {
 }
 
 .card-title {
-  font-size: 0.82rem;
+  font-size: clamp(0.7rem, 1.2vw, 0.95rem);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #4b352b;
@@ -380,9 +402,6 @@ button:disabled {
 #canvas-container {
   width: 100%;
   height: 100%;
-  max-width: min(100%, max(0px, var(--board-max)));
-  max-height: min(100%, max(0px, var(--board-max)));
-  aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg);
   background: rgba(30, 20, 18, 0.55);
   border: 1px solid rgba(160, 110, 100, 0.35);
@@ -666,15 +685,16 @@ button:disabled {
   }
 
   .game-console {
-    --rail-height: clamp(84px, 16vmin, 132px);
-    --pool-width: 1fr;
+    --pool-width: 0px;
+    --card-grid: clamp(72px, 24vw, 140px);
+    --card-min-height: calc(var(--card-grid) + 24px);
     grid-template-columns: 1fr;
-    grid-template-rows: var(--rail-height) minmax(0, 1fr) var(--rail-height) var(--rail-height);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     grid-template-areas:
       "opponent"
       "board"
-      "pool"
-      "player";
+      "player"
+      "pool";
   }
 
   .rail-cards {
@@ -683,6 +703,11 @@ button:disabled {
 }
 
 @media (max-width: 520px) {
+  .game-console {
+    --card-grid: clamp(68px, 32vw, 120px);
+    --card-min-height: calc(var(--card-grid) + 22px);
+  }
+
   .rail-cards {
     grid-template-columns: 1fr;
   }

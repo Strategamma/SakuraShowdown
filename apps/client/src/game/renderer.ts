@@ -163,6 +163,9 @@ export class GameRenderer {
   private baseYaw = 0;
   private manualYaw = 0;
   private isPointerDown = false;
+  private zoom = 1;
+  private readonly zoomMin = 0.75;
+  private readonly zoomMax = 1.35;
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -278,6 +281,11 @@ export class GameRenderer {
     if (this.manualYaw > Math.PI * 2) {
       this.manualYaw -= Math.PI * 2;
     }
+  }
+
+  adjustZoom(delta: number) {
+    this.zoom = THREE.MathUtils.clamp(this.zoom + delta, this.zoomMin, this.zoomMax);
+    this.fitCamera();
   }
 
   private updateBaseYaw() {
@@ -1580,16 +1588,17 @@ export class GameRenderer {
       this.container.clientHeight < 680 ||
       this.container.clientHeight > this.container.clientWidth * 1.2;
     const distance = boardRadius / Math.tan(fov / 2) + (isCompact ? 0.6 : 1.2);
+    const zoomed = distance / this.zoom;
 
     if (this.viewMode === "2d") {
       this.camera.fov = 35;
-      this.camera.position.set(0, distance * (isCompact ? 0.82 : 0.95), 0.01);
+      this.camera.position.set(0, zoomed * (isCompact ? 0.82 : 0.95), 0.01);
     } else {
       this.camera.fov = 40;
       this.camera.position.set(
         0,
-        distance * (isCompact ? 0.48 : 0.55),
-        distance * (isCompact ? 0.62 : 0.7)
+        zoomed * (isCompact ? 0.48 : 0.55),
+        zoomed * (isCompact ? 0.62 : 0.7)
       );
     }
     this.camera.lookAt(0, 0, 0);

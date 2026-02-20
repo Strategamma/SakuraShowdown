@@ -51,6 +51,8 @@ const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElemen
 const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
 const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLButtonElement | null;
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
+const zoomInBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
+const zoomOutBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
 const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement | null;
@@ -491,19 +493,45 @@ const renderer = new GameRenderer(canvasContainer, {
 renderer.setCardsEnabled(false);
 
 function updateBoardSize() {
-  if (!canvasContainer || !boardStage) return;
-  const rect = boardStage.getBoundingClientRect();
-  const size = Math.floor(Math.min(rect.width, rect.height));
+  if (!canvasContainer || !boardStage || !gameConsole) return;
+  const consoleRect = gameConsole.getBoundingClientRect();
+  if (!Number.isFinite(consoleRect.width) || consoleRect.width <= 0) return;
+
+  const styles = getComputedStyle(gameConsole);
+  const gap = parseFloat(styles.getPropertyValue("--console-gap")) || 0;
+  const pad = parseFloat(styles.getPropertyValue("--console-pad")) || 0;
+  const poolWidth =
+    parseFloat(styles.getPropertyValue("--pool-width")) || 0;
+  const opponentHeight = opponentSection?.getBoundingClientRect().height ?? 0;
+  const playerHeight = playerSection?.getBoundingClientRect().height ?? 0;
+  const poolRail = poolEl?.closest(".pool-rail") as HTMLElement | null;
+  const poolHeight = poolRail?.getBoundingClientRect().height ?? 0;
+  const stacked = window.matchMedia("(max-width: 900px)").matches;
+
+  const availableWidth = consoleRect.width - (stacked ? 0 : poolWidth) - gap - pad * 2;
+  const availableHeight =
+    consoleRect.height -
+    opponentHeight -
+    playerHeight -
+    gap * 2 -
+    pad * 2 -
+    (stacked ? poolHeight + gap : 0);
+
+  const size = Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
   if (!Number.isFinite(size) || size <= 0) return;
   if (Math.abs(size - lastBoardSize) < 1) return;
   lastBoardSize = size;
+
   boardStage.style.width = `${size}px`;
   boardStage.style.height = `${size}px`;
   canvasContainer.style.width = `${size}px`;
   canvasContainer.style.height = `${size}px`;
-  if (gameConsole) {
-    gameConsole.style.setProperty("--board-size", `${size}px`);
-  }
+  gameConsole.style.setProperty("--board-size", `${size}px`);
+
+  const gridSize = Math.max(72, Math.min(170, Math.round(size / 4)));
+  gameConsole.style.setProperty("--card-grid", `${gridSize}px`);
+  gameConsole.style.setProperty("--card-min-height", `${gridSize + 26}px`);
+
   window.dispatchEvent(new Event("resize"));
 }
 
@@ -524,6 +552,16 @@ rotateBoardBtn?.addEventListener("click", () => {
   renderer.rotateBoardQuarter();
   boardRotation = (boardRotation + 90) % 360;
   updateBoardRotation();
+});
+
+zoomInBtn?.addEventListener("click", () => {
+  sound.play("toggle");
+  renderer.adjustZoom(0.1);
+});
+
+zoomOutBtn?.addEventListener("click", () => {
+  sound.play("toggle");
+  renderer.adjustZoom(-0.1);
 });
 
 function updateBoardRotation() {
@@ -2212,3 +2250,43 @@ draftStartBtn.addEventListener("click", () => {
 appEl.dataset.mode = "local";
 bootstrap();
 showLanding();
+
+const renderGameToText = () => {
+  const state = latestState;
+  const config = latestConfig;
+  const payload = {
+    mode: currentMode,
+    view: viewMode,
+    activePlayerId: state?.activePlayerId,
+    winnerId: state?.winnerId,
+    board: config?.board,
+    coordinateSystem: "origin top-left; +x right; +y down",
+    pieces: state?.pieces.map((piece) => ({
+      id: piece.id,
+      ownerId: piece.ownerId,
+      typeId: piece.typeId,
+      x: piece.x,
+      y: piece.y,
+      alive: piece.alive
+    })),
+    hands: state?.players.map((player) => ({
+      id: player.id,
+      name: config?.players.find((p) => p.id === player.id)?.name,
+      hand: player.hand
+    })),
+    poolCard: state?.poolCard
+  };
+  return JSON.stringify(payload);
+};
+
+const advanceTime = (ms: number) => {
+  const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+  for (let i = 0; i < steps; i += 1) {
+    renderAll();
+  }
+};
+
+(window as typeof window & { render_game_to_text?: () => string; advanceTime?: (ms: number) => void })
+  .render_game_to_text = renderGameToText;
+(window as typeof window & { render_game_to_text?: () => string; advanceTime?: (ms: number) => void })
+  .advanceTime = advanceTime;
