@@ -10,27 +10,25 @@ declare namespace THREE {
   const ShapeGeometry: any;
   const EdgesGeometry: any;
   const ShadowMaterial: any;
-
-  type Object3D = any;
-  type Scene = any;
-  type Group = any;
-  type Mesh = any;
-  type PerspectiveCamera = any;
-  type WebGLRenderer = any;
-  type Raycaster = any;
-  type Vector2 = any;
-  type Vector3 = any;
-  type Box3 = any;
-  type CanvasTexture = any;
-  type MeshStandardMaterial = any;
-  type MeshBasicMaterial = any;
-  type LineBasicMaterial = any;
-  type TorusGeometry = any;
-  type CylinderGeometry = any;
-  type PlaneGeometry = any;
-  type BoxGeometry = any;
-  type SphereGeometry = any;
-  type LineSegments = any;
+  const Raycaster: any;
+  const Vector2: any;
+  const Vector3: any;
+  const Scene: any;
+  const PerspectiveCamera: any;
+  const WebGLRenderer: any;
+  const Group: any;
+  const Mesh: any;
+  const BoxGeometry: any;
+  const PlaneGeometry: any;
+  const TorusGeometry: any;
+  const CylinderGeometry: any;
+  const SphereGeometry: any;
+  const MeshStandardMaterial: any;
+  const MeshBasicMaterial: any;
+  const LineBasicMaterial: any;
+  const LineSegments: any;
+  const Box3: any;
+  const CanvasTexture: any;
 }
 
 declare module "three" {

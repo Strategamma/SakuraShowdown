@@ -12,7 +12,7 @@ body {
 
 body {
   margin: 0;
-  font-family: "Cinzel", "Georgia", serif;
+  font-family: "Cormorant Garamond", "Cinzel", serif;
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 215, 180, 0.08), transparent 45%),
     repeating-linear-gradient(
@@ -41,12 +41,16 @@ body::before {
 }
 
 :root {
+  --display-font: "Cormorant Garamond", "Cinzel", serif;
+  --ui-font: "Manrope", "Sora", sans-serif;
   --panel: rgba(20, 14, 20, 0.82);
   --panel-soft: rgba(24, 16, 24, 0.65);
   --panel-border: rgba(196, 92, 130, 0.35);
   --accent: #df5a88;
   --accent-strong: #f06a98;
   --text-muted: rgba(246, 233, 239, 0.72);
+  --surface: rgba(22, 16, 22, 0.68);
+  --surface-strong: rgba(30, 20, 28, 0.9);
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 10px;
@@ -61,13 +65,15 @@ body::before {
 button,
 input,
 select {
-  font: inherit;
+  font-family: var(--ui-font);
+  font-size: 0.9rem;
+  font-weight: 500;
   color: inherit;
 }
 
 button {
   border: 1px solid var(--panel-border);
-  background: rgba(20, 14, 20, 0.6);
+  background: var(--surface);
   color: #f7eef3;
   padding: 10px 16px;
   border-radius: 12px;
@@ -101,8 +107,12 @@ button:disabled {
   align-items: center;
   gap: 16px;
   padding: 10px 18px;
-  background: rgba(10, 7, 8, 0.85);
+  background: rgba(10, 7, 8, 0.78);
   border-bottom: 1px solid rgba(120, 80, 100, 0.45);
+  backdrop-filter: blur(18px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .brand {
@@ -140,6 +150,51 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.ghost-button {
+  background: rgba(20, 14, 20, 0.45);
+  border: 1px solid rgba(223, 90, 136, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.ghost-button:hover {
+  background: rgba(40, 22, 34, 0.75);
+  border-color: rgba(255, 150, 190, 0.6);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(20, 14, 20, 0.65);
+  border: 1px solid rgba(223, 90, 136, 0.45);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(240, 120, 160, 0.7);
 }
 
 .status {
@@ -194,9 +249,9 @@ button:disabled {
   max-height: calc(100vh - var(--topbar-height) - 24px);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, rgba(70, 32, 28, 0.45), rgba(14, 9, 10, 0.95)),
-    radial-gradient(circle at 10% 20%, rgba(255, 160, 190, 0.12), transparent 40%);
-  border: 1px solid rgba(226, 140, 110, 0.25);
+    linear-gradient(180deg, rgba(62, 34, 38, 0.7), rgba(14, 9, 12, 0.92)),
+    radial-gradient(circle at 20% 20%, rgba(255, 170, 200, 0.16), transparent 45%);
+  border: 1px solid rgba(226, 140, 110, 0.3);
   box-shadow: inset 0 0 0 1px rgba(30, 18, 18, 0.8), var(--shadow);
 }
 
@@ -235,8 +290,8 @@ button:disabled {
 }
 
 .player-name {
-  font-size: 0.85rem;
-  letter-spacing: 0.22em;
+  font-size: 0.82rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #f4dfe8;
 }
@@ -277,8 +332,8 @@ button:disabled {
 }
 
 .card-title {
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #4b352b;
   align-self: center;
