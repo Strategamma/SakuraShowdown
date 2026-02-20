@@ -366,9 +366,10 @@ const controller = new GameController({
 
 function handleCellTap(x: number, y: number) {
   if (!latestState || !latestConfig) return;
+  const state = latestState;
   if (!controller.canAct()) return;
-  const pieceAt = latestState.pieces.find(
-    (p) => p.alive && p.x === x && p.y === y && p.ownerId === latestState.activePlayerId
+  const pieceAt = state.pieces.find(
+    (p) => p.alive && p.x === x && p.y === y && p.ownerId === state.activePlayerId
   );
   if (pieceAt) {
     pendingMove = undefined;
@@ -381,7 +382,7 @@ function handleCellTap(x: number, y: number) {
     (move) =>
       move.to.x === x &&
       move.to.y === y &&
-      move.playerId === latestState.activePlayerId
+      move.playerId === state.activePlayerId
   );
   if (movesForCell.length === 0) return;
 
@@ -513,16 +514,18 @@ function updateBoardRotation() {
 
 function renderAll() {
   if (!latestConfig || !latestState) return;
+  const state = latestState;
+  const config = latestConfig;
   renderCards();
 
-  const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
-  const activeId = latestState.activePlayerId;
-  if (!latestState.winnerId && activeId !== lastActivePlayerId) {
+  const viewPlayerId = controller.getPlayerId() ?? state.activePlayerId;
+  const activeId = state.activePlayerId;
+  if (!state.winnerId && activeId !== lastActivePlayerId) {
     const shouldPlay =
       currentMode === "local" ||
       (!isSpectator && viewPlayerId === activeId);
     if (currentMode === "local") {
-      const primaryId = latestConfig.players[0]?.id;
+      const primaryId = config.players[0]?.id;
       sound.play(activeId === primaryId ? "turnRed" : "turnBlue");
     } else if (!isSpectator) {
       sound.play(activeId === viewPlayerId ? "turn" : "turnBlue");
@@ -531,8 +534,8 @@ function renderAll() {
   }
   const selection = controller.getSelection();
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
-  const checkOwners = computeCheckOwners(latestState, latestConfig);
-  renderer.render(latestState, moves, {
+  const checkOwners = computeCheckOwners(state, config);
+  renderer.render(state, moves, {
     ...selection,
     pendingCardIds: pendingMove?.cardIds,
     viewerId: viewPlayerId,
@@ -546,26 +549,26 @@ function renderAll() {
     }
   }
   lastCheckOwners = currentChecks;
-  const primaryId = latestConfig.players[0]?.id;
+  const primaryId = config.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
   renderer.setBoardFlip(flip);
 
-  if (latestState.winnerId) {
+  if (state.winnerId) {
     const winnerName =
-      latestConfig.players.find((p) => p.id === latestState.winnerId)?.name ??
-      latestState.winnerId;
+      config.players.find((p) => p.id === state.winnerId)?.name ??
+      state.winnerId;
     statusEl.textContent = `Winner: ${winnerName}`;
-    if (lastWinnerId !== latestState.winnerId) {
+    if (lastWinnerId !== state.winnerId) {
       showVictory(winnerName);
-      lastWinnerId = latestState.winnerId;
+      lastWinnerId = state.winnerId;
     }
     lastActivePlayerId = undefined;
   } else {
     const activeName =
-      latestConfig.players.find((p) => p.id === latestState.activePlayerId)?.name ??
-      latestState.activePlayerId;
-    const isChecked = checkOwners.includes(latestState.activePlayerId);
-    statusEl.textContent = `Turn ${latestState.turn} · ${activeName}${isChecked ? " · CHECK" : ""}`;
+      config.players.find((p) => p.id === state.activePlayerId)?.name ??
+      state.activePlayerId;
+    const isChecked = checkOwners.includes(state.activePlayerId);
+    statusEl.textContent = `Turn ${state.turn} · ${activeName}${isChecked ? " · CHECK" : ""}`;
     lastWinnerId = undefined;
   }
 
@@ -1821,15 +1824,16 @@ function renderDraft() {
   draftStartBtn.disabled = draftSelection.size !== 5;
 
   if (draftSelectedEl) {
+    const selectedSource = baseConfig ?? sourceConfig;
     for (const cardId of draftSelection) {
-      const card = baseConfig.cards.find((c) => c.id === cardId);
+      const card = selectedSource.cards.find((c) => c.id === cardId);
       if (!card) continue;
       const item = document.createElement("div");
       item.className = "draft-selected-item";
       const title = document.createElement("div");
       title.className = "card-title";
       title.textContent = card.name;
-    const pattern = drawCardPattern(card.moves);
+      const pattern = drawCardPattern(card.moves);
       item.appendChild(title);
       item.appendChild(pattern);
       draftSelectedEl.appendChild(item);

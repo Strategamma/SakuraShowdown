@@ -25,6 +25,16 @@ npm run dev
 
 Client runs at `http://localhost:5173` and server at `http://localhost:2567`.
 
+## Quality checks
+
+Run rule-engine tests + typechecks:
+
+```bash
+npm run quality
+```
+
+Rule-engine unit tests live in `packages/rules/test`.
+
 ## Public hosting (GitHub Pages)
 
 This repo includes a GitHub Actions workflow that builds and deploys the client to GitHub Pages.

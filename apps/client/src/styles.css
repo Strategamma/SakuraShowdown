@@ -87,6 +87,7 @@ button:disabled {
 
 #app {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -161,6 +162,8 @@ button:disabled {
   align-items: stretch;
   padding: 12px;
   gap: 12px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #right-panel {
@@ -170,7 +173,12 @@ button:disabled {
 .game-console {
   flex: 1;
   display: grid;
-  --card-height: clamp(100px, 12vmin, 160px);
+  --console-pad: 14px;
+  --console-gap: 16px;
+  --card-height-raw: calc(
+    (100vh - var(--topbar-height) - 24px - (2 * var(--console-pad)) - (2 * var(--console-gap))) / 3
+  );
+  --card-height: clamp(90px, var(--card-height-raw), 160px);
   --pool-width: clamp(150px, 18vw, 230px);
   grid-template-columns: minmax(0, 1fr) var(--pool-width);
   grid-template-rows: var(--card-height) minmax(0, 1fr) var(--card-height);
@@ -180,6 +188,8 @@ button:disabled {
     "player pool";
   gap: 16px;
   padding: 14px;
+  min-height: 0;
+  max-height: calc(100vh - var(--topbar-height) - 24px);
   border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(70, 32, 28, 0.45), rgba(14, 9, 10, 0.95)),
@@ -234,6 +244,8 @@ button:disabled {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: var(--card-height);
   gap: 10px;
+  align-items: stretch;
+  justify-items: stretch;
 }
 
 .pool-rail .rail-cards {
@@ -242,7 +254,7 @@ button:disabled {
 }
 
 .card {
-  height: var(--card-height);
+  height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--card-height);
   align-items: stretch;

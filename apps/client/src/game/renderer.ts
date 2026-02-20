@@ -72,6 +72,11 @@ type CardLayout = {
   rowOffset: number;
 };
 
+type HitData =
+  | { type: "card"; cardId: string; ownerId?: string; role?: "player" | "opponent" | "pool" }
+  | { type: "piece"; pieceId: string }
+  | { type: "cell"; x: number; y: number };
+
 type ModelEntry = {
   group: THREE.Group;
 };
@@ -1201,7 +1206,7 @@ export class GameRenderer {
 
   private extractPrimaryMesh(group: THREE.Group) {
     let targetMesh: THREE.Mesh | undefined;
-    group.traverse((child) => {
+    group.traverse((child: THREE.Object3D) => {
       if (targetMesh) return;
       if (child instanceof THREE.Mesh) {
         targetMesh = child;
@@ -1249,7 +1254,7 @@ export class GameRenderer {
   }
 
   private applySharedMaterial(group: THREE.Group, isPrimary: boolean) {
-    group.traverse((child) => {
+    group.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) {
         const material = new THREE.MeshStandardMaterial({
           map: this.fabricTexture,
@@ -1351,23 +1356,21 @@ export class GameRenderer {
     );
 
     for (const hit of hits) {
-      const data = this.findUserData(hit.object) as
-        | { type?: string; pieceId?: string; x?: number; y?: number }
-        | undefined;
+      const data = this.findUserData(hit.object) as HitData | undefined;
       if (data?.type === "card" && data.cardId) {
         this.callbacks.onCardTap?.(
-          data.cardId as string,
-          data.ownerId as string | undefined,
-          data.role as "player" | "opponent" | "pool" | undefined
+          data.cardId,
+          data.ownerId,
+          data.role
         );
         if (data.role !== "pool") return;
       }
       if (data?.type === "piece" && data.pieceId) {
-        this.callbacks.onPieceTap?.(data.pieceId as string);
+        this.callbacks.onPieceTap?.(data.pieceId);
         return;
       }
       if (data?.type === "cell") {
-        this.callbacks.onCellTap?.(data.x as number, data.y as number);
+        this.callbacks.onCellTap?.(data.x, data.y);
         return;
       }
     }
