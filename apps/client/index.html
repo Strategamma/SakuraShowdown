@@ -40,6 +40,17 @@
           </button>
           <div class="zoom-controls" role="group" aria-label="Zoom controls">
             <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out">−</button>
+            <input
+              id="zoom-range"
+              class="zoom-range"
+              type="range"
+              min="0.75"
+              max="1.35"
+              step="0.05"
+              value="1"
+              aria-label="Zoom level"
+            />
+            <span id="zoom-value" class="zoom-value">100%</span>
             <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in">+</button>
           </div>
           <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">

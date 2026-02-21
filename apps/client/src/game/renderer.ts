@@ -288,6 +288,15 @@ export class GameRenderer {
     this.fitCamera();
   }
 
+  setZoom(value: number) {
+    this.zoom = THREE.MathUtils.clamp(value, this.zoomMin, this.zoomMax);
+    this.fitCamera();
+  }
+
+  getZoom() {
+    return this.zoom;
+  }
+
   private updateBaseYaw() {
     if (this.viewMode !== "3d") {
       this.baseYaw = 0;

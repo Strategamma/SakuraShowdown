@@ -183,6 +183,18 @@ button:disabled {
   justify-content: center;
 }
 
+.zoom-range {
+  width: clamp(80px, 12vw, 140px);
+  accent-color: var(--accent);
+}
+
+.zoom-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 44px;
+  text-align: center;
+}
+
 .ghost-button {
   background: rgba(20, 14, 20, 0.45);
   border: 1px solid rgba(223, 90, 136, 0.4);

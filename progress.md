@@ -5,3 +5,8 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Added renderer zoom support (clamped) and camera fit adjustment.
 - Added deterministic hooks: window.render_game_to_text + window.advanceTime.
 - Added extra padding and zoom button styling.
+- Added zoom slider + percent label in toolbar; wired to renderer get/set zoom.
+- Reworked card rail sizing: min-height tied to card grid, larger readable cards, rails padded.
+- Updated board sizing to use available console space and derive card grid size from board size.
+- Mobile layout now stacks pool under player cards and scales card grid for smaller screens.
+- Focus start-random button when local start overlay opens (helps automated testing start match).

@@ -53,6 +53,8 @@ const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLBut
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
 const zoomInBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
 const zoomOutBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
+const zoomRange = document.getElementById("zoom-range") as HTMLInputElement | null;
+const zoomValue = document.getElementById("zoom-value") as HTMLElement | null;
 const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement | null;
@@ -547,6 +549,7 @@ if (canvasContainer) {
   updateBoardSize();
 }
 renderer.setViewMode(viewMode);
+updateZoomUI();
 rotateBoardBtn?.addEventListener("click", () => {
   sound.play("toggle");
   renderer.rotateBoardQuarter();
@@ -557,16 +560,32 @@ rotateBoardBtn?.addEventListener("click", () => {
 zoomInBtn?.addEventListener("click", () => {
   sound.play("toggle");
   renderer.adjustZoom(0.1);
+  updateZoomUI();
 });
 
 zoomOutBtn?.addEventListener("click", () => {
   sound.play("toggle");
   renderer.adjustZoom(-0.1);
+  updateZoomUI();
+});
+
+zoomRange?.addEventListener("input", () => {
+  const next = Number.parseFloat(zoomRange.value);
+  if (!Number.isFinite(next)) return;
+  renderer.setZoom(next);
+  updateZoomUI(next);
 });
 
 function updateBoardRotation() {
   if (!canvasContainer) return;
   canvasContainer.dataset.rotation = String(boardRotation);
+}
+
+function updateZoomUI(value?: number) {
+  if (!zoomRange || !zoomValue) return;
+  const zoom = value ?? renderer.getZoom();
+  zoomRange.value = String(zoom);
+  zoomValue.textContent = `${Math.round(zoom * 100)}%`;
 }
 
 function renderAll() {
@@ -1847,6 +1866,7 @@ function maybeShowStartOverlay() {
   if (currentMode !== "local") return;
   if (startChoiceResolved) return;
   startOverlay.classList.remove("hidden");
+  startRandomBtn?.focus();
   sound.play("modalOpen");
 }
 
@@ -1970,6 +1990,7 @@ landingLocalBtn.addEventListener("click", () => {
   setMode("local");
   startChoiceResolved = false;
   startOverlay.classList.remove("hidden");
+  startRandomBtn?.focus();
   setSpectatorMode(false);
   hideLanding();
 });
