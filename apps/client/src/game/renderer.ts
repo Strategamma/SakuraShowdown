@@ -164,7 +164,7 @@ export class GameRenderer {
   private manualYaw = 0;
   private isPointerDown = false;
   private zoom = 1;
-  private readonly zoomMin = 0.75;
+  private readonly zoomMin = 0.5;
   private readonly zoomMax = 1.35;
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {

@@ -10,3 +10,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Updated board sizing to use available console space and derive card grid size from board size.
 - Mobile layout now stacks pool under player cards and scales card grid for smaller screens.
 - Focus start-random button when local start overlay opens (helps automated testing start match).
+- Lowered zoom minimum to 50% and updated slider min accordingly.
+- Landing overlay layout reworked: full-width tabs, two-column online panel (public/private) with responsive stack, larger lobby list.

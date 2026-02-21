@@ -522,14 +522,17 @@ button:disabled {
 }
 
 .landing-card {
-  width: min(980px, 94vw);
+  width: min(1100px, 94vw);
+  max-height: min(90vh, 860px);
+  overflow: hidden;
   backdrop-filter: blur(18px);
 }
 
 .landing-body {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
   gap: 16px;
+  min-height: 0;
 }
 
 .landing-tabs-row {
@@ -541,9 +544,10 @@ button:disabled {
 }
 
 .landing-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  flex-wrap: wrap;
+  flex: 1;
 }
 
 .tab-button.active {
@@ -559,12 +563,14 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .landing-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .landing-name,
@@ -574,6 +580,29 @@ button:disabled {
   border: 1px solid rgba(226, 140, 110, 0.25);
   border-radius: var(--radius-md);
   padding: 14px;
+}
+
+.landing-panel-online {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  grid-template-areas:
+    "name name"
+    "public private";
+  gap: 16px;
+}
+
+.landing-panel-online .landing-name {
+  grid-area: name;
+}
+
+.landing-panel-online .landing-lobby {
+  grid-area: public;
+  min-height: 300px;
+}
+
+.landing-panel-online .landing-private {
+  grid-area: private;
+  min-height: 300px;
 }
 
 .landing-lobby-header,
@@ -588,7 +617,8 @@ button:disabled {
 .lobby-list {
   display: grid;
   gap: 10px;
-  max-height: min(46vh, 420px);
+  max-height: min(52vh, 520px);
+  min-height: 220px;
   overflow: auto;
   padding-right: 6px;
 }
@@ -681,6 +711,14 @@ button:disabled {
 
   .lobby-list {
     max-height: 36vh;
+  }
+
+  .landing-panel-online {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "name"
+      "public"
+      "private";
   }
 }
 
