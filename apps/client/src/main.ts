@@ -1507,7 +1507,7 @@ function createCardElement(
   const ownerForward =
     latestConfig?.players.find((p) => p.id === ownerId)?.forward ?? -1;
   const baseX = -ownerForward;
-  const baseY = ownerForward;
+  const baseY = -ownerForward;
   const xMul = baseX * viewMul;
   const yMul = baseY * viewMul;
 

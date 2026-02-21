@@ -350,38 +350,6 @@ export class GameRenderer {
     base.receiveShadow = true;
     this.boardGroup.add(base);
 
-    const blossomMat = new THREE.MeshStandardMaterial({
-      color: 0xf4b6c2,
-      emissive: 0xd8758b,
-      emissiveIntensity: 0.25,
-      roughness: 0.6,
-      metalness: 0.05
-    });
-    const blossomGeom = this.createBlossomGeometry(0.16, 5);
-    const halfW = width / 2;
-    const halfH = height / 2;
-    const edgeOffset = this.cellSize * 0.65;
-    const y = 0.095;
-    const blossomPositions: Array<[number, number, number]> = [];
-    for (let i = 0; i < this.boardSize.width; i += 1) {
-      const x = -halfW + this.cellSize / 2 + i * this.cellSize;
-      blossomPositions.push([x, y, -halfH - edgeOffset]);
-      blossomPositions.push([x, y, halfH + edgeOffset]);
-    }
-    for (let j = 0; j < this.boardSize.height; j += 1) {
-      const z = -halfH + this.cellSize / 2 + j * this.cellSize;
-      blossomPositions.push([-halfW - edgeOffset, y, z]);
-      blossomPositions.push([halfW + edgeOffset, y, z]);
-    }
-    blossomPositions.forEach(([x, y, z], index) => {
-      const blossom = new THREE.Mesh(blossomGeom, blossomMat);
-      blossom.position.set(x, y, z);
-      blossom.rotation.y = (index * Math.PI) / 6;
-      blossom.userData = { type: "decor" };
-      blossom.receiveShadow = false;
-      blossom.castShadow = false;
-      this.boardGroup.add(blossom);
-    });
 
     const lightMat = new THREE.MeshStandardMaterial({
       color: 0xf3efe8,

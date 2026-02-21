@@ -12,3 +12,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Focus start-random button when local start overlay opens (helps automated testing start match).
 - Lowered zoom minimum to 50% and updated slider min accordingly.
 - Landing overlay layout reworked: full-width tabs, two-column online panel (public/private) with responsive stack, larger lobby list.
+- Removed floating sakura blossoms from board decoration.
+- Fixed card pattern orientation by flipping Y like X (aligns with board move resolution).
