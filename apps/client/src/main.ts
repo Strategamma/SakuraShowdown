@@ -493,6 +493,7 @@ const renderer = new GameRenderer(canvasContainer, {
   }
 });
 renderer.setCardsEnabled(false);
+renderer.setZoom(0.5);
 
 function updateBoardSize() {
   if (!canvasContainer || !boardStage || !gameConsole) return;
@@ -1502,14 +1503,12 @@ function createCardElement(
   el.dataset.ownerId = ownerId;
   el.dataset.role = role;
 
-  const primaryId = latestConfig?.players[0]?.id;
-  const viewMul = viewPlayerId === primaryId ? 1 : -1;
   const ownerForward =
     latestConfig?.players.find((p) => p.id === ownerId)?.forward ?? -1;
-  const baseX = -ownerForward;
-  const baseY = -ownerForward;
-  const xMul = baseX * viewMul;
-  const yMul = baseY * viewMul;
+  const viewerIsOwner = ownerId === viewPlayerId;
+  const mult = viewerIsOwner ? -ownerForward : ownerForward;
+  const xMul = mult;
+  const yMul = mult;
 
   const title = document.createElement("div");
   title.className = "card-title";

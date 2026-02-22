@@ -14,3 +14,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Landing overlay layout reworked: full-width tabs, two-column online panel (public/private) with responsive stack, larger lobby list.
 - Removed floating sakura blossoms from board decoration.
 - Fixed card pattern orientation by flipping Y like X (aligns with board move resolution).
+- Card pattern orientation updated: current player uses -forward, opponent uses +forward so UI grid matches legal moves.
+- Default zoom set to 50% (renderer + slider default).
