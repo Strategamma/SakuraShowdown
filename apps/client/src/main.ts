@@ -1503,12 +1503,9 @@ function createCardElement(
   el.dataset.ownerId = ownerId;
   el.dataset.role = role;
 
-  const ownerForward =
-    latestConfig?.players.find((p) => p.id === ownerId)?.forward ?? -1;
-  const viewerIsOwner = ownerId === viewPlayerId;
-  const mult = viewerIsOwner ? -ownerForward : ownerForward;
-  const xMul = mult;
-  const yMul = mult;
+  const isOpponent = role === "opponent";
+  const xMul = isOpponent ? -1 : 1;
+  const yMul = isOpponent ? -1 : 1;
 
   const title = document.createElement("div");
   title.className = "card-title";

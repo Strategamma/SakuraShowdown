@@ -16,3 +16,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Fixed card pattern orientation by flipping Y like X (aligns with board move resolution).
 - Card pattern orientation updated: current player uses -forward, opponent uses +forward so UI grid matches legal moves.
 - Default zoom set to 50% (renderer + slider default).
+- Landing overlay visual polish: dojo-lean gradients, cleaner tabs, stronger card panels.
+- Landing overlay made scrollable with fixed header and improved small-screen layout.
