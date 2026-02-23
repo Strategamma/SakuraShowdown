@@ -1341,7 +1341,7 @@ function renderCards() {
 
   const poolCard = cardsById.get(latestState.poolCard);
   if (poolCard) {
-    const poolOwner = opponentMeta?.id ?? latestConfig.players[0]?.id ?? "pool";
+    const poolOwner = viewPlayerId;
     const poolElCard = createCardElement(poolCard, poolOwner, "pool", viewPlayerId);
     poolEl.appendChild(poolElCard);
   }
@@ -1503,9 +1503,12 @@ function createCardElement(
   el.dataset.ownerId = ownerId;
   el.dataset.role = role;
 
-  const isOpponent = role === "opponent";
-  const xMul = isOpponent ? -1 : 1;
-  const yMul = isOpponent ? -1 : 1;
+  const ownerMeta =
+    latestConfig?.players.find((player) => player.id === ownerId) ??
+    latestConfig?.players.find((player) => player.id === viewPlayerId);
+  const forward = ownerMeta?.forward ?? 1;
+  const xMul = -forward;
+  const yMul = -forward;
 
   const title = document.createElement("div");
   title.className = "card-title";

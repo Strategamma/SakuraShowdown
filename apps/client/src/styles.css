@@ -265,6 +265,10 @@ button:disabled {
 }
 
 #right-panel {
+  display: none !important;
+}
+
+.name-actions {
   display: none;
 }
 
@@ -521,6 +525,78 @@ button:disabled {
   border-radius: var(--radius-lg);
   padding: 18px;
   box-shadow: var(--shadow);
+  position: relative;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 54px 12px 4px;
+  border-bottom: 1px solid rgba(226, 140, 110, 0.25);
+}
+
+.overlay-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-title {
+  font-size: 1.2rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.overlay-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.close-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.overlay-body {
+  padding-top: 12px;
+}
+
+.overlay-footer {
+  padding-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.victory-card {
+  max-width: 640px;
+}
+
+.victory-body {
+  padding-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.victory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.victory-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .landing-card {
@@ -530,7 +606,8 @@ button:disabled {
   position: relative;
   backdrop-filter: blur(16px);
   background:
-    linear-gradient(180deg, rgba(38, 22, 22, 0.96), rgba(16, 10, 12, 0.96));
+    radial-gradient(circle at 20% 20%, rgba(255, 210, 190, 0.12), transparent 45%),
+    linear-gradient(180deg, rgba(40, 22, 22, 0.96), rgba(14, 8, 10, 0.96));
   border: 1px solid rgba(230, 160, 130, 0.38);
   display: flex;
   flex-direction: column;
@@ -545,6 +622,7 @@ button:disabled {
   flex: 1;
   overflow: auto;
   padding-right: 6px;
+  padding-bottom: 6px;
 }
 
 .landing-tabs-row {
@@ -560,6 +638,10 @@ button:disabled {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   flex: 1;
+}
+
+.landing-tabs .tab-button {
+  width: 100%;
 }
 
 .landing-tabs .tab-button {

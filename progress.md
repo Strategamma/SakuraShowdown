@@ -18,3 +18,9 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Default zoom set to 50% (renderer + slider default).
 - Landing overlay visual polish: dojo-lean gradients, cleaner tabs, stronger card panels.
 - Landing overlay made scrollable with fixed header and improved small-screen layout.
+- Removed in-game player name edit/save buttons from the player rail.
+- Standardized overlay header/footer styles and improved victory modal layout.
+- Landing overlay polish: close button now anchored top-right of card; overlay header padding adjusted; landing card background refined.
+- Hid in-game name edit/save actions completely (right panel stays hidden).
+- Card orientation logic updated: card pattern orientation now derived from card owner forward (xMul/yMul = -forward), pool uses viewer forward.
+- Playwright run: http://127.0.0.1:5175 (shot-0.png). Console error: ERR_CONNECTION_REFUSED (resource load).
