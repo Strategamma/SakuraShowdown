@@ -24,3 +24,10 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Hid in-game name edit/save actions completely (right panel stays hidden).
 - Card orientation logic updated: card pattern orientation now derived from card owner forward (xMul/yMul = -forward), pool uses viewer forward.
 - Playwright run: http://127.0.0.1:5175 (shot-0.png). Console error: ERR_CONNECTION_REFUSED (resource load).
+- Card orientation now accounts for board flip: effectiveForward = forward * (flip ? -1 : 1) for all cards.
+- Card orientation now also accounts for board flip (effectiveForward uses viewer flip).
+- Playwright re-run against http://127.0.0.1:5174 (shot-0.png). Console error: ERR_CONNECTION_REFUSED (resource load).
+- Landing overlay polish: overlay padding + wider card; refined dojo gradient; tab text tightened for small screens.
+- Playwright run (http://127.0.0.1:5174) captured shot-0.png; console error still ERR_CONNECTION_REFUSED.
+- Landing default tab now opens to online to show lobbies immediately.
+- Playwright run against 5174 captured online landing panel (shot-0.png).

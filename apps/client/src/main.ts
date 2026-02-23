@@ -975,7 +975,7 @@ function showNotice(message: string) {
   }, 2200);
 }
 
-function showLanding(tab: "local" | "online" = "local") {
+function showLanding(tab: "local" | "online" = "online") {
   landingOverlay.classList.remove("hidden");
   landingOverlay.dataset.tab = tab;
   landingOverlay.dataset.rules = "false";
@@ -1507,8 +1507,11 @@ function createCardElement(
     latestConfig?.players.find((player) => player.id === ownerId) ??
     latestConfig?.players.find((player) => player.id === viewPlayerId);
   const forward = ownerMeta?.forward ?? 1;
-  const xMul = -forward;
-  const yMul = -forward;
+  const primaryId = latestConfig?.players[0]?.id;
+  const isFlippedView = Boolean(primaryId && viewPlayerId !== primaryId);
+  const effectiveForward = isFlippedView ? -forward : forward;
+  const xMul = -effectiveForward;
+  const yMul = -effectiveForward;
 
   const title = document.createElement("div");
   title.className = "card-title";

@@ -510,16 +510,19 @@ button:disabled {
 .overlay {
   position: fixed;
   inset: 0;
+  padding: clamp(12px, 3vw, 28px);
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 210, 200, 0.08), transparent 45%),
     rgba(8, 6, 10, 0.72);
   display: grid;
   place-items: center;
+  align-items: start;
+  overflow: auto;
   z-index: 50;
 }
 
 .overlay-card {
-  width: min(960px, 92vw);
+  width: min(1040px, 96vw);
   background: linear-gradient(180deg, rgba(36, 20, 18, 0.96), rgba(18, 10, 10, 0.96));
   border: 1px solid rgba(226, 140, 110, 0.35);
   border-radius: var(--radius-lg);
@@ -600,14 +603,15 @@ button:disabled {
 }
 
 .landing-card {
-  width: min(1120px, 94vw);
-  max-height: min(90vh, 880px);
+  width: min(1120px, 96vw);
+  max-height: min(92vh, 880px);
   overflow: hidden;
   position: relative;
   backdrop-filter: blur(16px);
   background:
-    radial-gradient(circle at 20% 20%, rgba(255, 210, 190, 0.12), transparent 45%),
-    linear-gradient(180deg, rgba(40, 22, 22, 0.96), rgba(14, 8, 10, 0.96));
+    radial-gradient(circle at 12% 18%, rgba(255, 210, 190, 0.18), transparent 52%),
+    radial-gradient(circle at 88% 70%, rgba(240, 140, 170, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(38, 20, 18, 0.96), rgba(14, 8, 10, 0.96));
   border: 1px solid rgba(230, 160, 130, 0.38);
   display: flex;
   flex-direction: column;
@@ -642,15 +646,15 @@ button:disabled {
 
 .landing-tabs .tab-button {
   width: 100%;
-}
-
-.landing-tabs .tab-button {
   padding: 12px 16px;
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.8rem;
   background: rgba(18, 12, 16, 0.6);
+  text-align: center;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .tab-button.active {
@@ -872,6 +876,11 @@ button:disabled {
 
   .landing-tabs {
     grid-template-columns: 1fr;
+  }
+
+  .landing-tabs .tab-button {
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
   }
 
   .landing-actions {
