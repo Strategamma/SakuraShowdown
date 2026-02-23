@@ -31,3 +31,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Playwright run (http://127.0.0.1:5174) captured shot-0.png; console error still ERR_CONNECTION_REFUSED.
 - Landing default tab now opens to online to show lobbies immediately.
 - Playwright run against 5174 captured online landing panel (shot-0.png).
+- Styled start (new game) and draft (choose 5 cards) overlays with consistent dojo styling, responsive grids, and sticky footer.
+- Playwright run captured online landing panel again (shot-0.png).
