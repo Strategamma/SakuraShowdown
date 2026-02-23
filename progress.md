@@ -33,3 +33,7 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Playwright run against 5174 captured online landing panel (shot-0.png).
 - Styled start (new game) and draft (choose 5 cards) overlays with consistent dojo styling, responsive grids, and sticky footer.
 - Playwright run captured online landing panel again (shot-0.png).
+- Landing panel inputs/buttons polished (consistent input styling, stronger panel depth).
+- Playwright run captured online landing panel after polish (shot-0.png).
+- Landing lobby polish: tighter typography, clearer room-info, hover states for lobby items.
+- Playwright run captured landing lobby area post-polish (shot-0.png).
