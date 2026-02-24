@@ -53,3 +53,4 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Removed board overlay discard hint and switched to card-only highlight for discard choices.
 - Card layout updated to avoid title overlap (two-line clamp) and added strong .card.choice highlight.
 - Draft (choose 5) grid now has fixed row heights + overflow hidden to stop overlap.
+- Server URL resolution updated to prefer Koyeb when frontend is hosted on static hosts (github.io/vercel/netlify/pages.dev).

@@ -21,7 +21,12 @@ function resolveServerUrl() {
     if (meta?.content) return meta.content;
     const host = window.location.host;
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
+    const isLocal = host === "localhost" || host === "127.0.0.1";
+    const staticHosts = ["github.io", "vercel.app", "netlify.app", "pages.dev"];
+    if (host && staticHosts.some((suffix) => host.endsWith(suffix))) {
+      return DEFAULT_REMOTE_SERVER;
+    }
+    if (host && !isLocal) {
       return `${protocol}//${host}`;
     }
   }
