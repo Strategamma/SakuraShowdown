@@ -8,6 +8,8 @@ import { sound } from "./sound";
 
 const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
+const SERVER_OVERRIDE_KEY = "sakura.serverUrl";
+const DEFAULT_REMOTE_SERVER = "wss://arrogant-leeanne-strategamma-82d356d8.koyeb.app";
 
 function resolveServerUrl() {
   const envServer = import.meta.env.VITE_SERVER_URL;
@@ -23,20 +25,58 @@ function resolveServerUrl() {
       return `${protocol}//${host}`;
     }
   }
-  return "ws://localhost:2567";
+  return DEFAULT_REMOTE_SERVER;
 }
 
-const SERVER_URL = resolveServerUrl();
-const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
-  ? `${SERVER_URL.replace(/^ws/, "http")}/config`
-  : undefined;
-const CONFIG_URL = import.meta.env.VITE_CONFIG_URL ?? DERIVED_CONFIG_URL ?? DEFAULT_CONFIG_URL;
-const LOBBY_URL = SERVER_URL.startsWith("ws")
-  ? `${SERVER_URL.replace(/^ws/, "http")}/lobby`
-  : `${SERVER_URL.replace(/\/$/, "")}/lobby`;
-const PRIVATE_URL = SERVER_URL.startsWith("ws")
-  ? `${SERVER_URL.replace(/^ws/, "http")}/private`
-  : `${SERVER_URL.replace(/\/$/, "")}/private`;
+const ENV_CONFIG_URL = import.meta.env.VITE_CONFIG_URL;
+
+function normalizeServerUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  if (/^wss?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/$/, "");
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/^http/i, "ws").replace(/\/$/, "");
+  }
+  const host = trimmed.replace(/\/$/, "");
+  const isLocal = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  return `${isLocal ? "ws" : "wss"}://${host}`;
+}
+
+function getServerUrl() {
+  if (typeof window !== "undefined") {
+    const override = localStorage.getItem(SERVER_OVERRIDE_KEY);
+    if (override) {
+      const normalized = normalizeServerUrl(override);
+      if (normalized) return normalized;
+    }
+  }
+  return resolveServerUrl();
+}
+
+function toHttpUrl(wsUrl: string) {
+  return wsUrl.replace(/^ws/i, "http");
+}
+
+function getConfigUrl() {
+  if (ENV_CONFIG_URL) return ENV_CONFIG_URL;
+  const serverUrl = getServerUrl();
+  if (serverUrl.startsWith("ws")) {
+    return `${toHttpUrl(serverUrl).replace(/\/$/, "")}/config`;
+  }
+  return DEFAULT_CONFIG_URL;
+}
+
+function getLobbyUrl() {
+  const httpBase = toHttpUrl(getServerUrl());
+  return `${httpBase.replace(/\/$/, "")}/lobby`;
+}
+
+function getPrivateUrl() {
+  const httpBase = toHttpUrl(getServerUrl());
+  return `${httpBase.replace(/\/$/, "")}/private`;
+}
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
@@ -124,6 +164,7 @@ const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonEl
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingActionsOnline = document.getElementById("landing-actions-online") as HTMLElement | null;
+const serverUrlInput = document.getElementById("server-url") as HTMLInputElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
 const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
@@ -1046,7 +1087,7 @@ async function refreshLobby() {
   lobbyListEl.innerHTML = "";
   lobbyRefreshBtn.classList.add("loading");
   try {
-    const response = await fetch(LOBBY_URL, { cache: "no-store" });
+    const response = await fetch(getLobbyUrl(), { cache: "no-store" });
     if (!response.ok) throw new Error("Failed");
     const payload = (await response.json()) as {
       rooms?: {
@@ -1122,7 +1163,7 @@ async function refreshLobby() {
           setButtonDisabled(join, true, "Reconnecting…");
           setMode("online");
           const ok = await controller.reconnectOnline(
-            SERVER_URL,
+            getServerUrl(),
             normalizeReconnectToken(reconnectToken),
             getOnlineName()
           );
@@ -1142,7 +1183,7 @@ async function refreshLobby() {
         join.textContent = open ? "Joining..." : "Rejoining...";
         setButtonDisabled(join, true, "Connecting…");
         setMode("online");
-        const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName());
+        const ok = await controller.connectOnline(getServerUrl(), room.roomId, getOnlineName());
         setLobbyBusy(false);
         if (ok) {
           hideLanding();
@@ -1174,7 +1215,7 @@ async function refreshLobby() {
         setLobbyBusy(true);
         spectate.textContent = "Joining...";
         setMode("online");
-        const ok = await controller.connectOnline(SERVER_URL, room.roomId, getOnlineName(), {
+        const ok = await controller.connectOnline(getServerUrl(), room.roomId, getOnlineName(), {
           spectator: true
         });
         setLobbyBusy(false);
@@ -1198,13 +1239,15 @@ async function refreshLobby() {
     empty.className = "lobby-empty";
     empty.textContent = "Lobby unavailable. Try again.";
     lobbyListEl.appendChild(empty);
+    statusEl.textContent = "Lobby unavailable. Check server URL and try again.";
+    sound.play("error");
   } finally {
     lobbyRefreshBtn.classList.remove("loading");
   }
 }
 
 async function lookupPrivateRoom(code: string) {
-  const response = await fetch(`${PRIVATE_URL}?code=${encodeURIComponent(code)}`, {
+  const response = await fetch(`${getPrivateUrl()}?code=${encodeURIComponent(code)}`, {
     cache: "no-store"
   });
   if (response.status === 404) {
@@ -1960,7 +2003,7 @@ async function bootstrap() {
       playerLabel.textContent = localName || "You";
     } else {
       try {
-        await controller.loadConfig(CONFIG_URL);
+        await controller.loadConfig(getConfigUrl());
         const loaded = controller.getConfig();
         if (loaded) {
           baseConfig = loaded;
@@ -2023,20 +2066,23 @@ lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyCreateBtn.addEventListener("click", async () => {
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(SERVER_URL, getOnlineName());
+  const ok = await controller.createOnline(getServerUrl(), getOnlineName());
   setLobbyBusy(false);
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
     updateLobbyOverlay();
     sound.play("door");
+  } else {
+    statusEl.textContent = "Failed to create public lobby.";
+    sound.play("error");
   }
 });
 privateCreateBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(SERVER_URL, getOnlineName(), {
+  const ok = await controller.createOnline(getServerUrl(), getOnlineName(), {
     private: true
   });
   setLobbyBusy(false);
@@ -2062,7 +2108,7 @@ privateJoinBtn?.addEventListener("click", async () => {
   setLobbyBusy(true);
   try {
     const roomId = await lookupPrivateRoom(code);
-    const ok = await controller.connectOnline(SERVER_URL, roomId, getOnlineName());
+    const ok = await controller.connectOnline(getServerUrl(), roomId, getOnlineName());
     if (ok) {
       setSpectatorMode(false);
       hideLanding();
@@ -2146,6 +2192,22 @@ if (privateKeyInput) {
       .slice(0, 6);
     privateKeyInput.value = sanitized;
   });
+}
+
+if (serverUrlInput) {
+  const savedServerUrl = localStorage.getItem(SERVER_OVERRIDE_KEY) ?? "";
+  serverUrlInput.value = savedServerUrl || DEFAULT_REMOTE_SERVER;
+  const applyServerOverride = () => {
+    const raw = serverUrlInput.value.trim();
+    if (raw) {
+      localStorage.setItem(SERVER_OVERRIDE_KEY, raw);
+    } else {
+      localStorage.removeItem(SERVER_OVERRIDE_KEY);
+    }
+    refreshLobby();
+  };
+  serverUrlInput.addEventListener("change", applyServerOverride);
+  serverUrlInput.addEventListener("blur", applyServerOverride);
 }
 
 spectatorBackBtn?.addEventListener("click", () => {

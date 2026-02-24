@@ -43,3 +43,8 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Playwright run captured landing panel after responsive updates (shot-0.png).
 - Mobile/tablet lobby list fixes: lobby card uses flex with list stretch, min-heights adjusted; buttons get 44px minimum on small screens.
 - Playwright run captured landing lobby area after mobile adjustments (shot-0.png).
+- Overlays now clamp height and scroll (overlay card body scrolls); landing lobby list height adjusted for desktop/mobile.
+- Playwright run captured landing lobby area after overlay scrolling changes (shot-0.png).
+- Wired server URL override from landing (server-url input) with localStorage; added normalize/getServerUrl + dynamic lobby/private/config URL helpers.
+- Updated lobby/public/private create/join/reconnect to use getServerUrl and added error feedback for public create + lobby fetch failures.
+- Default lobby server now points to Koyeb (DEFAULT_REMOTE_SERVER) when no override/env present; landing server URL input prefilled with Koyeb URL.
