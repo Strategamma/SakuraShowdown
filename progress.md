@@ -41,3 +41,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Playwright run after lobby fix (shot-0.png).
 - Mobile/tablet responsiveness: landing online panel now stacks from 1100px down; toolbar spacing tightened; cards stack title+grid on small screens.
 - Playwright run captured landing panel after responsive updates (shot-0.png).
+- Mobile/tablet lobby list fixes: lobby card uses flex with list stretch, min-heights adjusted; buttons get 44px minimum on small screens.
+- Playwright run captured landing lobby area after mobile adjustments (shot-0.png).

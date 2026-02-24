@@ -805,6 +805,12 @@ button:disabled {
   backdrop-filter: blur(10px);
 }
 
+.landing-lobby {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
 .landing-panel-online {
   display: grid;
   grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
@@ -825,6 +831,14 @@ button:disabled {
 
   .landing-card {
     max-height: 94vh;
+  }
+
+  .landing-lobby {
+    min-height: 280px;
+  }
+
+  .lobby-list {
+    max-height: 42vh;
   }
 }
 
@@ -875,10 +889,11 @@ button:disabled {
 .lobby-list {
   display: grid;
   gap: 10px;
-  max-height: min(52vh, 520px);
+  max-height: min(50vh, 520px);
   min-height: 220px;
   overflow: auto;
   padding-right: 6px;
+  flex: 1;
 }
 
 .lobby-item {
@@ -1061,6 +1076,17 @@ button:disabled {
 
   .landing-actions {
     grid-template-columns: 1fr;
+  }
+
+  .landing-actions button,
+  .private-buttons button,
+  .lobby-footer button {
+    min-height: 44px;
+  }
+
+  .lobby-list {
+    max-height: 38vh;
+    min-height: 180px;
   }
 
   .start-actions {
