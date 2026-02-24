@@ -60,6 +60,10 @@ body::before {
   --text-muted: rgba(246, 233, 239, 0.72);
   --surface: rgba(22, 16, 22, 0.68);
   --surface-strong: rgba(30, 20, 28, 0.9);
+  --wood-dark: #2b1a14;
+  --wood-mid: #4a2a1e;
+  --wood-light: #7a4b34;
+  --wood-glow: rgba(180, 110, 70, 0.35);
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 10px;
@@ -319,11 +323,45 @@ button:disabled {
   max-height: calc(100vh - var(--topbar-height) - 24px);
   overflow: hidden;
   border-radius: var(--radius-lg);
+  position: relative;
   background:
     linear-gradient(180deg, rgba(62, 34, 38, 0.7), rgba(14, 9, 12, 0.92)),
     radial-gradient(circle at 20% 20%, rgba(255, 170, 200, 0.16), transparent 45%);
   border: 1px solid rgba(226, 140, 110, 0.3);
   box-shadow: inset 0 0 0 1px rgba(30, 18, 18, 0.8), var(--shadow);
+}
+
+/* Dojo trim around the console */
+.game-console::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(var(--radius-lg) + 6px);
+  background:
+    linear-gradient(135deg, var(--wood-light), var(--wood-mid) 35%, var(--wood-dark) 70%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 2px,
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 5px
+    );
+  z-index: -2;
+  box-shadow:
+    0 16px 30px rgba(8, 6, 10, 0.55),
+    inset 0 0 12px rgba(255, 210, 180, 0.12);
+}
+
+.game-console::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(255, 220, 190, 0.08), transparent 45%),
+    linear-gradient(315deg, rgba(255, 160, 200, 0.08), transparent 55%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .card-rail {
@@ -555,6 +593,45 @@ button:disabled {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.landing-name,
+.landing-lobby,
+.landing-private,
+.lobby-item,
+.card-rail,
+.pool-rail {
+  position: relative;
+}
+
+/* Shoji grid overlay for panels/cards */
+.overlay::before,
+.overlay-card::before,
+.landing-name::before,
+.landing-lobby::before,
+.landing-private::before,
+.lobby-item::before,
+.card-rail::before,
+.pool-rail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(255, 230, 210, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 230, 210, 0.06) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.overlay-card::after,
+.overlay::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 210, 190, 0.08);
+  pointer-events: none;
 }
 
 .overlay-header {

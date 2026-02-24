@@ -48,3 +48,4 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Wired server URL override from landing (server-url input) with localStorage; added normalize/getServerUrl + dynamic lobby/private/config URL helpers.
 - Updated lobby/public/private create/join/reconnect to use getServerUrl and added error feedback for public create + lobby fetch failures.
 - Default lobby server now points to Koyeb (DEFAULT_REMOTE_SERVER) when no override/env present; landing server URL input prefilled with Koyeb URL.
+- Added dojo styling pass: wood/bamboo trim on game console and shoji grid overlays for panels/cards.
