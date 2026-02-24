@@ -8,7 +8,25 @@ import { sound } from "./sound";
 
 const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
-const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "ws://localhost:2567";
+
+function resolveServerUrl() {
+  const envServer = import.meta.env.VITE_SERVER_URL;
+  if (envServer) return envServer;
+  if (typeof window !== "undefined") {
+    const dataServer = document.body?.dataset?.serverUrl;
+    if (dataServer) return dataServer;
+    const meta = document.querySelector("meta[name=\"sakura-server\"]") as HTMLMetaElement | null;
+    if (meta?.content) return meta.content;
+    const host = window.location.host;
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return `${protocol}//${host}`;
+    }
+  }
+  return "ws://localhost:2567";
+}
+
+const SERVER_URL = resolveServerUrl();
 const DERIVED_CONFIG_URL = SERVER_URL.startsWith("ws")
   ? `${SERVER_URL.replace(/^ws/, "http")}/config`
   : undefined;

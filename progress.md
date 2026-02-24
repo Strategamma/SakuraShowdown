@@ -37,3 +37,7 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Playwright run captured online landing panel after polish (shot-0.png).
 - Landing lobby polish: tighter typography, clearer room-info, hover states for lobby items.
 - Playwright run captured landing lobby area post-polish (shot-0.png).
+- Online lobby connectivity now defaults to same-origin WS when VITE_SERVER_URL is not set.
+- Playwright run after lobby fix (shot-0.png).
+- Mobile/tablet responsiveness: landing online panel now stacks from 1100px down; toolbar spacing tightened; cards stack title+grid on small screens.
+- Playwright run captured landing panel after responsive updates (shot-0.png).
