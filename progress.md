@@ -49,3 +49,7 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Updated lobby/public/private create/join/reconnect to use getServerUrl and added error feedback for public create + lobby fetch failures.
 - Default lobby server now points to Koyeb (DEFAULT_REMOTE_SERVER) when no override/env present; landing server URL input prefilled with Koyeb URL.
 - Added dojo styling pass: wood/bamboo trim on game console and shoji grid overlays for panels/cards.
+- Removed server URL field from landing UI; Koyeb default remains internal.
+- Removed board overlay discard hint and switched to card-only highlight for discard choices.
+- Card layout updated to avoid title overlap (two-line clamp) and added strong .card.choice highlight.
+- Draft (choose 5) grid now has fixed row heights + overflow hidden to stop overlap.

@@ -221,12 +221,6 @@ let canvasCheckBottom: HTMLElement | null = null;
 let boardRotation = 0;
 let lastBoardSize = 0;
 if (canvasContainer) {
-  cardHintOverlay = document.createElement("div");
-  cardHintOverlay.id = "card-choice-overlay";
-  cardHintOverlay.className = "card-hint board-hint hidden";
-  cardHintOverlay.textContent = "Choose card to discard";
-  canvasContainer.appendChild(cardHintOverlay);
-
   canvasNameTop = document.createElement("div");
   canvasNameTop.className = "canvas-nameplate top";
   canvasContainer.appendChild(canvasNameTop);
@@ -1364,7 +1358,7 @@ function renderCards() {
     cardChoiceHint.classList.toggle("hidden", hideLegacy || !showHint);
   }
   if (cardHintOverlay) {
-    cardHintOverlay.classList.toggle("hidden", !showHint);
+    cardHintOverlay.classList.toggle("hidden", true);
   }
 
   const cardsById = new Map(latestConfig.cards.map((card) => [card.id, card]));
