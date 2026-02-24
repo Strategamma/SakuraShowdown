@@ -54,3 +54,4 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Card layout updated to avoid title overlap (two-line clamp) and added strong .card.choice highlight.
 - Draft (choose 5) grid now has fixed row heights + overflow hidden to stop overlap.
 - Server URL resolution updated to prefer Koyeb when frontend is hosted on static hosts (github.io/vercel/netlify/pages.dev).
+- Added server-level CORS headers for all requests (including Colyseus matchmake) to fix preflight blocking from GitHub Pages.

@@ -565,6 +565,14 @@ app.get("/private", async (req, res) => {
 });
 
 const server = http.createServer(app);
+server.prependListener("request", (_req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+});
 const gameServer = new Server({ server });
 
 gameServer.define("onitama", GameRoom);
