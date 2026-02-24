@@ -55,3 +55,4 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Draft (choose 5) grid now has fixed row heights + overflow hidden to stop overlap.
 - Server URL resolution updated to prefer Koyeb when frontend is hosted on static hosts (github.io/vercel/netlify/pages.dev).
 - Added server-level CORS headers for all requests (including Colyseus matchmake) to fix preflight blocking from GitHub Pages.
+- Loaded Cinzel + Manrope fonts; lobby/new game overlays now use UI font with display font for headers.
