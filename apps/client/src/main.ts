@@ -202,6 +202,7 @@ const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElem
 const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
 const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
+const onlineStatusEl = document.getElementById("online-status") as HTMLElement | null;
 
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
@@ -1013,6 +1014,34 @@ function setLobbyBusy(busy: boolean) {
   }
 }
 
+function setOnlineStatus(message?: string, tone: "error" | "success" | "info" = "info") {
+  if (!onlineStatusEl) return;
+  if (!message) {
+    onlineStatusEl.textContent = "";
+    onlineStatusEl.classList.add("hidden");
+    onlineStatusEl.classList.remove("error", "success");
+    return;
+  }
+  onlineStatusEl.textContent = message;
+  onlineStatusEl.classList.remove("hidden", "error", "success");
+  if (tone === "error") {
+    onlineStatusEl.classList.add("error");
+  } else if (tone === "success") {
+    onlineStatusEl.classList.add("success");
+  }
+}
+
+function ensureOnlineName() {
+  const name = getOnlineName();
+  if (!name || name.trim().length < 2) {
+    setOnlineStatus("Enter a display name (at least 2 characters).", "error");
+    sound.play("question");
+    return "";
+  }
+  setOnlineStatus();
+  return name;
+}
+
 function updateRoomCode() {
   if (!roomCodeEl) return;
   const code = currentRoomCode;
@@ -1108,6 +1137,7 @@ async function refreshLobby() {
       empty.textContent = "No public rooms yet. Create one below.";
       lobbyListEl.appendChild(empty);
       sound.play("ting");
+      setOnlineStatus();
       return;
     }
     const reconnectRoomId = reconnectToken ? getReconnectRoomId(reconnectToken) : undefined;
@@ -1233,12 +1263,14 @@ async function refreshLobby() {
       lobbyListEl.appendChild(row);
     }
     sound.play("ting");
+    setOnlineStatus();
   } catch {
     const empty = document.createElement("div");
     empty.className = "lobby-empty";
     empty.textContent = "Lobby unavailable. Try again.";
     lobbyListEl.appendChild(empty);
     statusEl.textContent = "Lobby unavailable. Check server URL and try again.";
+    setOnlineStatus("Lobby unavailable. Check server status and try again.", "error");
     sound.play("error");
   } finally {
     lobbyRefreshBtn.classList.remove("loading");
@@ -2063,25 +2095,31 @@ landingCustomizeBtn.addEventListener("click", () => {
 });
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyCreateBtn.addEventListener("click", async () => {
+  const name = ensureOnlineName();
+  if (!name) return;
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(getServerUrl(), getOnlineName());
+  const ok = await controller.createOnline(getServerUrl(), name);
   setLobbyBusy(false);
   if (ok) {
     setSpectatorMode(false);
     hideLanding();
     updateLobbyOverlay();
     sound.play("door");
+    setOnlineStatus("Public room created.", "success");
   } else {
     statusEl.textContent = "Failed to create public lobby.";
     sound.play("error");
+    setOnlineStatus("Failed to create public lobby.", "error");
   }
 });
 privateCreateBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
+  const name = ensureOnlineName();
+  if (!name) return;
   setMode("online");
   setLobbyBusy(true);
-  const ok = await controller.createOnline(getServerUrl(), getOnlineName(), {
+  const ok = await controller.createOnline(getServerUrl(), name, {
     private: true
   });
   setLobbyBusy(false);
@@ -2090,31 +2128,38 @@ privateCreateBtn?.addEventListener("click", async () => {
     hideLanding();
     updateLobbyOverlay();
     sound.play("door");
+    setOnlineStatus("Private room created.", "success");
   } else {
     statusEl.textContent = "Failed to create private lobby.";
     sound.play("error");
+    setOnlineStatus("Failed to create private lobby.", "error");
   }
 });
 privateJoinBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
+  const name = ensureOnlineName();
+  if (!name) return;
   const code = privateKeyInput?.value.trim().toLowerCase() ?? "";
   if (!code) {
     statusEl.textContent = "Enter a private lobby key.";
     sound.play("question");
+    setOnlineStatus("Enter a private lobby key.", "error");
     return;
   }
   setMode("online");
   setLobbyBusy(true);
   try {
     const roomId = await lookupPrivateRoom(code);
-    const ok = await controller.connectOnline(getServerUrl(), roomId, getOnlineName());
+    const ok = await controller.connectOnline(getServerUrl(), roomId, name);
     if (ok) {
       setSpectatorMode(false);
       hideLanding();
+      setOnlineStatus();
       updateLobbyOverlay();
       return;
     }
     statusEl.textContent = "Private lobby unavailable. Try again.";
+    setOnlineStatus("Private lobby unavailable. Try again.", "error");
   } catch (error) {
     const message =
       error instanceof Error && error.message === "full"
@@ -2123,6 +2168,7 @@ privateJoinBtn?.addEventListener("click", async () => {
           ? "No game found."
           : "Private lobby unavailable.";
     statusEl.textContent = message;
+    setOnlineStatus(message, "error");
     sound.play("question");
     sound.play("error");
   } finally {
@@ -2180,6 +2226,9 @@ if (onlineNameInput) {
   onlineNameInput.addEventListener("input", () => {
     onlineName = onlineNameInput.value;
     localStorage.setItem(ONLINE_NAME_KEY, onlineName);
+    if (onlineName.trim().length >= 2) {
+      setOnlineStatus();
+    }
   });
 }
 
