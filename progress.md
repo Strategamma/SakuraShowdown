@@ -57,3 +57,5 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Added server-level CORS headers for all requests (including Colyseus matchmake) to fix preflight blocking from GitHub Pages.
 - Loaded Cinzel + Manrope fonts; lobby/new game overlays now use UI font with display font for headers.
 - Added inline online status messaging and required display-name validation for lobby create/join flows.
+- Fixed landing online actions hidden state when lobby busy; invalid display name now focuses input.
+- Customize flow updated: opens in new-card mode, sets Add to Deck button, hides list/add/remove in new mode, prevents auto-start when adding.

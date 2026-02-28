@@ -696,6 +696,26 @@ button:disabled {
   padding-right: 6px;
 }
 
+#customize-overlay .overlay-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+#customize-overlay[data-mode="new"] .overlay-body {
+  grid-template-columns: 1fr;
+}
+
+#customize-overlay[data-mode="new"] #card-list,
+#customize-overlay[data-mode="new"] #card-add,
+#customize-overlay[data-mode="new"] #card-remove {
+  display: none;
+}
+
+#customize-overlay .overlay-editor {
+  min-width: 0;
+}
+
 .overlay-footer {
   padding-top: 14px;
   display: flex;

@@ -134,6 +134,8 @@ const canvasContainer = document.getElementById("canvas-container") as HTMLEleme
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
 const overlay = document.getElementById("customize-overlay") as HTMLElement;
 const closeBtn = document.getElementById("customize-close") as HTMLButtonElement;
+const customizeTitle = document.getElementById("customize-title") as HTMLElement | null;
+const customizeSubtitle = document.getElementById("customize-subtitle") as HTMLElement | null;
 const cardListEl = document.getElementById("card-list") as HTMLElement;
 const cardNameInput = document.getElementById("card-name") as HTMLInputElement;
 const moveListEl = document.getElementById("move-list") as HTMLElement;
@@ -253,6 +255,7 @@ let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
+let customizeMode: "edit" | "new" = "edit";
 let currentRoomId: string | undefined;
 let currentRoomCode: string | undefined;
 let currentRoomPrivate = false;
@@ -999,7 +1002,9 @@ function setLobbyBusy(busy: boolean) {
   setButtonDisabled(lobbyRefreshBtn, busy, tooltip);
   setButtonDisabled(lobbyCreateBtn, busy, tooltip);
   setButtonDisabled(landingTabOnline, busy, tooltip);
-  if (landingActionsOnline) landingActionsOnline.classList.add("hidden");
+  if (landingActionsOnline) {
+    landingActionsOnline.classList.toggle("hidden", busy);
+  }
   setButtonDisabled(privateJoinBtn, busy, tooltip);
   setButtonDisabled(privateCreateBtn, busy, tooltip);
   if (privateKeyInput) privateKeyInput.disabled = busy;
@@ -1036,6 +1041,7 @@ function ensureOnlineName() {
   if (!name || name.trim().length < 2) {
     setOnlineStatus("Enter a display name (at least 2 characters).", "error");
     sound.play("question");
+    onlineNameInput?.focus();
     return "";
   }
   setOnlineStatus();
@@ -1624,14 +1630,35 @@ function cloneConfig<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function openCustomize(scope: "local" | "lobby" = "local") {
+function updateCustomizeHeader() {
+  if (customizeTitle) {
+    customizeTitle.textContent =
+      customizeMode === "new" ? "Create New Card" : "Customize Cards";
+  }
+  if (customizeSubtitle) {
+    customizeSubtitle.textContent =
+      customizeMode === "new"
+        ? "Design a new move card and add it to your deck."
+        : "Edit names and moves. Changes are local to this browser.";
+  }
+  cardsApplyBtn.textContent = customizeMode === "new" ? "Add to Deck" : "Apply Changes";
+}
+
+function openCustomize(scope: "local" | "lobby" = "local", mode: "edit" | "new" = "edit") {
   if (!latestConfig) return;
   customizeScope = scope;
+  customizeMode = mode;
+  overlay.dataset.mode = customizeMode;
   returnToLandingOnCustomizeClose = false;
   returnToLobbyOnCustomizeClose = scope === "lobby";
   editableConfig = cloneConfig(latestConfig);
   selectedCardIndex = 0;
-  renderCustomize();
+  updateCustomizeHeader();
+  if (customizeMode === "new") {
+    addCard();
+  } else {
+    renderCustomize();
+  }
   overlay.classList.remove("hidden");
   sound.play("modalOpen");
 }
@@ -1639,6 +1666,8 @@ function openCustomize(scope: "local" | "lobby" = "local") {
 function closeCustomize() {
   overlay.classList.add("hidden");
   sound.play("modalClose");
+  customizeMode = "edit";
+  overlay.dataset.mode = "edit";
   if (returnToLobbyOnCustomizeClose) {
     returnToLobbyOnCustomizeClose = false;
     customizeScope = "local";
@@ -1789,6 +1818,7 @@ function applyCardChanges() {
     const validated = validateConfig(editableConfig);
     if (customizeScope === "lobby") {
       applyOnlineConfig(validated);
+      customizeMode = "edit";
       closeCustomize();
       return;
     }
@@ -1798,6 +1828,14 @@ function applyCardChanges() {
     latestConfig = localConfig;
     controller.setConfig(localConfig);
     renderer.setConfig(localConfig);
+    if (customizeMode === "new") {
+      statusEl.textContent = "Card added to deck.";
+      startChoiceResolved = false;
+      playerLabel.textContent = localName || "You";
+      customizeMode = "edit";
+      closeCustomize();
+      return;
+    }
     startChoiceResolved = true;
     startLocalMatch();
     playerLabel.textContent = localName || "You";
@@ -2091,7 +2129,7 @@ landingLocalBtn.addEventListener("click", () => {
 landingCustomizeBtn.addEventListener("click", () => {
   returnToLandingOnCustomizeClose = true;
   hideLanding();
-  openCustomize("local");
+  openCustomize("local", "new");
 });
 lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyCreateBtn.addEventListener("click", async () => {
@@ -2295,7 +2333,7 @@ lobbyCustomizeBtn?.addEventListener("click", () => {
     return;
   }
   lobbyOverlay?.classList.add("hidden");
-  openCustomize("lobby");
+  openCustomize("lobby", "new");
 });
 lobbyRandomBtn?.addEventListener("click", () => {
   if (!canEditOnlineLobby()) {
@@ -2332,8 +2370,8 @@ startingPlayerSelect.addEventListener("change", () => {
   localStorage.setItem(LOCAL_START_KEY, localStartingPlayer);
 });
 
-customizeBtn.addEventListener("click", () => openCustomize("local"));
-openCustomizeBtn?.addEventListener("click", () => openCustomize("local"));
+customizeBtn.addEventListener("click", () => openCustomize("local", "new"));
+openCustomizeBtn?.addEventListener("click", () => openCustomize("local", "new"));
 closeBtn.addEventListener("click", closeCustomize);
 overlay.addEventListener("click", (event) => {
   if (event.target === overlay) closeCustomize();
