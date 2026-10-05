@@ -25,3 +25,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Three.js hit coordinates depend on correct canvas sizing; existing browser automation is restricted.
 
 **Verification:** Typecheck/build/rules tests, layout-source review, Playwright attempt, and screenshot inspection where available.
+
+## Interaction polish
+
+**Goal:** Make each turn feel responsive and self-explanatory without changing the rules.
+
+**Scope:** Turn transitions, selection feedback, invalid-action feedback, keyboard clearing, card affordances, and side-panel balance.
+
+**Approach:** Reuse the renderer's piece/card motion, add lightweight DOM feedback around it, and derive all guidance from the current selection state.
+
+**Risks:** Repeated state renders can restart transient effects; mobile overlays must not obscure board input.
+
+**Verification:** Rules/type checks, production build, responsive source review, and the prescribed browser test attempt.

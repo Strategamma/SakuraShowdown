@@ -128,3 +128,10 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - `npm run quality:ci` and root `npm run build` passed after structural changes.
   - Required Playwright attempt repeated against port 5174; macOS again blocked Chromium Mach registration before page launch, so fresh screenshot QA remains unverified in this environment.
   - Mobile follow-up: added dynamic viewport sizing, iOS safe-area padding, momentum scrolling, 44px touch targets, canvas touch handling, and retained two compact cards per hand at phone widths instead of the overly tall single-card stack.
+- 2026-10-05 interaction polish:
+  - Added a short turn-change banner and a persistent state-derived “Next” prompt over the board.
+  - Piece selection now toggles off on a second tap; Escape clears any piece/card/pending selection.
+  - Invalid destination taps now explain the problem and give restrained visual/audio feedback.
+  - Improved playable-card hover affordance, active-turn labeling, and vertical balance in hand/pool rails.
+  - Added a pool explanation so the card-exchange mechanic is easier to understand.
+  - `npm run quality:ci` and `npm run build` pass. The required Playwright run was attempted after installing Chromium into `/tmp`, but macOS denied Chromium's Mach service registration, so no fresh automated screenshot was produced.

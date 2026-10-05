@@ -92,12 +92,22 @@
           </section>
 
           <div id="board-stage" aria-label="Game board stage">
+            <div id="turn-banner" class="turn-banner" aria-live="polite">
+              <span id="turn-banner-title">Your turn</span>
+              <small id="turn-banner-detail">Choose a piece or movement card</small>
+            </div>
+            <div id="turn-guide" class="turn-guide" aria-live="polite">
+              <span class="guide-kicker">Next</span>
+              <span id="turn-guide-text">Choose a piece or movement card</span>
+              <span class="guide-shortcut">Esc to clear</span>
+            </div>
             <div id="canvas-container" aria-label="Game board"></div>
           </div>
 
           <section class="card-rail pool-rail embedded-rail">
             <div class="group-label">Pool</div>
             <div id="pool" class="cards rail-cards" aria-label="Pool card"></div>
+            <div class="pool-caption">The played card lands here</div>
           </section>
 
           <section id="player-section" class="card-rail player-rail embedded-rail">

@@ -140,6 +140,10 @@ const playerCapturedEl = document.getElementById("player-captured") as HTMLEleme
 const gameConsole = document.getElementById("game-console") as HTMLElement | null;
 const boardStage = document.getElementById("board-stage") as HTMLElement | null;
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
+const turnBanner = document.getElementById("turn-banner") as HTMLElement | null;
+const turnBannerTitle = document.getElementById("turn-banner-title") as HTMLElement | null;
+const turnBannerDetail = document.getElementById("turn-banner-detail") as HTMLElement | null;
+const turnGuideText = document.getElementById("turn-guide-text") as HTMLElement | null;
 const customizeBtn = document.getElementById("customize-cards") as HTMLButtonElement;
 const overlay = document.getElementById("customize-overlay") as HTMLElement;
 const closeBtn = document.getElementById("customize-close") as HTMLButtonElement;
@@ -338,6 +342,38 @@ let lastReadyAll = false;
 let lastCheckOwners = new Set<string>();
 let pendingOnlineLeaveStatus: string | undefined;
 let moveFeedbackTimer: number | undefined;
+let turnBannerTimer: number | undefined;
+let invalidFeedbackTimer: number | undefined;
+
+function showInvalidAction(message: string) {
+  if (!gameConsole) return;
+  statusEl.textContent = message;
+  gameConsole.classList.remove("invalid-action");
+  void gameConsole.offsetWidth;
+  gameConsole.classList.add("invalid-action");
+  sound.play("deselect");
+  if (invalidFeedbackTimer) window.clearTimeout(invalidFeedbackTimer);
+  invalidFeedbackTimer = window.setTimeout(() => {
+    gameConsole.classList.remove("invalid-action");
+    invalidFeedbackTimer = undefined;
+    renderAll();
+  }, 620);
+}
+
+function showTurnChange(name: string, isPrimary: boolean) {
+  if (!turnBanner || !turnBannerTitle || !turnBannerDetail) return;
+  turnBannerTitle.textContent = `${name}'s turn`;
+  turnBannerDetail.textContent = "Choose a piece or movement card";
+  turnBanner.dataset.team = isPrimary ? "red" : "blue";
+  turnBanner.classList.remove("show");
+  void turnBanner.offsetWidth;
+  turnBanner.classList.add("show");
+  if (turnBannerTimer) window.clearTimeout(turnBannerTimer);
+  turnBannerTimer = window.setTimeout(() => {
+    turnBanner.classList.remove("show");
+    turnBannerTimer = undefined;
+  }, 1250);
+}
 
 function applyEmbeddedOverrides() {
   if (!isEmbeddedMobileClient) return;
@@ -522,8 +558,11 @@ function handleCellTap(x: number, y: number) {
     (p) => p.alive && p.x === x && p.y === y && p.ownerId === state.activePlayerId
   );
   if (pieceAt) {
+    const selection = controller.getSelection();
     pendingMove = undefined;
-    controller.selectPiece(pieceAt.id);
+    const next = selection.selectedPieceId === pieceAt.id ? undefined : pieceAt.id;
+    controller.selectPiece(next);
+    sound.play(next ? "select" : "deselect");
     renderAll();
     return;
   }
@@ -534,7 +573,12 @@ function handleCellTap(x: number, y: number) {
       move.to.y === y &&
       move.playerId === state.activePlayerId
   );
-  if (movesForCell.length === 0) return;
+  if (movesForCell.length === 0) {
+    if (selection.selectedPieceId || selection.selectedCardId) {
+      showInvalidAction("That square is not available. Choose a glowing square.");
+    }
+    return;
+  }
 
   if (!selection.selectedPieceId) {
     const uniquePieces = Array.from(new Set(movesForCell.map((move) => move.pieceId)));
@@ -566,7 +610,10 @@ function handleCellTap(x: number, y: number) {
   const filteredMoves = movesForCell.filter(
     (move) => move.pieceId === selection.selectedPieceId
   );
-  if (filteredMoves.length === 0) return;
+  if (filteredMoves.length === 0) {
+    showInvalidAction("That piece cannot move there with the current card.");
+    return;
+  }
 
   if (filteredMoves.length === 1) {
     const only = filteredMoves[0];
@@ -626,8 +673,11 @@ const renderer = new GameRenderer(canvasContainer, {
       return;
     }
 
+    const selection = controller.getSelection();
     pendingMove = undefined;
-    controller.selectPiece(pieceId);
+    const next = selection.selectedPieceId === pieceId ? undefined : pieceId;
+    controller.selectPiece(next);
+    sound.play(next ? "select" : "deselect");
     renderAll();
   },
   onCardTap: (cardId, ownerId, role) => {
@@ -742,6 +792,8 @@ function renderAll() {
     } else if (!isSpectator) {
       sound.play(activeId === viewPlayerId ? "turn" : "turnBlue");
     }
+    const activePlayer = config.players.find((player) => player.id === activeId);
+    showTurnChange(activePlayer?.name ?? activeId, activeId === config.players[0]?.id);
     lastActivePlayerId = activeId;
   }
   const selection = controller.getSelection();
@@ -799,12 +851,23 @@ function renderAll() {
           : selection.selectedCardId
             ? "Choose one of your pieces"
             : "Choose a piece or movement card";
+    if (turnGuideText) turnGuideText.textContent = actionHint;
     statusEl.textContent = `Turn ${state.turn} · ${activeName}${isChecked ? " · CHECK" : ""} · ${actionHint}`;
     lastWinnerId = undefined;
   }
 
   updateStartedUI();
 }
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !latestState || !controller.canAct()) return;
+  const selection = controller.getSelection();
+  if (!pendingMove && !selection.selectedPieceId && !selection.selectedCardId) return;
+  pendingMove = undefined;
+  controller.clearSelection();
+  sound.play("deselect");
+  renderAll();
+});
 
 function computeCheckOwners(state: GameState, config: GameConfig): string[] {
   const masterTypeIds = new Set(
