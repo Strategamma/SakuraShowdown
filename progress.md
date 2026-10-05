@@ -118,3 +118,13 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Verification: `npm run quality:ci` passed; `npm run build` passed; dev client/server started and local server endpoints responded.
   - Prescribed Playwright rerun remains blocked before page launch by macOS Mach registration denial in the restricted environment; no fresh visual screenshot claim.
   - Remaining: deploy/configure a live multiplayer endpoint, repair the currently nonfunctional lint script, and perform visual/responsive QA on an unrestricted browser.
+- 2026-10-05 gameplay UI redesign:
+  - Replaced the left-compressed two-column console with a full-width three-zone desktop arena: stacked hands, dominant center board, isolated exchange card.
+  - Reworked board sizing to use the actual board-stage bounds; removes the rail-height subtraction that produced a tiny board and a large dead region.
+  - Compact single-line brand treatment, denser toolbar controls, ellipsized turn guidance, and horizontally scrollable controls at constrained widths.
+  - Restyled rails, cards, arena surfaces, active states, shadows, and hierarchy toward the refined twilight-dojo direction.
+  - Card layouts now stack names above diagrams so long names no longer collide with movement grids.
+  - Added explicit stacked tablet/mobile layout with scrollable gameplay and a square board stage.
+  - `npm run quality:ci` and root `npm run build` passed after structural changes.
+  - Required Playwright attempt repeated against port 5174; macOS again blocked Chromium Mach registration before page launch, so fresh screenshot QA remains unverified in this environment.
+  - Mobile follow-up: added dynamic viewport sizing, iOS safe-area padding, momentum scrolling, 44px touch targets, canvas touch handling, and retained two compact cards per hand at phone widths instead of the overly tall single-card stack.

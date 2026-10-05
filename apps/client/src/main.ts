@@ -640,41 +640,33 @@ renderer.setZoom(0.5);
 
 function updateBoardSize() {
   if (!canvasContainer || !boardStage || !gameConsole) return;
-  const consoleRect = gameConsole.getBoundingClientRect();
-  if (!Number.isFinite(consoleRect.width) || consoleRect.width <= 0) return;
+  const stageRect = boardStage.getBoundingClientRect();
+  if (!Number.isFinite(stageRect.width) || stageRect.width <= 0) return;
 
   const styles = getComputedStyle(gameConsole);
-  const gap = parseFloat(styles.getPropertyValue("--console-gap")) || 0;
-  const pad = parseFloat(styles.getPropertyValue("--console-pad")) || 0;
-  const poolWidth =
-    parseFloat(styles.getPropertyValue("--pool-width")) || 0;
-  const opponentHeight = opponentSection?.getBoundingClientRect().height ?? 0;
-  const playerHeight = playerSection?.getBoundingClientRect().height ?? 0;
-  const poolRail = poolEl?.closest(".pool-rail") as HTMLElement | null;
-  const poolHeight = poolRail?.getBoundingClientRect().height ?? 0;
+  const stageStyles = getComputedStyle(boardStage);
+  const insetX =
+    (parseFloat(stageStyles.paddingLeft) || 0) + (parseFloat(stageStyles.paddingRight) || 0);
+  const insetY =
+    (parseFloat(stageStyles.paddingTop) || 0) + (parseFloat(stageStyles.paddingBottom) || 0);
   const stacked = window.matchMedia("(max-width: 900px)").matches;
 
-  const availableWidth = consoleRect.width - (stacked ? 0 : poolWidth) - gap - pad * 2;
-  const availableHeight =
-    consoleRect.height -
-    opponentHeight -
-    playerHeight -
-    gap * 2 -
-    pad * 2 -
-    (stacked ? poolHeight + gap : 0);
+  const availableWidth = stageRect.width - insetX;
+  const availableHeight = stageRect.height - insetY;
 
   const size = Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
   if (!Number.isFinite(size) || size <= 0) return;
   if (Math.abs(size - lastBoardSize) < 1) return;
   lastBoardSize = size;
 
-  boardStage.style.width = `${size}px`;
-  boardStage.style.height = `${size}px`;
   canvasContainer.style.width = `${size}px`;
   canvasContainer.style.height = `${size}px`;
   gameConsole.style.setProperty("--board-size", `${size}px`);
 
-  const gridSize = Math.max(72, Math.min(170, Math.round(size / 4)));
+  const handWidth = parseFloat(styles.getPropertyValue("--hand-width")) || size * 0.42;
+  const gridSize = stacked
+    ? Math.max(68, Math.min(124, Math.round(size / 4)))
+    : Math.max(76, Math.min(118, Math.round(handWidth * 0.26)));
   gameConsole.style.setProperty("--card-grid", `${gridSize}px`);
   gameConsole.style.setProperty("--card-min-height", `${gridSize + 26}px`);
 

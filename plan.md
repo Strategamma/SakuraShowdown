@@ -13,3 +13,15 @@
 ## Status
 
 First upgrade slice implemented and build/quality verified. Fresh browser visual QA is environment-blocked. Online hosting and lint tooling remain for the next slice.
+
+## Current UI redesign
+
+**Goal:** Replace the cramped, left-weighted gameplay screen with a balanced, premium board-game composition.
+
+**Scope:** Gameplay layout, toolbar hierarchy, board scale, hand/pool cards, active-turn presentation, desktop/tablet/mobile adaptation.
+
+**Approach:** Use a three-zone desktop grid (hands / board / exchange), compute board size from its actual center stage, compact the toolbar, and reduce decorative noise while preserving existing controls and game logic.
+
+**Risks:** Three.js hit coordinates depend on correct canvas sizing; existing browser automation is restricted.
+
+**Verification:** Typecheck/build/rules tests, layout-source review, Playwright attempt, and screenshot inspection where available.
