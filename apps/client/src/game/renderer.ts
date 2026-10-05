@@ -193,6 +193,10 @@ export class GameRenderer {
   private baseYaw = 0;
   private manualYaw = 0;
   private isPointerDown = false;
+  private touchPointers = new Map<number, { x: number; y: number }>();
+  private pinchStartDistance = 0;
+  private pinchStartZoom = 1;
+  private gestureHadPinch = false;
   private zoom = 1;
   private readonly zoomMin = 0.5;
   private readonly zoomMax = 1.35;
@@ -245,6 +249,7 @@ export class GameRenderer {
     this.renderer.domElement.addEventListener("pointerdown", this.onPointerDown);
     window.addEventListener("pointermove", this.onPointerMove);
     window.addEventListener("pointerup", this.onPointerUp);
+    window.addEventListener("pointercancel", this.onPointerUp);
     window.addEventListener("resize", this.onResize);
     document.addEventListener("visibilitychange", this.onVisibilityChange);
 
@@ -348,6 +353,7 @@ export class GameRenderer {
     this.renderer.domElement.removeEventListener("pointerdown", this.onPointerDown);
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
+    window.removeEventListener("pointercancel", this.onPointerUp);
     window.removeEventListener("resize", this.onResize);
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.scene.traverse((object) => this.disposeObjectResources(object, true));
@@ -1408,6 +1414,18 @@ export class GameRenderer {
     this.dragActive = false;
     this.dragStart = { x: event.clientX, y: event.clientY };
     this.dragLast = { x: event.clientX, y: event.clientY };
+    if (event.pointerType === "touch") {
+      this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      this.renderer.domElement.setPointerCapture(event.pointerId);
+      if (this.touchPointers.size === 2) {
+        const [first, second] = [...this.touchPointers.values()];
+        this.pinchStartDistance = Math.hypot(second.x - first.x, second.y - first.y);
+        this.pinchStartZoom = this.zoom;
+        this.gestureHadPinch = true;
+        this.dragActive = true;
+      }
+      return;
+    }
     if (event.pointerType === "mouse" && event.button === 0) {
       this.renderer.domElement.setPointerCapture(event.pointerId);
     }
@@ -1415,6 +1433,16 @@ export class GameRenderer {
 
   private onPointerMove = (event: PointerEvent) => {
     if (!this.isPointerDown) return;
+    if (event.pointerType === "touch" && this.touchPointers.has(event.pointerId)) {
+      this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (this.touchPointers.size >= 2 && this.pinchStartDistance > 0) {
+        const [first, second] = [...this.touchPointers.values()];
+        const distance = Math.hypot(second.x - first.x, second.y - first.y);
+        this.setZoom(this.pinchStartZoom * (distance / this.pinchStartDistance));
+        event.preventDefault();
+      }
+      return;
+    }
     if (this.viewMode !== "3d") return;
     if (event.pointerType !== "mouse") return;
     const dx = event.clientX - this.dragStart.x;
@@ -1434,13 +1462,27 @@ export class GameRenderer {
 
   private onPointerUp = (event: PointerEvent) => {
     if (!this.isPointerDown) return;
+    if (event.pointerType === "touch") {
+      const wasPinch = this.gestureHadPinch;
+      this.touchPointers.delete(event.pointerId);
+      if (this.renderer.domElement.hasPointerCapture(event.pointerId)) {
+        this.renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+      if (this.touchPointers.size > 0) return;
+      this.isPointerDown = false;
+      this.dragActive = false;
+      this.pinchStartDistance = 0;
+      this.gestureHadPinch = false;
+      if (!wasPinch && event.type !== "pointercancel") this.handleClick(event);
+      return;
+    }
     const wasDrag = this.dragActive;
     this.isPointerDown = false;
     this.dragActive = false;
     if (event.pointerType === "mouse") {
       this.renderer.domElement.releasePointerCapture(event.pointerId);
     }
-    if (!wasDrag) {
+    if (!wasDrag && event.type !== "pointercancel") {
       this.handleClick(event);
     }
   };

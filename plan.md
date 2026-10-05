@@ -133,3 +133,39 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Raycasting and renderer aspect must remain aligned after rectangular resizing; maximum zoom must remain intentionally user-controlled.
 
 **Verification:** Responsive source audit, typecheck/full build, gameplay tests, and prescribed browser attempt.
+
+## 9.5 phone composition milestone
+
+**Goal:** Make the phone board dominant and every action comfortably tappable without crowded controls.
+
+**Scope:** Phone content order, header height, action dock, board zoom, board overlays, hand/pool density, and extra-small widths.
+
+**Approach:** Lead with the board, place the active hand next, demote opponent/pool information, reduce redundant labels, and use a fixed equal-column action dock with safe-area clearance.
+
+**Risks:** Pass-and-play must still expose both hands clearly; fixed actions must never cover scrollable game content.
+
+**Verification:** 320–520px source audit, full quality/build gates, and prescribed browser attempt.
+
+## 9.5 mobile board gestures
+
+**Goal:** Make the expanded phone board controllable without restoring a cramped row of desktop controls.
+
+**Scope:** Pinch zoom, touch gesture arbitration, scroll compatibility, and accidental-tap prevention.
+
+**Approach:** Track two touch pointers inside the renderer, map their distance to bounded camera zoom, preserve one-finger page scrolling, and suppress click resolution after any pinch.
+
+**Risks:** Pointer capture must release cleanly and a pinch must never execute the final finger-up as a board move.
+
+**Verification:** Renderer typecheck, gesture source audit, full quality/build gates, and prescribed browser attempt.
+
+## 9.5 board control hierarchy
+
+**Goal:** Decongest the match header while keeping board tools close to the surface they manipulate.
+
+**Scope:** Board controls, hint placement, header actions, and phone/landscape breakpoints.
+
+**Approach:** Move rotate, zoom, and view controls into a compact bar below the canvas; float an accessible icon-only hint action at the board's top-right; retain match actions and status in the header.
+
+**Risks:** Existing mobile rules must not hide the relocated controls, and the added control row must not make the canvas unusably short in landscape.
+
+**Verification:** Responsive source audit, full quality/build gates, and prescribed browser attempt.

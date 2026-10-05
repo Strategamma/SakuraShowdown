@@ -40,32 +40,6 @@
           <div class="brand-subtitle">Petal duels. Razor tactics.</div>
         </div>
         <div class="toolbar">
-          <div class="toolbar-group board-controls" aria-label="Board controls">
-            <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board" data-tooltip="Rotate the board 90°">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z"
-                />
-              </svg>
-              <span class="icon-label">Rotate</span>
-            </button>
-            <div class="zoom-controls" role="group" aria-label="Zoom controls">
-              <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out" data-tooltip="Zoom out">−</button>
-              <input
-                id="zoom-range"
-                class="zoom-range"
-                type="range"
-                min="0.5"
-                max="1.35"
-                step="0.05"
-                value="0.85"
-                aria-label="Zoom level"
-              />
-              <span id="zoom-value" class="zoom-value">85%</span>
-              <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in" data-tooltip="Zoom in">+</button>
-            </div>
-            <button id="toggle-view" class="ghost-button" data-tooltip="Switch between flat and angled board views">3D View</button>
-          </div>
           <div class="toolbar-group action-controls" aria-label="Game actions">
             <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -74,7 +48,6 @@
               </svg>
             </button>
             <button id="open-customize" class="ghost-button local-only">Customize</button>
-            <button id="hint-move" class="ghost-button emphasis-button" data-tooltip="Highlight a strong move">Hint</button>
             <button id="open-settings" class="ghost-button" aria-label="Open settings" data-tooltip="Sound, motion and display">Settings</button>
             <button id="new-game" class="ghost-button" data-tooltip="Start a fresh match">New Game</button>
           </div>
@@ -101,17 +74,39 @@
             <div id="opponent-hand" class="cards rail-cards" aria-label="Opponent cards"></div>
           </section>
 
-          <div id="board-stage" aria-label="Game board stage">
-            <div id="turn-banner" class="turn-banner" aria-live="polite">
-              <span id="turn-banner-title">Your turn</span>
-              <small id="turn-banner-detail">Choose a piece or movement card</small>
+          <div class="board-column">
+            <div id="board-stage" aria-label="Game board stage">
+              <div id="turn-banner" class="turn-banner" aria-live="polite">
+                <span id="turn-banner-title">Your turn</span>
+                <small id="turn-banner-detail">Choose a piece or movement card</small>
+              </div>
+              <div id="turn-guide" class="turn-guide" aria-live="polite">
+                <span class="guide-kicker">Next</span>
+                <span id="turn-guide-text">Choose a piece or movement card</span>
+                <span class="guide-shortcut">Esc to clear</span>
+              </div>
+              <button id="hint-move" class="board-hint ghost-button emphasis-button icon-button" aria-label="Show a suggested move" data-tooltip="Highlight a strong move">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2l1.7 5.3L19 9l-5.3 1.7L12 16l-1.7-5.3L5 9l5.3-1.7L12 2zm6 12 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14z" />
+                </svg>
+              </button>
+              <div id="canvas-container" aria-label="Game board"></div>
             </div>
-            <div id="turn-guide" class="turn-guide" aria-live="polite">
-              <span class="guide-kicker">Next</span>
-              <span id="turn-guide-text">Choose a piece or movement card</span>
-              <span class="guide-shortcut">Esc to clear</span>
+            <div class="toolbar-group board-controls board-stage-controls" aria-label="Board controls">
+              <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board" data-tooltip="Rotate the board 90°">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z" />
+                </svg>
+                <span class="icon-label">Rotate</span>
+              </button>
+              <div class="zoom-controls" role="group" aria-label="Zoom controls">
+                <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out" data-tooltip="Zoom out">−</button>
+                <input id="zoom-range" class="zoom-range" type="range" min="0.5" max="1.35" step="0.05" value="0.85" aria-label="Zoom level" />
+                <span id="zoom-value" class="zoom-value">85%</span>
+                <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in" data-tooltip="Zoom in">+</button>
+              </div>
+              <button id="toggle-view" class="ghost-button" data-tooltip="Switch between flat and angled board views">3D View</button>
             </div>
-            <div id="canvas-container" aria-label="Game board"></div>
           </div>
 
           <section class="card-rail pool-rail embedded-rail">

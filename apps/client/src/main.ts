@@ -876,7 +876,8 @@ const renderer = new GameRenderer(canvasContainer, {
   }
 });
 renderer.setCardsEnabled(false);
-renderer.setZoom(0.85);
+const initialBoardZoom = window.matchMedia("(max-width: 520px)").matches ? 1.05 : 0.85;
+renderer.setZoom(initialBoardZoom);
 window.addEventListener("pagehide", (event) => {
   if (!(event as PageTransitionEvent).persisted) renderer.dispose();
 });

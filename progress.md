@@ -1,5 +1,11 @@
 Original prompt: Target all UI issues on the gameplay page and landing page, add a wallpaper background, and add + / - zoom controls for the board.
 
+- Moved rotate, zoom, and view controls from the match header into a compact toolbar directly below the board.
+- Replaced the header Hint label with an accessible sparkle icon at the board's top-right.
+- Updated phone and short-landscape rules so board controls remain visible and compact; the phone action dock now distributes its remaining actions without an empty column.
+- Verification: 16 gameplay/rules tests, typechecks, server health check, production build, bundle budgets, and diff whitespace check passed.
+- Visual runner attempted but could not launch because its Playwright Chromium executable is absent; local browser preview is blocked by the saved browser security preference.
+
 - Initialized progress tracking.
 - Added zoom controls in toolbar (+/-), wired to renderer.
 - Added renderer zoom support (clamped) and camera fit adjustment.
@@ -216,3 +222,13 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Tightened desktop hand/pool columns, console gaps, camera fit margins, and raised the useful default zoom from 50% to 85%.
   - Removed phone-specific board boxing so the open-surface treatment is consistent across screen sizes.
   - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Playwright was attempted and remains blocked by its absent Chromium executable.
+- 2026-10-05 9.5 phone composition milestone:
+  - Reordered phone gameplay around board → active hand → pool → opponent hand so the playable surface appears first and related choices remain adjacent.
+  - Reduced phone header height and redundant canvas nameplates, increased the mobile board's initial zoom to 105%, and tightened rail chrome.
+  - Replaced the horizontally scrolling action row with three equal touch columns, 46px targets, safe spacing, and extra-small-screen tuning.
+  - Restored missing mode-visibility rules from the retired stylesheet so local-only and online-only actions no longer occupy each other's toolbar space.
+  - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Playwright remains blocked by its absent Chromium executable.
+- 2026-10-05 mobile board gestures:
+  - Added bounded two-finger pinch zoom directly to the Three.js canvas, retaining one-finger vertical page scrolling.
+  - Pinch state uses pointer capture and suppresses the final release click, preventing accidental piece moves after resizing the board.
+  - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Browser gesture playback remains blocked by the absent Chromium executable, so physical touch validation is still required.

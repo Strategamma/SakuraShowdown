@@ -19,3 +19,6 @@
 - Controls use short delayed tooltips only where meaning is not obvious; coarse-pointer devices rely on visible labels and never receive hover-only UI.
 - Piece motion communicates selection, travel, capture, and card exchange; reduced-motion disables renderer motion as well as CSS transitions.
 - The board is an open play surface, not a panel nested inside another panel: the canvas fills its complete center region, camera framing stays tight, and state is communicated with restrained ambient glow rather than borders.
+- Phone gameplay opens on the board first, keeps the active player's cards directly beneath it, moves secondary information below, and uses an equal-width three-action dock rather than horizontally scrolling controls.
+- Phone board navigation is direct: one finger taps pieces/cells or scrolls the page, while a two-finger pinch zooms the board without triggering a move.
+- Board manipulation controls live directly beneath the play surface; the global header is reserved for match status/actions, while Hint is a discoverable icon at the board's top-right.
