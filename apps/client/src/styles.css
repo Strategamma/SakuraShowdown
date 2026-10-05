@@ -439,10 +439,10 @@ button:disabled {
 .game-console {
   flex: 1;
   display: grid;
-  --console-pad: clamp(10px, 1vw, 16px);
-  --console-gap: clamp(10px, 1vw, 16px);
-  --hand-width: clamp(300px, 23vw, 430px);
-  --pool-width: clamp(180px, 14vw, 250px);
+  --console-pad: clamp(6px, 0.7vw, 11px);
+  --console-gap: clamp(7px, 0.7vw, 11px);
+  --hand-width: clamp(272px, 20vw, 360px);
+  --pool-width: clamp(150px, 11vw, 200px);
   --card-grid: clamp(76px, 6vw, 118px);
   --card-min-height: calc(var(--card-grid) + 26px);
   --board-max: calc(
@@ -694,12 +694,11 @@ button:disabled {
   display: grid;
   place-items: center;
   justify-self: center;
-  padding: clamp(8px, 1.25vw, 20px);
-  border-radius: 18px;
+  padding: 0;
+  border-radius: 0;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 245, 225, 0.045), transparent 58%),
-    linear-gradient(180deg, rgba(9, 8, 11, 0.24), rgba(9, 8, 11, 0.54));
-  border: 1px solid rgba(255, 235, 215, 0.06);
+    radial-gradient(circle at 50% 48%, rgba(232, 189, 112, 0.075), transparent 48%);
+  border: 0;
   position: relative;
   overflow: hidden;
 }
@@ -772,24 +771,23 @@ button:disabled {
 #canvas-container {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   background:
-    radial-gradient(circle at 50% 42%, rgba(100, 92, 78, 0.2), transparent 62%),
-    rgba(16, 14, 17, 0.72);
-  border: 1px solid rgba(210, 168, 130, 0.25);
+    radial-gradient(circle at 50% 48%, rgba(100, 92, 78, 0.14), transparent 54%);
+  border: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(220, 170, 150, 0.1), 0 24px 60px rgba(3, 2, 4, 0.3);
+  box-shadow: none;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .game-console[data-selection="piece"] #canvas-container,
 .game-console[data-selection="card"] #canvas-container,
 .game-console[data-selection="ready"] #canvas-container {
-  border-color: rgba(121, 198, 163, 0.58);
-  box-shadow: inset 0 0 0 1px rgba(121, 198, 163, 0.16), 0 0 28px rgba(121, 198, 163, 0.1);
+  background: radial-gradient(circle at 50% 48%, rgba(121, 198, 163, 0.13), transparent 58%);
+  box-shadow: none;
 }
 
 .game-console.move-resolved #canvas-container {
@@ -2220,8 +2218,8 @@ body.reduce-motion *::after {
   }
 
   .game-console {
-    --hand-width: clamp(280px, 25vw, 360px);
-    --pool-width: clamp(160px, 15vw, 210px);
+    --hand-width: clamp(250px, 22vw, 330px);
+    --pool-width: clamp(136px, 12vw, 180px);
   }
 
   .toolbar { gap: 6px; }
@@ -2756,15 +2754,15 @@ body.reduce-motion *::after {
 
   #board-stage {
     min-height: calc(100vw - 14px);
-    padding: 3px;
+    padding: 0;
     border: 0;
-    border-radius: 14px;
-    background: rgba(9, 8, 11, 0.46);
+    border-radius: 0;
+    background: radial-gradient(circle at 50% 48%, rgba(232, 189, 112, 0.065), transparent 54%);
   }
 
   #canvas-container {
-    border-radius: 13px;
-    box-shadow: inset 0 0 0 1px rgba(220, 170, 150, 0.08), 0 12px 32px rgba(3, 2, 4, 0.26);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .turn-guide {

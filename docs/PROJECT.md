@@ -22,6 +22,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Production hides card editing by default; enable via development mode or `?devCardEditor=1`.
 - UI uses accessible DOM controls around a Three.js board and exposes `window.render_game_to_text` plus `window.advanceTime` for QA.
 - The Three.js renderer is typechecked with version-matched official types, pauses while hidden, and owns explicit GPU/resource cleanup.
+- Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
 
 ## Current major state
 

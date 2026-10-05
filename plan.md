@@ -109,3 +109,27 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Search must remain responsive at high branching factors and must evaluate card exchange, Master safety, and both victory conditions from the correct player perspective.
 
 **Verification:** Forced capture, temple-win, and immediate-threat tests plus full quality/build gates and prescribed browser attempt.
+
+## 9.5 initial-load milestone
+
+**Goal:** Reduce what local players download initially and prevent bundle regressions.
+
+**Scope:** Multiplayer code splitting, stable vendor boundaries, and automated JavaScript budgets.
+
+**Approach:** Dynamically import networking only when an online action begins, isolate Three.js as a cacheable vendor chunk, and fail production builds when gzip budgets are exceeded.
+
+**Risks:** Dynamic loading must preserve connect/create/reconnect behavior and type safety.
+
+**Verification:** Client typecheck, production chunk inspection/budgets, full quality gate, and prescribed browser attempt.
+
+## 9.5 open-board milestone
+
+**Goal:** Turn the board into the dominant play surface and reclaim space lost to nested framing and conservative camera margins.
+
+**Scope:** Center-column allocation, canvas sizing, camera fit, default zoom, selection feedback, and phone overrides.
+
+**Approach:** Let the canvas fill the entire rectangular stage, tighten side rails and camera margins, remove duplicated borders/backgrounds, and retain interaction state through ambient glow.
+
+**Risks:** Raycasting and renderer aspect must remain aligned after rectangular resizing; maximum zoom must remain intentionally user-controlled.
+
+**Verification:** Responsive source audit, typecheck/full build, gameplay tests, and prescribed browser attempt.

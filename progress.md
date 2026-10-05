@@ -205,3 +205,14 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - All 15 rules/AI tests, full typechecks, server health, production build, and diff validation pass. A seeded opening-position benchmark used the complete 240 ms Expert budget with nine legal moves.
   - Prescribed Playwright gameplay validation was attempted but remains blocked by the absent Chromium executable.
   - Standard follow-up: removed intentional random blunders and added a 90 ms two-ply reply search, with regression coverage proving it answers an immediate Master threat. A seeded nine-move opening benchmark completed in 13 ms.
+- 2026-10-05 9.5 initial-load milestone:
+  - Removed multiplayer/Colyseus from the main execution path; connect, reconnect, and room creation dynamically load the network module on demand.
+  - Split production JavaScript into entry, Three.js, and networking chunks and added enforced gzip budgets to every client build.
+  - Initial entry is 46.31 kB gzip; deferred networking is 22.01 kB gzip; the separately cacheable Three.js chunk is 149.91 kB gzip.
+  - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Prescribed Playwright remains blocked by the absent Chromium executable.
+- 2026-10-05 9.5 open-board milestone:
+  - Removed the center stage/canvas double frame and converted selection feedback to an unobtrusive ambient glow.
+  - Canvas now consumes the full rectangular board region rather than forcing another inset square; renderer aspect and raycasting follow its real dimensions.
+  - Tightened desktop hand/pool columns, console gaps, camera fit margins, and raised the useful default zoom from 50% to 85%.
+  - Removed phone-specific board boxing so the open-surface treatment is consistent across screen sizes.
+  - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Playwright was attempted and remains blocked by its absent Chromium executable.

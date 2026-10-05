@@ -1724,20 +1724,20 @@ export class GameRenderer {
       extentX = Math.max(width / 2, cardXExtent);
       extentZ = Math.max(depth / 2, layout.rowOffset + layout.cardHeight / 2);
     }
-    const boardRadius = Math.max(extentX, extentZ);
+    this.camera.fov = this.viewMode === "2d" ? 35 : 40;
     const fov = (this.camera.fov * Math.PI) / 180;
+    const aspect = Math.max(0.35, this.camera.aspect || 1);
+    const boardRadius = Math.max(extentZ, extentX / aspect);
     const isCompact =
       this.container.clientWidth < 720 ||
       this.container.clientHeight < 680 ||
       this.container.clientHeight > this.container.clientWidth * 1.2;
-    const distance = boardRadius / Math.tan(fov / 2) + (isCompact ? 0.6 : 1.2);
+    const distance = boardRadius / Math.tan(fov / 2) + (isCompact ? 0.38 : 0.68);
     const zoomed = distance / this.zoom;
 
     if (this.viewMode === "2d") {
-      this.camera.fov = 35;
       this.camera.position.set(0, zoomed * (isCompact ? 0.82 : 0.95), 0.01);
     } else {
-      this.camera.fov = 40;
       this.camera.position.set(
         0,
         zoomed * (isCompact ? 0.48 : 0.55),

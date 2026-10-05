@@ -322,7 +322,7 @@ let canvasNameBottom: HTMLElement | null = null;
 let canvasCheckTop: HTMLElement | null = null;
 let canvasCheckBottom: HTMLElement | null = null;
 let boardRotation = 0;
-let lastBoardSize = 0;
+let lastBoardSize = "";
 if (canvasContainer) {
   canvasNameTop = document.createElement("div");
   canvasNameTop.className = "canvas-nameplate top";
@@ -876,7 +876,7 @@ const renderer = new GameRenderer(canvasContainer, {
   }
 });
 renderer.setCardsEnabled(false);
-renderer.setZoom(0.5);
+renderer.setZoom(0.85);
 window.addEventListener("pagehide", (event) => {
   if (!(event as PageTransitionEvent).persisted) renderer.dispose();
 });
@@ -897,13 +897,16 @@ function updateBoardSize() {
   const availableWidth = stageRect.width - insetX;
   const availableHeight = stageRect.height - insetY;
 
-  const size = Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
+  const width = Math.floor(Math.max(0, availableWidth));
+  const height = Math.floor(Math.max(0, availableHeight));
+  const size = Math.min(width, height);
   if (!Number.isFinite(size) || size <= 0) return;
-  if (Math.abs(size - lastBoardSize) < 1) return;
-  lastBoardSize = size;
+  const dimensions = `${width}x${height}`;
+  if (dimensions === lastBoardSize) return;
+  lastBoardSize = dimensions;
 
-  canvasContainer.style.width = `${size}px`;
-  canvasContainer.style.height = `${size}px`;
+  canvasContainer.style.width = `${width}px`;
+  canvasContainer.style.height = `${height}px`;
   gameConsole.style.setProperty("--board-size", `${size}px`);
 
   const handWidth = parseFloat(styles.getPropertyValue("--hand-width")) || size * 0.42;

@@ -5,7 +5,7 @@ import {
   getRulePackMetadata
 } from "@game/rules";
 import type { GameConfig, GameState, LegalMove, Move, RulePackMetadata } from "@game/rules";
-import { OnlineSession } from "./network";
+import type { OnlineSession } from "./network";
 
 export type GameMode = "local" | "online";
 
@@ -119,6 +119,7 @@ export class GameController {
 
     this.callbacks.onStatus("Connecting...");
 
+    const { OnlineSession } = await import("./network");
     this.online = new OnlineSession(endpoint, {
       onState: (state) => {
         this.state = state;
@@ -182,6 +183,7 @@ export class GameController {
 
     this.callbacks.onStatus("Reconnecting...");
 
+    const { OnlineSession } = await import("./network");
     this.online = new OnlineSession(endpoint, {
       onState: (state) => {
         this.state = state;
@@ -245,6 +247,7 @@ export class GameController {
 
     this.callbacks.onStatus("Creating room...");
 
+    const { OnlineSession } = await import("./network");
     this.online = new OnlineSession(endpoint, {
       onState: (state) => {
         this.state = state;

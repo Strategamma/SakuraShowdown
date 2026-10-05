@@ -18,3 +18,4 @@
 - Card-selection grids stay two columns on phones; selection order is visible, unavailable options are subdued, and every tile is a keyboard-focusable button.
 - Controls use short delayed tooltips only where meaning is not obvious; coarse-pointer devices rely on visible labels and never receive hover-only UI.
 - Piece motion communicates selection, travel, capture, and card exchange; reduced-motion disables renderer motion as well as CSS transitions.
+- The board is an open play surface, not a panel nested inside another panel: the canvas fills its complete center region, camera framing stays tight, and state is communicated with restrained ambient glow rather than borders.
