@@ -4,3 +4,4 @@ export * from "./engine.js";
 export * from "./mechanics.js";
 export * from "./rulePack.js";
 export * from "./network.js";
+export * from "./ai.js";

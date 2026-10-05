@@ -341,9 +341,9 @@
             <div class="consumer-options">
               <label for="ai-difficulty"><span class="label">Computer difficulty</span><small>Change this anytime before a solo match.</small></label>
               <select id="ai-difficulty">
-                <option value="beginner">Beginner</option>
-                <option value="standard" selected>Standard</option>
-                <option value="expert">Expert</option>
+                <option value="beginner">Beginner · relaxed</option>
+                <option value="standard" selected>Standard · tactical</option>
+                <option value="expert">Expert · looks ahead</option>
               </select>
               <button id="landing-tutorial" class="ghost-button">How to Play</button>
             </div>
@@ -439,6 +439,7 @@
             <span><strong>Board style</strong><small>Choose the default presentation</small></span>
             <select id="setting-view"><option value="3d">3D board</option><option value="2d">2D board</option></select>
           </label>
+          <small class="app-version" data-app-version></small>
         </div>
       </div>
     </div>
@@ -543,8 +544,26 @@
       </div>
     </div>
 
+    <div id="connection-notice" class="connection-notice hidden" role="status" aria-live="polite">
+      <span class="connection-dot" aria-hidden="true"></span>
+      <span>Offline · Solo and local play still work</span>
+    </div>
     <button id="app-update" class="app-update hidden">Update ready · Reload</button>
+
+    <div id="fatal-error" class="overlay fatal-error hidden" role="alertdialog" aria-modal="true" aria-labelledby="fatal-error-title">
+      <div class="overlay-card fatal-error-card">
+        <div class="fatal-error-mark" aria-hidden="true">桜</div>
+        <div class="overlay-title" id="fatal-error-title">The match hit a snag</div>
+        <p id="fatal-error-copy">Your local settings are safe. Reload the game to recover.</p>
+        <div class="fatal-error-actions">
+          <button id="fatal-error-reload">Reload game</button>
+          <button id="fatal-error-copy" class="ghost-button">Copy diagnostics</button>
+        </div>
+        <small class="app-version" data-app-version></small>
+      </div>
+    </div>
     <canvas id="confetti"></canvas>
+    <script type="module" src="/src/recovery.ts"></script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1938,6 +1938,81 @@ button:disabled {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
 }
 
+.connection-notice {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 79;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 28px);
+  padding: 9px 13px;
+  border: 1px solid rgba(232, 189, 112, 0.45);
+  border-radius: 999px;
+  background: rgba(22, 17, 15, 0.94);
+  color: #f5e4c3;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(16px);
+  font-size: 0.72rem;
+  transform: translateX(-50%);
+}
+
+.connection-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(232, 189, 112, 0.58);
+}
+
+.fatal-error { z-index: 120; }
+
+.fatal-error-card {
+  width: min(460px, 94vw);
+  align-items: center;
+  padding: clamp(24px, 5vw, 38px);
+  text-align: center;
+}
+
+.fatal-error-mark {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(229, 111, 132, 0.48);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(229, 111, 132, 0.24), rgba(84, 28, 47, 0.32));
+  color: #ffe8ed;
+  box-shadow: 0 16px 38px rgba(7, 3, 6, 0.34);
+  font-family: var(--display-font);
+  font-size: 1.7rem;
+}
+
+.fatal-error-card p {
+  max-width: 340px;
+  margin: 12px auto 22px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.fatal-error-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-version {
+  margin-top: 18px;
+  color: rgba(248, 239, 232, 0.45);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .tutorial-card {
   width: min(520px, 92vw);
 }
@@ -2754,6 +2829,10 @@ body.reduce-motion *::after {
     padding: 12px;
     border-radius: 16px;
   }
+
+  .fatal-error-actions { grid-template-columns: 1fr; }
+  .fatal-error-actions button { min-height: 46px; }
+  .connection-notice { width: max-content; justify-content: center; }
 
   .overlay-header {
     min-height: 58px;

@@ -877,6 +877,9 @@ const renderer = new GameRenderer(canvasContainer, {
 });
 renderer.setCardsEnabled(false);
 renderer.setZoom(0.5);
+window.addEventListener("pagehide", (event) => {
+  if (!(event as PageTransitionEvent).persisted) renderer.dispose();
+});
 
 function updateBoardSize() {
   if (!canvasContainer || !boardStage || !gameConsole) return;

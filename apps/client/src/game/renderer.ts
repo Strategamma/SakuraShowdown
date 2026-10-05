@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { GameConfig, GameState, LegalMove } from "@game/rules";
@@ -137,6 +136,7 @@ export class GameRenderer {
   private callbacks: RendererCallbacks;
   private container: HTMLElement;
   private animationFrame?: number;
+  private disposed = false;
   private lastState?: GameState;
   private lastMoves: LegalMove[] = [];
   private lastSelection: RendererSelection = {};
@@ -246,6 +246,7 @@ export class GameRenderer {
     window.addEventListener("pointermove", this.onPointerMove);
     window.addEventListener("pointerup", this.onPointerUp);
     window.addEventListener("resize", this.onResize);
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
 
     this.onResize();
     this.startLoop();
@@ -254,9 +255,11 @@ export class GameRenderer {
   setCardsEnabled(enabled: boolean) {
     this.cardsEnabled = enabled;
     if (!enabled) {
+      this.disposeGroupResources(this.cardGroup);
       this.cardGroup.clear();
       this.cards.clear();
       this.cardFly = [];
+      this.opponentShelf = undefined;
     }
   }
 
@@ -271,9 +274,11 @@ export class GameRenderer {
     this.buildBoard();
     this.buildTempleMarkers();
     this.buildHighlights();
+    this.disposeGroupResources(this.cardGroup);
     this.cardGroup.clear();
     this.cards.clear();
     this.cardFly = [];
+    for (const texture of this.cardTextureCache.values()) texture.dispose();
     this.cardTextureCache.clear();
     this.opponentShelf = undefined;
     this.fitCamera();
@@ -336,6 +341,25 @@ export class GameRenderer {
     this.reducedMotion = reduced;
   }
 
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.stopLoop();
+    this.renderer.domElement.removeEventListener("pointerdown", this.onPointerDown);
+    window.removeEventListener("pointermove", this.onPointerMove);
+    window.removeEventListener("pointerup", this.onPointerUp);
+    window.removeEventListener("resize", this.onResize);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    this.scene.traverse((object) => this.disposeObjectResources(object, true));
+    for (const texture of this.cardTextureCache.values()) texture.dispose();
+    this.cardTextureCache.clear();
+    this.woodTexture.dispose();
+    this.fabricTexture.dispose();
+    this.accentTexture.dispose();
+    this.renderer.dispose();
+    this.renderer.domElement.remove();
+  }
+
   private updateBaseYaw() {
     if (this.viewMode !== "3d") {
       this.baseYaw = 0;
@@ -371,6 +395,7 @@ export class GameRenderer {
   }
 
   private buildBoard() {
+    this.disposeGroupResources(this.boardGroup);
     this.boardGroup.clear();
     this.cells = [];
 
@@ -438,6 +463,7 @@ export class GameRenderer {
   }
 
   private buildTempleMarkers() {
+    this.disposeGroupResources(this.templeGroup);
     this.templeGroup.clear();
     if (!this.config) return;
 
@@ -475,6 +501,7 @@ export class GameRenderer {
   }
 
   private buildHighlights() {
+    this.disposeGroupResources(this.highlightGroup);
     this.highlightGroup.clear();
     this.highlights = [];
 
@@ -752,6 +779,7 @@ export class GameRenderer {
     for (const [key, visual] of previous.entries()) {
       if (!next.has(key)) {
         this.cardGroup.remove(visual.mesh);
+        this.disposeObjectResources(visual.mesh);
       }
     }
 
@@ -1339,8 +1367,8 @@ export class GameRenderer {
     }
     const min = new THREE.Vector3();
     const max = new THREE.Vector3();
-    box.getMin(min);
-    box.getMax(max);
+    min.copy(box.min);
+    max.copy(box.max);
     group.position.x -= (min.x + max.x) / 2;
     group.position.z -= (min.z + max.z) / 2;
     group.position.y -= min.y;
@@ -1477,12 +1505,44 @@ export class GameRenderer {
   };
 
   private startLoop() {
+    if (this.disposed || this.animationFrame !== undefined || document.hidden) return;
     const tick = () => {
-      this.animationFrame = requestAnimationFrame(tick);
+      this.animationFrame = undefined;
+      if (this.disposed || document.hidden) return;
       this.updateAnimations();
       this.renderer.render(this.scene, this.camera);
+      this.animationFrame = requestAnimationFrame(tick);
     };
-    tick();
+    this.animationFrame = requestAnimationFrame(tick);
+  }
+
+  private stopLoop() {
+    if (this.animationFrame === undefined) return;
+    cancelAnimationFrame(this.animationFrame);
+    this.animationFrame = undefined;
+  }
+
+  private onVisibilityChange = () => {
+    if (document.hidden) this.stopLoop();
+    else this.startLoop();
+  };
+
+  private disposeGroupResources(group: THREE.Group) {
+    group.traverse((object) => this.disposeObjectResources(object));
+  }
+
+  private disposeObjectResources(object: THREE.Object3D, disposeTextures = false) {
+    if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.LineSegments)) return;
+    object.geometry.dispose();
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    for (const material of materials) {
+      if (disposeTextures) {
+        for (const value of Object.values(material)) {
+          if (value instanceof THREE.Texture) value.dispose();
+        }
+      }
+      material.dispose();
+    }
   }
 
   private updateAnimations() {
@@ -1639,6 +1699,7 @@ export class GameRenderer {
           remaining.push(fly);
         } else {
           this.cardGroup.remove(fly.mesh);
+          this.disposeObjectResources(fly.mesh);
         }
       }
       this.cardFly = remaining;

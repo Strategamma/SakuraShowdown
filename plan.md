@@ -73,3 +73,39 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Capture animation must not leave dead pieces interactive; tooltips must not obstruct coarse-pointer/mobile play.
 
 **Verification:** Full quality/build gates, source-level state audit, and prescribed Playwright interaction attempt.
+
+## 9.5 reliability milestone 1
+
+**Goal:** Make startup and unexpected client failures understandable and recoverable.
+
+**Scope:** Pre-bootstrap error recovery, offline status, build identity, and safe diagnostics.
+
+**Approach:** Load a small recovery module before the game entrypoint; preserve local play while offline and expose only non-personal diagnostic fields.
+
+**Risks:** Error handling must not depend on the main application successfully loading or mislabel ordinary offline play as a crash.
+
+**Verification:** Full quality/build gates, served-markup smoke check, offline/error source review, and prescribed Playwright attempt.
+
+## 9.5 renderer milestone
+
+**Goal:** Make the board renderer type-safe, lifecycle-aware, and dependable across long sessions.
+
+**Scope:** Three.js typing, animation-loop suspension, GPU cleanup, and page teardown.
+
+**Approach:** Replace the local `any` shim with matching official types, include the renderer in normal typechecks, and give created resources explicit ownership and disposal.
+
+**Risks:** Shared model/texture resources must not be disposed while still in use; background-tab suspension must resume exactly one loop.
+
+**Verification:** Renderer typecheck, full quality/build gates, resource-lifecycle source review, and prescribed browser attempt.
+
+## 9.5 expert AI milestone
+
+**Goal:** Make Expert anticipate replies, convert winning tactics, and avoid elementary losses.
+
+**Scope:** Shared AI search/evaluation, difficulty behavior, performance budget, and tactical regression tests.
+
+**Approach:** Use iterative-deepening minimax with alpha-beta pruning, tactical move ordering, transposition caching, and a mobile-safe time limit; keep Beginner intentionally random and Standard shallow.
+
+**Risks:** Search must remain responsive at high branching factors and must evaluate card exchange, Master safety, and both victory conditions from the correct player perspective.
+
+**Verification:** Forced capture, temple-win, and immediate-threat tests plus full quality/build gates and prescribed browser attempt.

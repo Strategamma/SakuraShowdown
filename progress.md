@@ -183,3 +183,25 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Improved piece travel timing, selected-piece breathing, and animated capture removal; the reduced-motion preference now reaches the Three.js renderer.
   - Reduced animation-loop garbage by reusing temporary vectors.
   - Full tests, typechecks, server health, production build, and diff validation pass. Playwright lacks its cached Chromium executable; the in-app browser is also blocked from localhost by saved user policy, so visual QA remains an external-device follow-up.
+- 2026-10-05 9.5 reliability milestone 1:
+  - Added a pre-bootstrap recovery module that catches runtime and rejected-promise failures even when the main game cannot finish starting.
+  - Added a responsive recovery dialog with reload and privacy-safe diagnostic copy actions, plus a build version visible in Settings and recovery UI.
+  - Added live offline/online awareness that explicitly preserves solo and local play.
+  - Full rules tests, typechecks, server health, production build, diff validation, and served-markup smoke check pass.
+  - The prescribed Playwright run was attempted but its cached Chromium executable is absent, so fresh screenshot validation remains external.
+- 2026-10-05 9.5 renderer milestone:
+  - Removed the renderer's `@ts-nocheck` and tsconfig exclusion; replaced the handwritten `any` shim with version-matched official Three.js types.
+  - Fixed model normalization to use the typed Box3 bounds API.
+  - Added animation-loop suspension/resume on page visibility, guarded against duplicate loops, and added final page teardown.
+  - Added disposal for replaced board, temple, highlight, card, texture, material, geometry, and renderer resources; fixed the cleared opponent shelf reference.
+  - Full rules tests, renderer/client typechecks, server health, production build, and diff validation pass. Playwright remains blocked by its absent Chromium executable.
+  - Production audit exposed 20 transitive vulnerabilities in the held-back Colyseus/Express stack; recorded in `ERRORS_LOG.md` for a deliberate multiplayer dependency migration rather than an unsafe forced upgrade.
+- 2026-10-05 9.5 expert AI milestone:
+  - Moved AI decision-making into the shared rules package so it is deterministic to test and independent of UI code.
+  - Expert now uses time-bounded iterative deepening, minimax, alpha-beta pruning, tactical move ordering, and transposition caching at 3–4 ply.
+  - Evaluation covers forced capture/temple wins, immediate opponent wins, Master safety, material, mobility, capture pressure, central control, and temple progress.
+  - Beginner remains intentionally random; Standard uses a strong one-ply tactical ranking with limited imperfection.
+  - Added regression tests for immediate Master capture, immediate temple victory, and answering a direct Master threat.
+  - All 15 rules/AI tests, full typechecks, server health, production build, and diff validation pass. A seeded opening-position benchmark used the complete 240 ms Expert budget with nine legal moves.
+  - Prescribed Playwright gameplay validation was attempted but remains blocked by the absent Chromium executable.
+  - Standard follow-up: removed intentional random blunders and added a 90 ms two-ply reply search, with regression coverage proving it answers an immediate Master threat. A seeded nine-move opening benchmark completed in 13 ms.
