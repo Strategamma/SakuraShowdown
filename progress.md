@@ -135,3 +135,21 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Improved playable-card hover affordance, active-turn labeling, and vertical balance in hand/pool rails.
   - Added a pool explanation so the card-exchange mechanic is easier to understand.
   - `npm run quality:ci` and `npm run build` pass. The required Playwright run was attempted after installing Chromium into `/tmp`, but macOS denied Chromium's Mach service registration, so no fresh automated screenshot was produced.
+- 2026-10-05 consumer programme phase 1:
+  - Added solo play against a computer with Beginner, Standard, and Expert move selection; fixed the viewer to the human side and prevents input during the AI turn.
+  - Added a four-step first-run tutorial with a direct transition into beginner practice.
+  - Added a web app manifest, branded scalable icon, offline shell service worker, theme metadata, and production registration.
+  - Client typecheck and production client build pass; manifest, icon, service worker, and game config are present in the output.
+  - Remaining phases: settings/accessibility controls, live multiplayer deployment and Quick Match, guest profiles/statistics, replays/share links, then monitoring/policies/moderation.
+- 2026-10-05 consumer programme phase 2:
+  - Added a persistent settings dialog for sound enablement, volume, reduced motion, high contrast, and default 2D/3D board presentation.
+  - Added an in-game Hint action that selects a strong legal piece/card combination and highlights valid destinations without making the move.
+  - Escape now closes settings/tutorial dialogs before clearing board selection.
+  - Full quality gate and production build pass. Playwright was attempted again but macOS denied Chromium Mach registration before page launch.
+  - Remaining phases: live multiplayer deployment/Quick Match/invites, guest profiles/statistics, replays/sharing, and production operations.
+- 2026-10-05 responsive UI pass:
+  - Split the crowded toolbar into board controls, game actions, and live status groups with consistent spacing and a distinct Hint action.
+  - Tablet navigation now uses two balanced control rows; phone gameplay uses a blurred, safe-area-aware bottom action dock with 44px+ targets.
+  - Improved mobile arena/card spacing and converted the pool into a compact horizontal exchange panel on narrow screens.
+  - Preserved two cards per hand, a full-width square board, scrollable small-screen play, and compact desktop behavior at intermediate widths.
+  - Full quality gate and production build pass. Direct localhost browser access is blocked by saved browser policy, and Playwright remains blocked by macOS Chromium Mach registration, so fresh visual screenshots could not be captured here.

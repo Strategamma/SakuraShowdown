@@ -1,0 +1,12 @@
+{
+  "name": "Sakura Showdown",
+  "short_name": "Sakura",
+  "description": "A focused tactical board duel for one or two players.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#160c0a",
+  "theme_color": "#160c0a",
+  "icons": [
+    { "src": "./sakura-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

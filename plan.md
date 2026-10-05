@@ -37,3 +37,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Repeated state renders can restart transient effects; mobile overlays must not obscure board input.
 
 **Verification:** Rules/type checks, production build, responsive source review, and the prescribed browser test attempt.
+
+## Consumer readiness programme
+
+**Goal:** Make Sakura Showdown understandable, enjoyable, installable, and dependable for players who arrive without prior rules knowledge or an available opponent.
+
+**Scope:** Onboarding, solo AI, settings/accessibility, PWA, multiplayer reliability/matchmaking, profiles/statistics, replays/sharing, and production safeguards.
+
+**Approach:** Ship in dependency order: consumer entry and solo play first; online infrastructure second; durable identity/history and sharing third; production analytics, policies, and moderation last.
+
+**Risks:** Online features require a live authoritative server; account sync requires a storage/authentication decision; automated browser QA remains restricted on this host.
+
+**Verification:** Pure rules/AI checks where possible, workspace quality gate and production build each phase, browser interaction and responsive checks when the host permits Chromium.

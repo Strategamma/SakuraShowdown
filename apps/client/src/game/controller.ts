@@ -37,6 +37,7 @@ export class GameController {
   private online?: OnlineSession;
   private playerId?: string;
   private onlineStarted = true;
+  private localHumanPlayerId?: string;
 
   constructor(callbacks: ControllerCallbacks) {
     this.callbacks = callbacks;
@@ -84,6 +85,28 @@ export class GameController {
     this.recalculateMoves();
     this.callbacks.onState(this.state);
     this.callbacks.onStatus("Local match ready.");
+  }
+
+  setLocalHumanPlayer(playerId?: string) {
+    this.localHumanPlayerId = playerId;
+  }
+
+  playLocalMove(move: Move) {
+    if (this.mode !== "local" || !this.state || !this.config || this.state.winnerId) return false;
+    const legal = this.legalMoves.some(
+      (candidate) =>
+        candidate.playerId === move.playerId &&
+        candidate.pieceId === move.pieceId &&
+        candidate.cardId === move.cardId &&
+        candidate.to.x === move.to.x &&
+        candidate.to.y === move.to.y
+    );
+    if (!legal) return false;
+    this.state = applyMove(this.state, move, this.config);
+    this.clearSelection();
+    this.recalculateMoves();
+    this.callbacks.onState(this.state);
+    return true;
   }
 
   async connectOnline(
@@ -351,7 +374,9 @@ export class GameController {
   canAct() {
     if (!this.state) return false;
     if (this.state.winnerId) return false;
-    if (this.mode === "local") return true;
+    if (this.mode === "local") {
+      return !this.localHumanPlayerId || this.localHumanPlayerId === this.state.activePlayerId;
+    }
     if (!this.onlineStarted) return false;
     return this.playerId === this.state.activePlayerId;
   }

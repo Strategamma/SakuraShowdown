@@ -217,6 +217,32 @@ button:disabled {
   scrollbar-width: none;
 }
 
+.toolbar-group,
+.toolbar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toolbar-status {
+  flex: 1 1 260px;
+  justify-content: flex-end;
+}
+
+.toolbar .status-pill { flex: 1 1 220px; }
+
+.emphasis-button {
+  color: #d6f3e5;
+  border-color: rgba(121, 198, 163, 0.48);
+  background: rgba(43, 87, 68, 0.28);
+}
+
+.emphasis-button:hover {
+  border-color: rgba(121, 198, 163, 0.82);
+  background: rgba(43, 87, 68, 0.48);
+}
+
 .toolbar::-webkit-scrollbar {
   display: none;
 }
@@ -1559,6 +1585,142 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.consumer-options {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(12, 8, 12, 0.42);
+  border: 1px solid rgba(231, 151, 135, 0.14);
+}
+
+.consumer-options .label { margin: 0; }
+
+.tutorial-card {
+  width: min(520px, 92vw);
+}
+
+.tutorial-body {
+  padding: clamp(24px, 5vw, 48px);
+  text-align: center;
+}
+
+.tutorial-symbol {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffe9ef;
+  background: radial-gradient(circle at 35% 30%, rgba(242, 138, 155, 0.55), rgba(84, 28, 47, 0.72));
+  border: 1px solid rgba(242, 138, 155, 0.52);
+  box-shadow: 0 14px 40px rgba(6, 3, 6, 0.32);
+  font-family: var(--display-font);
+  font-size: 2rem;
+}
+
+.tutorial-body h2 {
+  margin: 0 0 10px;
+  color: #fff4ed;
+  font-family: var(--display-font);
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+}
+
+.tutorial-body p {
+  min-height: 3.5em;
+  margin: 0 auto;
+  max-width: 390px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.tutorial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 24px;
+}
+
+.tutorial-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.tutorial-dots span.active {
+  width: 24px;
+  border-radius: 999px;
+  background: var(--accent-jade);
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.settings-card { width: min(560px, 94vw); }
+
+.settings-body {
+  display: grid;
+  gap: 1px;
+  padding: 8px 20px 22px;
+}
+
+.setting-row {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+}
+
+.setting-row:last-child { border-bottom: 0; }
+.setting-row span { display: grid; gap: 4px; }
+.setting-row strong { color: #fff4ed; font-size: 0.86rem; }
+.setting-row small { color: var(--text-muted); font-size: 0.68rem; line-height: 1.35; }
+.setting-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--accent-jade); }
+.setting-row input[type="range"] { width: min(190px, 34vw); accent-color: var(--accent); }
+.setting-row select { width: min(190px, 38vw); }
+
+.game-console.hint-active #canvas-container {
+  border-color: rgba(232, 189, 112, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(232, 189, 112, 0.22), 0 0 34px rgba(232, 189, 112, 0.18);
+}
+
+body.high-contrast {
+  --text-muted: rgba(255, 255, 255, 0.9);
+  --panel-border: rgba(255, 222, 196, 0.72);
+  --accent-jade: #9cf1c8;
+  --accent-gold: #ffd68a;
+}
+
+body.high-contrast .card-rail,
+body.high-contrast #canvas-container,
+body.high-contrast .status-pill {
+  border-width: 2px;
+}
+
+body.high-contrast .card.disabled { opacity: 0.86; }
+
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
 .sakura-spinner {
   display: inline-flex;
   width: 14px;
@@ -1637,6 +1799,11 @@ button:disabled {
     --hand-width: clamp(280px, 25vw, 360px);
     --pool-width: clamp(160px, 15vw, 210px);
   }
+
+  .toolbar { gap: 6px; }
+  .toolbar-group, .toolbar-status { gap: 6px; }
+  .toolbar button:not(.zoom-button) { padding-inline: 11px; }
+  .action-controls #open-customize { display: none; }
 }
 
 @media (max-width: 900px) {
@@ -1702,22 +1869,50 @@ button:disabled {
 
   .toolbar {
     grid-column: 1 / -1;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 2px 0 4px;
-    scrollbar-width: none;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 8px;
+    overflow: visible;
+    padding: 2px 0 3px;
   }
 
   .toolbar::-webkit-scrollbar {
     display: none;
   }
 
-  .status-pill {
+  .toolbar-status {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100%;
     order: -1;
-    min-width: min(72vw, 420px);
-    max-width: min(72vw, 420px);
-    flex: 0 0 auto;
+  }
+
+  .toolbar-status .status-pill {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .board-controls,
+  .action-controls {
+    grid-row: 2;
+    min-height: 48px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .board-controls {
+    justify-content: flex-start;
+  }
+
+  .action-controls {
+    justify-content: flex-end;
+  }
+
+  .board-controls::-webkit-scrollbar,
+  .action-controls::-webkit-scrollbar {
+    display: none;
   }
 
   #game-area {
@@ -1746,7 +1941,7 @@ button:disabled {
     --card-grid: clamp(72px, 24vw, 140px);
     --card-min-height: calc(var(--card-grid) + 24px);
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       "opponent"
       "board"
@@ -1754,6 +1949,8 @@ button:disabled {
       "pool";
     max-height: none;
     overflow: visible;
+    gap: clamp(10px, 2vw, 16px);
+    padding: clamp(10px, 2vw, 16px);
   }
 
   #board-stage {
@@ -1767,6 +1964,10 @@ button:disabled {
 
   .card {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .card-rail {
+    padding: clamp(12px, 2.5vw, 18px);
   }
 
   .turn-guide { top: 8px; }
@@ -1852,6 +2053,7 @@ button:disabled {
   .game-console {
     --card-grid: clamp(64px, 21vw, 88px);
     --card-min-height: calc(var(--card-grid) + 22px);
+    border-radius: 14px;
   }
 
   .zoom-range,
@@ -1860,9 +2062,67 @@ button:disabled {
     display: none;
   }
 
-  .status-pill {
-    min-width: 78vw;
-    max-width: 78vw;
+  #top-bar {
+    gap: 9px;
+  }
+
+  .brand-title {
+    font-size: 0.84rem;
+    letter-spacing: 0.14em;
+  }
+
+  .brand-subtitle { display: none; }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-status {
+    grid-row: 1;
+  }
+
+  .toolbar-status .status-pill {
+    min-width: 0;
+    max-width: none;
+    padding-inline: 12px;
+  }
+
+  .toolbar-status #player-label {
+    display: none;
+  }
+
+  .board-controls {
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .action-controls {
+    position: fixed;
+    z-index: 30;
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: stretch;
+    gap: 6px;
+    padding: 7px;
+    min-height: 58px;
+    overflow-x: auto;
+    border: 1px solid rgba(231, 151, 135, 0.28);
+    border-radius: 17px;
+    background: rgba(12, 9, 13, 0.9);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(22px) saturate(130%);
+  }
+
+  .action-controls button {
+    flex: 1 0 auto;
+    min-width: 76px;
+    padding-inline: 12px;
+  }
+
+  #game-area {
+    padding-bottom: max(86px, calc(env(safe-area-inset-bottom) + 74px));
   }
 
   .rail-cards {
@@ -1879,6 +2139,24 @@ button:disabled {
   .pool-rail .rail-cards {
     grid-template-columns: 1fr;
   }
+
+  .pool-rail {
+    display: grid;
+    grid-template-columns: auto minmax(118px, 0.7fr) minmax(90px, auto);
+    align-items: center;
+    justify-items: center;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .pool-rail .rail-cards { margin: 0; }
+
+  .pool-rail .card {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .pool-caption { text-align: left; }
 
   .card-title {
     justify-self: center;
@@ -1900,4 +2178,16 @@ button:disabled {
     top: 9px;
     right: 9px;
   }
+
+  .consumer-options {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .setting-row input[type="range"],
+  .setting-row select { width: 100%; }
 }

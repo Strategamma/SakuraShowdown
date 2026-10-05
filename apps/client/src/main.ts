@@ -2,6 +2,8 @@ import "./styles.css";
 import { listLegalMoves, validateConfig } from "@game/rules";
 import type { GameConfig, GameState, LegalMove } from "@game/rules";
 import { GameController } from "./game/controller";
+import { chooseAiMove } from "./game/ai";
+import type { AiDifficulty } from "./game/ai";
 import { GameRenderer } from "./game/renderer";
 import defaultConfig from "./game/defaultConfig";
 import { sound } from "./sound";
@@ -92,6 +94,9 @@ const VIEW_MODE_KEY = "sakura.viewMode";
 const ONLINE_NAME_KEY = "sakura.onlineName";
 const RECONNECT_KEY = "sakura.reconnectToken";
 const DEV_CARD_EDITOR_KEY = "sakura.devCardEditor";
+const TUTORIAL_COMPLETE_KEY = "sakura.tutorialComplete";
+const AI_DIFFICULTY_KEY = "sakura.aiDifficulty";
+const ACCESSIBILITY_KEY = "sakura.preferences";
 const MOBILE_EMBED_KEY = "mobileEmbed";
 const MOBILE_MODE_KEY = "mobileMode";
 const MOBILE_NAME_KEY = "mobileName";
@@ -129,6 +134,8 @@ const zoomRange = document.getElementById("zoom-range") as HTMLInputElement | nu
 const zoomValue = document.getElementById("zoom-value") as HTMLElement | null;
 const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
+const hintMoveBtn = document.getElementById("hint-move") as HTMLButtonElement;
+const openSettingsBtn = document.getElementById("open-settings") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement | null;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
@@ -182,6 +189,9 @@ const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement
 const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
 const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
+const landingAiBtn = document.getElementById("landing-ai") as HTMLButtonElement;
+const landingTutorialBtn = document.getElementById("landing-tutorial") as HTMLButtonElement;
+const aiDifficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingActionsOnline = document.getElementById("landing-actions-online") as HTMLElement | null;
 const serverUrlInput = document.getElementById("server-url") as HTMLInputElement | null;
@@ -218,6 +228,21 @@ const privateKeyInput = document.getElementById("private-key") as HTMLInputEleme
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
 const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
 const onlineStatusEl = document.getElementById("online-status") as HTMLElement | null;
+const tutorialOverlay = document.getElementById("tutorial-overlay") as HTMLElement;
+const tutorialCloseBtn = document.getElementById("tutorial-close") as HTMLButtonElement;
+const tutorialBackBtn = document.getElementById("tutorial-back") as HTMLButtonElement;
+const tutorialNextBtn = document.getElementById("tutorial-next") as HTMLButtonElement;
+const tutorialProgress = document.getElementById("tutorial-progress") as HTMLElement;
+const tutorialSymbol = document.getElementById("tutorial-symbol") as HTMLElement;
+const tutorialStepTitle = document.getElementById("tutorial-step-title") as HTMLElement;
+const tutorialStepCopy = document.getElementById("tutorial-step-copy") as HTMLElement;
+const settingsOverlay = document.getElementById("settings-overlay") as HTMLElement;
+const settingsCloseBtn = document.getElementById("settings-close") as HTMLButtonElement;
+const settingSound = document.getElementById("setting-sound") as HTMLInputElement;
+const settingVolume = document.getElementById("setting-volume") as HTMLInputElement;
+const settingMotion = document.getElementById("setting-motion") as HTMLInputElement;
+const settingContrast = document.getElementById("setting-contrast") as HTMLInputElement;
+const settingView = document.getElementById("setting-view") as HTMLSelectElement;
 
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
@@ -312,6 +337,20 @@ let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
 let localOpponentName = localStorage.getItem(LOCAL_OPPONENT_NAME_KEY) ?? "";
 let localStartingPlayer = localStorage.getItem(LOCAL_START_KEY) ?? "random";
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) as "2d" | "3d" | null) ?? "3d";
+type ConsumerPreferences = { sound: boolean; volume: number; reducedMotion: boolean; highContrast: boolean };
+const defaultPreferences: ConsumerPreferences = {
+  sound: true,
+  volume: 0.8,
+  reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  highContrast: false
+};
+let preferences = defaultPreferences;
+try {
+  const storedPreferences = JSON.parse(localStorage.getItem(ACCESSIBILITY_KEY) ?? "null") as Partial<ConsumerPreferences> | null;
+  if (storedPreferences) preferences = { ...defaultPreferences, ...storedPreferences };
+} catch {
+  localStorage.removeItem(ACCESSIBILITY_KEY);
+}
 let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
 let reconnectToken = localStorage.getItem(RECONNECT_KEY) ?? "";
 let currentMode: "local" | "online" = "local";
@@ -344,6 +383,119 @@ let pendingOnlineLeaveStatus: string | undefined;
 let moveFeedbackTimer: number | undefined;
 let turnBannerTimer: number | undefined;
 let invalidFeedbackTimer: number | undefined;
+let aiMoveTimer: number | undefined;
+let localGameType: "pass-and-play" | "ai" = "pass-and-play";
+let aiDifficulty = (localStorage.getItem(AI_DIFFICULTY_KEY) as AiDifficulty | null) ?? "standard";
+let tutorialStep = 0;
+
+const tutorialSteps = [
+  { symbol: "一", title: "Choose a warrior", copy: "Select your Master or one of your four Students. Glowing squares show where it can move." },
+  { symbol: "二", title: "Choose a movement card", copy: "Each card contains a movement pattern. You can select the card first or select your warrior first." },
+  { symbol: "三", title: "Move and exchange", copy: "Move to a glowing square. The card you use enters the pool and the old pool card joins your hand." },
+  { symbol: "勝", title: "Claim victory", copy: "Capture the opposing Master, or guide your Master onto the opponent's temple square." }
+];
+
+function applyPreferences() {
+  document.body.classList.toggle("reduce-motion", preferences.reducedMotion);
+  document.body.classList.toggle("high-contrast", preferences.highContrast);
+  settingSound.checked = preferences.sound;
+  settingVolume.value = String(Math.round(preferences.volume * 100));
+  settingVolume.disabled = !preferences.sound;
+  settingMotion.checked = preferences.reducedMotion;
+  settingContrast.checked = preferences.highContrast;
+  settingView.value = viewMode;
+  sound.setEnabled(preferences.sound);
+  sound.setVolume(preferences.volume);
+  localStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify(preferences));
+}
+
+function openSettings() {
+  applyPreferences();
+  settingsOverlay.classList.remove("hidden");
+  sound.play("modalOpen");
+  settingsCloseBtn.focus();
+}
+
+function closeSettings() {
+  settingsOverlay.classList.add("hidden");
+  sound.play("modalClose");
+}
+
+function showMoveHint() {
+  if (!latestState || !latestConfig || !controller.canAct() || !latestMoves.length) {
+    showInvalidAction("No hint is available right now.");
+    return;
+  }
+  const masterIds = new Set(
+    latestConfig.pieceTypes.filter((type) => type.tag === "king" || type.id === "master").map((type) => type.id)
+  );
+  const move = [...latestMoves].sort((a, b) => {
+    const score = (candidate: LegalMove) => {
+      const target = latestState?.pieces.find(
+        (piece) => piece.alive && piece.x === candidate.to.x && piece.y === candidate.to.y
+      );
+      return target ? (masterIds.has(target.typeId) ? 100 : 10) : 0;
+    };
+    return score(b) - score(a);
+  })[0];
+  pendingMove = undefined;
+  controller.selectPiece(move.pieceId);
+  controller.selectCard(move.cardId);
+  const cardName = latestConfig.cards.find((card) => card.id === move.cardId)?.name ?? "selected card";
+  gameConsole?.classList.add("hint-active");
+  window.setTimeout(() => gameConsole?.classList.remove("hint-active"), 1800);
+  sound.play("question");
+  renderAll();
+  statusEl.textContent = `Hint · Try ${cardName} to the glowing square.`;
+}
+
+function getViewPlayerId(state: GameState, config: GameConfig) {
+  if (currentMode === "local" && localGameType === "ai") {
+    return config.players[0]?.id ?? state.activePlayerId;
+  }
+  return controller.getPlayerId() ?? state.activePlayerId;
+}
+
+function renderTutorial() {
+  const step = tutorialSteps[tutorialStep];
+  tutorialProgress.textContent = `Step ${tutorialStep + 1} of ${tutorialSteps.length}`;
+  tutorialSymbol.textContent = step.symbol;
+  tutorialStepTitle.textContent = step.title;
+  tutorialStepCopy.textContent = step.copy;
+  tutorialBackBtn.disabled = tutorialStep === 0;
+  tutorialNextBtn.textContent = tutorialStep === tutorialSteps.length - 1 ? "Start Practice" : "Next";
+  tutorialOverlay.querySelectorAll(".tutorial-dots span").forEach((dot, index) => {
+    dot.classList.toggle("active", index === tutorialStep);
+  });
+}
+
+function openTutorial() {
+  tutorialStep = 0;
+  renderTutorial();
+  tutorialOverlay.classList.remove("hidden");
+  sound.play("modalOpen");
+  tutorialNextBtn.focus();
+}
+
+function closeTutorial(completed = false) {
+  tutorialOverlay.classList.add("hidden");
+  if (completed) localStorage.setItem(TUTORIAL_COMPLETE_KEY, "1");
+  sound.play("modalClose");
+}
+
+function scheduleAiTurn() {
+  if (aiMoveTimer) window.clearTimeout(aiMoveTimer);
+  if (currentMode !== "local" || localGameType !== "ai" || !latestState || !latestConfig) return;
+  const aiPlayerId = latestConfig.players[1]?.id;
+  if (!aiPlayerId || latestState.winnerId || latestState.activePlayerId !== aiPlayerId) return;
+  statusEl.textContent = `${latestConfig.players[1]?.name ?? "Computer"} is thinking…`;
+  aiMoveTimer = window.setTimeout(() => {
+    aiMoveTimer = undefined;
+    if (!latestState || !latestConfig || latestState.activePlayerId !== aiPlayerId) return;
+    const move = chooseAiMove(latestMoves, latestState, latestConfig, aiDifficulty);
+    if (move) controller.playLocalMove(move);
+  }, aiDifficulty === "expert" ? 850 : 620);
+}
 
 function showInvalidAction(message: string) {
   if (!gameConsole) return;
@@ -443,6 +595,7 @@ const controller = new GameController({
       }
     }
     renderAll();
+    scheduleAiTurn();
   },
   onConfig: (config) => {
     latestConfig = config;
@@ -780,7 +933,7 @@ function renderAll() {
   const config = latestConfig;
   renderCards();
 
-  const viewPlayerId = controller.getPlayerId() ?? state.activePlayerId;
+  const viewPlayerId = getViewPlayerId(state, config);
   const activeId = state.activePlayerId;
   if (!state.winnerId && activeId !== lastActivePlayerId) {
     const shouldPlay =
@@ -808,6 +961,7 @@ function renderAll() {
           : "none"
   );
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
+  hintMoveBtn.disabled = !controller.canAct() || latestMoves.length === 0;
   const checkOwners = computeCheckOwners(state, config);
   renderer.render(state, moves, {
     ...selection,
@@ -860,7 +1014,16 @@ function renderAll() {
 }
 
 window.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape" || !latestState || !controller.canAct()) return;
+  if (event.key !== "Escape") return;
+  if (!settingsOverlay.classList.contains("hidden")) {
+    closeSettings();
+    return;
+  }
+  if (!tutorialOverlay.classList.contains("hidden")) {
+    closeTutorial();
+    return;
+  }
+  if (!latestState || !controller.canAct()) return;
   const selection = controller.getSelection();
   if (!pendingMove && !selection.selectedPieceId && !selection.selectedCardId) return;
   pendingMove = undefined;
@@ -1514,6 +1677,7 @@ function resolveStartingPlayer(config: GameConfig): string | undefined {
 function startLocalMatch() {
   if (!latestConfig) return;
   const startingId = resolveStartingPlayer(latestConfig);
+  controller.setLocalHumanPlayer(localGameType === "ai" ? latestConfig.players[0]?.id : undefined);
   controller.startLocal({ startingPlayerId: startingId });
   renderAll();
   maybeShowStartOverlay();
@@ -1522,7 +1686,7 @@ function startLocalMatch() {
 function applyLocalName(config: GameConfig): GameConfig {
   const next = structuredClone(config) as GameConfig;
   const displayName = localName.trim();
-  const displayOpponent = localOpponentName.trim();
+  const displayOpponent = localGameType === "ai" ? "Kitsune" : localOpponentName.trim();
   if (displayName && next.players[0]) {
     next.players[0].name = displayName;
   }
@@ -1534,7 +1698,7 @@ function applyLocalName(config: GameConfig): GameConfig {
 
 function renderCards() {
   if (!latestState || !latestConfig) return;
-  const viewPlayerId = controller.getPlayerId() ?? latestState.activePlayerId;
+  const viewPlayerId = getViewPlayerId(latestState, latestConfig);
   const playerMeta = latestConfig.players.find((p) => p.id === viewPlayerId);
   const opponentMeta = latestConfig.players.find((p) => p.id !== viewPlayerId);
   const playerName = playerMeta?.name ?? "You";
@@ -2334,12 +2498,47 @@ landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
 landingLocalBtn.addEventListener("click", () => {
+  localGameType = "pass-and-play";
+  controller.setLocalHumanPlayer(undefined);
   setMode("local");
   startChoiceResolved = false;
   startOverlay.classList.remove("hidden");
   startRandomBtn?.focus();
   setSpectatorMode(false);
   hideLanding();
+});
+landingAiBtn.addEventListener("click", () => {
+  localGameType = "ai";
+  setMode("local");
+  setSpectatorMode(false);
+  hideLanding();
+  startRandomFive();
+});
+aiDifficultySelect.value = aiDifficulty;
+aiDifficultySelect.addEventListener("change", () => {
+  aiDifficulty = aiDifficultySelect.value as AiDifficulty;
+  localStorage.setItem(AI_DIFFICULTY_KEY, aiDifficulty);
+});
+landingTutorialBtn.addEventListener("click", openTutorial);
+tutorialCloseBtn.addEventListener("click", () => closeTutorial());
+tutorialBackBtn.addEventListener("click", () => {
+  tutorialStep = Math.max(0, tutorialStep - 1);
+  renderTutorial();
+});
+tutorialNextBtn.addEventListener("click", () => {
+  if (tutorialStep < tutorialSteps.length - 1) {
+    tutorialStep += 1;
+    renderTutorial();
+    return;
+  }
+  closeTutorial(true);
+  localGameType = "ai";
+  aiDifficulty = "beginner";
+  aiDifficultySelect.value = aiDifficulty;
+  localStorage.setItem(AI_DIFFICULTY_KEY, aiDifficulty);
+  setMode("local");
+  hideLanding();
+  startRandomFive();
 });
 landingCustomizeBtn.addEventListener("click", () => {
   if (!enableDevCardEditor) return;
@@ -2437,7 +2636,37 @@ toggleViewBtn.addEventListener("click", () => {
   localStorage.setItem(VIEW_MODE_KEY, viewMode);
   renderer.setViewMode(viewMode);
   toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
+  settingView.value = viewMode;
 });
+hintMoveBtn.addEventListener("click", showMoveHint);
+openSettingsBtn.addEventListener("click", openSettings);
+settingsCloseBtn.addEventListener("click", closeSettings);
+settingsOverlay.addEventListener("click", (event) => {
+  if (event.target === settingsOverlay) closeSettings();
+});
+settingSound.addEventListener("change", () => {
+  preferences.sound = settingSound.checked;
+  applyPreferences();
+});
+settingVolume.addEventListener("input", () => {
+  preferences.volume = Number(settingVolume.value) / 100;
+  applyPreferences();
+});
+settingMotion.addEventListener("change", () => {
+  preferences.reducedMotion = settingMotion.checked;
+  applyPreferences();
+});
+settingContrast.addEventListener("change", () => {
+  preferences.highContrast = settingContrast.checked;
+  applyPreferences();
+});
+settingView.addEventListener("change", () => {
+  viewMode = settingView.value as "2d" | "3d";
+  localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  renderer.setViewMode(viewMode);
+  toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
+});
+applyPreferences();
 
 localNameInput.value = localName;
 playerNameEl.textContent = localName || "You";
@@ -2658,7 +2887,16 @@ void (async () => {
   await bootstrap();
   showLanding(embeddedLaunchMode === "online" ? "online" : "local");
   applyEmbeddedLaunchMode();
+  if (!embeddedLaunchMode && localStorage.getItem(TUTORIAL_COMPLETE_KEY) !== "1") {
+    window.setTimeout(openTutorial, 250);
+  }
 })();
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(`${BASE_URL}sw.js`).catch(() => undefined);
+  });
+}
 
 const renderGameToText = () => {
   const state = latestState;
@@ -2666,6 +2904,8 @@ const renderGameToText = () => {
   const selection = controller.getSelection();
   const payload = {
     mode: currentMode,
+    localGameType,
+    aiDifficulty: localGameType === "ai" ? aiDifficulty : undefined,
     view: viewMode,
     activePlayerId: state?.activePlayerId,
     winnerId: state?.winnerId,

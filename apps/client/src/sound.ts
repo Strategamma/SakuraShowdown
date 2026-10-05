@@ -29,6 +29,17 @@ class SoundManager {
   private ctx: AudioContext | null = null;
   private unlocked = false;
   private ambienceTimer: number | null = null;
+  private enabled = true;
+  private volume = 0.8;
+
+  setEnabled(enabled: boolean) {
+    this.enabled = enabled;
+    if (!enabled) this.stopAmbience();
+  }
+
+  setVolume(volume: number) {
+    this.volume = Math.max(0, Math.min(1, volume));
+  }
 
   unlock() {
     if (this.unlocked) return;
@@ -47,7 +58,7 @@ class SoundManager {
   }
 
   play(type: SoundType) {
-    if (!this.ctx || this.ctx.state === "suspended") return;
+    if (!this.enabled || !this.ctx || this.ctx.state === "suspended") return;
     const now = this.ctx.currentTime;
     switch (type) {
       case "turn":
@@ -147,7 +158,7 @@ class SoundManager {
   }
 
   startAmbience() {
-    if (!this.ctx || this.ambienceTimer !== null) return;
+    if (!this.enabled || !this.ctx || this.ambienceTimer !== null) return;
     const notes = [0, 3, 5, 7, 10];
     let index = 0;
     this.ambienceTimer = window.setInterval(() => {
@@ -174,7 +185,7 @@ class SoundManager {
     osc.type = "triangle";
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak * this.volume), start + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     osc.connect(gain).connect(this.ctx.destination);
     osc.start(start);
@@ -195,7 +206,7 @@ class SoundManager {
     osc.frequency.setValueAtTime(fromFreq, start);
     osc.frequency.exponentialRampToValueAtTime(Math.max(10, toFreq), start + duration);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak * this.volume), start + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     osc.connect(gain).connect(this.ctx.destination);
     osc.start(start);
@@ -223,7 +234,7 @@ class SoundManager {
     filter.frequency.exponentialRampToValueAtTime(Math.max(10, filterTo), start + duration);
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak * this.volume), start + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     source.connect(filter).connect(gain).connect(this.ctx.destination);
     source.start(start);

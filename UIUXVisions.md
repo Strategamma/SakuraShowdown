@@ -11,3 +11,4 @@
 - Maintain responsive DOM controls around the Three.js board rather than hiding essential actions inside the canvas.
 - Desktop gameplay uses three balanced zones: stacked hands, dominant central board, and isolated exchange card. Card names never compete horizontally with movement diagrams.
 - Mobile keeps two cards per hand in a compact row, uses a full-width square board, preserves 44px touch targets and safe-area insets, and scrolls the match vertically rather than shrinking objects below legibility.
+- Controls are grouped by purpose: board manipulation, match actions, and live status. On phones, match actions live in a thumb-reachable bottom dock and never cover playable content.

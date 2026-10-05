@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <link rel="icon" href="data:;base64,=" />
+    <meta name="theme-color" content="#160c0a" />
+    <meta name="description" content="A focused tactical board duel for one or two players." />
+    <link rel="icon" href="./sakura-icon.svg" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -36,46 +39,52 @@
           <div class="brand-subtitle">Petal duels. Razor tactics.</div>
         </div>
         <div class="toolbar">
-          <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z"
+          <div class="toolbar-group board-controls" aria-label="Board controls">
+            <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z"
+                />
+              </svg>
+              <span class="icon-label">Rotate</span>
+            </button>
+            <div class="zoom-controls" role="group" aria-label="Zoom controls">
+              <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out">−</button>
+              <input
+                id="zoom-range"
+                class="zoom-range"
+                type="range"
+                min="0.5"
+                max="1.35"
+                step="0.05"
+                value="0.5"
+                aria-label="Zoom level"
               />
-            </svg>
-            <span class="icon-label">Rotate</span>
-          </button>
-          <div class="zoom-controls" role="group" aria-label="Zoom controls">
-            <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out">−</button>
-            <input
-              id="zoom-range"
-              class="zoom-range"
-              type="range"
-              min="0.5"
-              max="1.35"
-              step="0.05"
-              value="0.5"
-              aria-label="Zoom level"
-            />
-            <span id="zoom-value" class="zoom-value">50%</span>
-            <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in">+</button>
+              <span id="zoom-value" class="zoom-value">50%</span>
+              <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in">+</button>
+            </div>
+            <button id="toggle-view" class="ghost-button">3D View</button>
           </div>
-          <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M14 5h-2v2h2a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-2v2h2a5 5 0 0 0 5-5v-4a5 5 0 0 0-5-5z"
-              />
-              <path d="M4 12l5-4v3h7v2H9v3z" />
-            </svg>
-          </button>
-          <button id="open-customize" class="ghost-button local-only">Customize</button>
-          <button id="toggle-view" class="ghost-button">3D View</button>
-          <button id="new-game" class="ghost-button">New Game</button>
-          <div class="status-pill">
-            <span class="status-dot"></span>
-            <span id="status">Ready</span>
+          <div class="toolbar-group action-controls" aria-label="Game actions">
+            <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h-2v2h2a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-2v2h2a5 5 0 0 0 5-5v-4a5 5 0 0 0-5-5z" />
+                <path d="M4 12l5-4v3h7v2H9v3z" />
+              </svg>
+            </button>
+            <button id="open-customize" class="ghost-button local-only">Customize</button>
+            <button id="hint-move" class="ghost-button emphasis-button">Hint</button>
+            <button id="open-settings" class="ghost-button" aria-label="Open settings">Settings</button>
+            <button id="new-game" class="ghost-button">New Game</button>
           </div>
-          <div id="room-code" class="status room-code hidden">Room</div>
-          <div class="status" id="player-label">You</div>
+          <div class="toolbar-status">
+            <div class="status-pill">
+              <span class="status-dot"></span>
+              <span id="status">Ready</span>
+            </div>
+            <div id="room-code" class="status room-code hidden">Room</div>
+            <div class="status" id="player-label">You</div>
+          </div>
         </div>
       </header>
 
@@ -301,8 +310,18 @@
           </div>
           <div id="landing-panel-local" class="landing-panel">
             <div class="landing-actions">
+              <button id="landing-ai">Play vs Computer</button>
               <button id="landing-local">Start Local Match</button>
               <button id="landing-customize" class="ghost-button">Create New Card</button>
+            </div>
+            <div class="consumer-options">
+              <label class="label" for="ai-difficulty">Computer difficulty</label>
+              <select id="ai-difficulty">
+                <option value="beginner">Beginner</option>
+                <option value="standard" selected>Standard</option>
+                <option value="expert">Expert</option>
+              </select>
+              <button id="landing-tutorial" class="ghost-button">How to Play</button>
             </div>
           </div>
           <div id="landing-panel-online" class="landing-panel landing-panel-online hidden">
@@ -362,6 +381,64 @@
               </ul>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings-overlay" class="overlay hidden">
+      <div class="overlay-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="overlay-header">
+          <div>
+            <div id="settings-title" class="overlay-title">Settings</div>
+            <div class="overlay-subtitle">Your preferences stay on this device.</div>
+          </div>
+          <button id="settings-close" class="ghost-button close-button" aria-label="Close settings">X</button>
+        </div>
+        <div class="settings-body">
+          <label class="setting-row" for="setting-sound">
+            <span><strong>Sound effects</strong><small>Moves, turns, warnings, and menus</small></span>
+            <input id="setting-sound" type="checkbox" checked />
+          </label>
+          <label class="setting-row setting-range" for="setting-volume">
+            <span><strong>Volume</strong><small>Adjust all game sounds</small></span>
+            <input id="setting-volume" type="range" min="0" max="100" value="80" />
+          </label>
+          <label class="setting-row" for="setting-motion">
+            <span><strong>Reduce motion</strong><small>Minimize movement and animated effects</small></span>
+            <input id="setting-motion" type="checkbox" />
+          </label>
+          <label class="setting-row" for="setting-contrast">
+            <span><strong>High contrast</strong><small>Strengthen borders, text, and valid moves</small></span>
+            <input id="setting-contrast" type="checkbox" />
+          </label>
+          <label class="setting-row" for="setting-view">
+            <span><strong>Board style</strong><small>Choose the default presentation</small></span>
+            <select id="setting-view"><option value="3d">3D board</option><option value="2d">2D board</option></select>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="tutorial-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+        <div class="overlay-header">
+          <div>
+            <div id="tutorial-title" class="overlay-title">Your First Duel</div>
+            <div id="tutorial-progress" class="overlay-subtitle">Step 1 of 4</div>
+          </div>
+          <button id="tutorial-close" class="ghost-button close-button" aria-label="Close tutorial">X</button>
+        </div>
+        <div class="tutorial-body">
+          <div id="tutorial-symbol" class="tutorial-symbol" aria-hidden="true">一</div>
+          <h2 id="tutorial-step-title">Choose a warrior</h2>
+          <p id="tutorial-step-copy">Select your Master or one of your four Students. Glowing squares show where it can move.</p>
+          <div class="tutorial-dots" aria-hidden="true">
+            <span class="active"></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="overlay-footer tutorial-actions">
+          <button id="tutorial-back" class="ghost-button" disabled>Back</button>
+          <button id="tutorial-next">Next</button>
         </div>
       </div>
     </div>
