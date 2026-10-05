@@ -1,0 +1,164 @@
+{
+  "timestamp": "2026-03-07T10:02:52.844Z",
+  "outDir": "/Users/farzan/Documents/Codex/SakuraShowdown/output/web-game/qa-full-2026-03-07T09-59-31-515Z",
+  "results": [
+    {
+      "name": "landing_visible",
+      "ok": true
+    },
+    {
+      "name": "online_tab_switch_and_name_input",
+      "ok": true
+    },
+    {
+      "name": "online_create_public_room",
+      "ok": true
+    },
+    {
+      "name": "online_ready_toggle",
+      "ok": true,
+      "checked": true
+    },
+    {
+      "name": "online_leave_to_landing",
+      "ok": true
+    },
+    {
+      "name": "local_start_via_draft",
+      "ok": false,
+      "error": "Error: elementHandle.click: Element is not attached to the DOM\nCall log:\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n"
+    },
+    {
+      "name": "toolbar_zoom_toggle_rotate",
+      "ok": false,
+      "error": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#zoom-in')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"zoom-in\" aria-label=\"Zoom in\" class=\"ghost-button icon-button zoom-button\">+</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay-card draft-card\">…</div> from <div class=\"overlay\" id=\"draft-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay-card draft-card\">…</div> from <div class=\"overlay\" id=\"draft-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    40 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"overlay-card draft-card\">…</div> from <div class=\"overlay\" id=\"draft-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n"
+    },
+    {
+      "name": "local_make_move_via_ui",
+      "ok": false,
+      "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#hand .card').first()\u001b[22m\n\u001b[2m    - locator resolved to <div class=\"card\" data-owner-id=\"p1\" data-role=\"player\" data-card-id=\"cobra\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    25 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    },
+    {
+      "name": "new_game_returns_landing",
+      "ok": false,
+      "error": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#new-game')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"new-game\" class=\"ghost-button\">New Game</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    44 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"overlay\" id=\"draft-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    },
+    {
+      "name": "customize_add_card_persists",
+      "ok": false,
+      "error": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#landing-customize')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"ghost-button\" id=\"landing-customize\">Create New Card</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    45 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    }
+  ],
+  "consoleErrors": [],
+  "finalState": {
+    "mode": "local",
+    "view": "3d",
+    "activePlayerId": "p1",
+    "board": {
+      "width": 5,
+      "height": 5
+    },
+    "coordinateSystem": "origin top-left; +x right; +y down",
+    "pieces": [
+      {
+        "id": "p1:student:0",
+        "ownerId": "p1",
+        "typeId": "student",
+        "x": 0,
+        "y": 4,
+        "alive": true
+      },
+      {
+        "id": "p1:student:1",
+        "ownerId": "p1",
+        "typeId": "student",
+        "x": 1,
+        "y": 4,
+        "alive": true
+      },
+      {
+        "id": "p1:master:2",
+        "ownerId": "p1",
+        "typeId": "master",
+        "x": 2,
+        "y": 4,
+        "alive": true
+      },
+      {
+        "id": "p1:student:3",
+        "ownerId": "p1",
+        "typeId": "student",
+        "x": 3,
+        "y": 4,
+        "alive": true
+      },
+      {
+        "id": "p1:student:4",
+        "ownerId": "p1",
+        "typeId": "student",
+        "x": 4,
+        "y": 4,
+        "alive": true
+      },
+      {
+        "id": "p2:student:5",
+        "ownerId": "p2",
+        "typeId": "student",
+        "x": 0,
+        "y": 0,
+        "alive": true
+      },
+      {
+        "id": "p2:student:6",
+        "ownerId": "p2",
+        "typeId": "student",
+        "x": 1,
+        "y": 0,
+        "alive": true
+      },
+      {
+        "id": "p2:master:7",
+        "ownerId": "p2",
+        "typeId": "master",
+        "x": 2,
+        "y": 0,
+        "alive": true
+      },
+      {
+        "id": "p2:student:8",
+        "ownerId": "p2",
+        "typeId": "student",
+        "x": 3,
+        "y": 0,
+        "alive": true
+      },
+      {
+        "id": "p2:student:9",
+        "ownerId": "p2",
+        "typeId": "student",
+        "x": 4,
+        "y": 0,
+        "alive": true
+      }
+    ],
+    "hands": [
+      {
+        "id": "p1",
+        "name": "Red",
+        "hand": [
+          "cobra",
+          "eel"
+        ]
+      },
+      {
+        "id": "p2",
+        "name": "Blue",
+        "hand": [
+          "crab",
+          "heron"
+        ]
+      }
+    ],
+    "poolCard": "crane"
+  }
+}
