@@ -40,6 +40,8 @@ export type MechanicConfig = {
 };
 
 export type GameConfig = {
+  // Version string that all clients/servers can compare to reject mismatched rule packs.
+  rulePackVersion: string;
   board: BoardConfig;
   players: PlayerConfig[];
   pieceTypes: PieceType[];

@@ -1,39 +1,60 @@
 # Sakura Showdown (Onitama-like)
 
 Production-ready, data-driven board game foundation inspired by Onitama.
-Includes a 3D client built with Three.js, animated cards, and procedural or GLTF-based pieces.
+This repository now contains the web game stack only:
 
-## Quick start (local dev)
+- browser client (`apps/client`)
+- multiplayer server (`apps/server`)
+- shared rules engine (`packages/rules`)
 
-1. Install dependencies
+## Quick start (local development)
+
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Start server
+2. Start the server:
 
 ```bash
 npm run dev:server
 ```
 
-3. Start client (new terminal)
+3. Start the web client in a second terminal:
 
 ```bash
 npm run dev
 ```
 
-Client runs at `http://localhost:5173` and server at `http://localhost:2567`.
+Local URLs:
+
+- Client: `http://localhost:5173`
+- Server: `http://localhost:2567`
+
+## Workspace structure
+
+- `apps/client`: Three.js web game UI, match flow, card editor UI.
+- `apps/server`: Node multiplayer server and config endpoint.
+- `packages/rules`: Shared deterministic game logic and contracts.
 
 ## Quality checks
 
-Run rule-engine tests + typechecks:
+Run full local quality gate:
 
 ```bash
-npm run quality
+npm run quality:ci
 ```
 
-Rule-engine unit tests live in `packages/rules/test`.
+What this runs:
+
+- `npm run quality`:
+  - rules build + tests (`packages/rules`)
+  - typechecks (`packages/rules`, `apps/server`, `apps/client`)
+- `npm run test:server:health`:
+  - server health/config contract check (`scripts/server-health-check.mjs`)
+
+Rule-engine tests live in `packages/rules/test`.
 
 ## Public hosting (GitHub Pages)
 
@@ -41,74 +62,81 @@ This repo includes a GitHub Actions workflow that builds and deploys the client 
 
 Steps:
 
-1. Create a GitHub repo and push this project to the `main` branch.
-2. In GitHub, go to Settings → Pages.
-3. Under “Build and deployment”, set Source to “GitHub Actions”.
-4. Push any commit to `main`. The site will deploy automatically.
+1. Push this project to `main`.
+2. In GitHub, open **Settings -> Pages**.
+3. Set **Source** to **GitHub Actions**.
+4. Push a commit; deployment runs automatically.
 
-Your site URL will be:
+Site URL format:
 
-```
+```text
 https://<your-username>.github.io/<repo-name>/
 ```
 
-The game config is loaded from `/game.json`, so changes to:
+Workflow file:
 
-`/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/game.json`
-
-will be picked up after redeploying.
-
-Online play uses the Koyeb server URL configured in the GitHub Pages workflow:
-
-`/Users/farzan/Documents/Codex/SakuraShowdown/.github/workflows/deploy.yml`
+- `/Users/farzan/Documents/Codex/SakuraShowdown/.github/workflows/deploy.yml`
 
 ## Config-first game logic
 
-All rules, cards, and board settings are defined in JSON. The server reads:
+All rules, cards, and board settings are defined in JSON.
+Server config path:
 
-`/Users/farzan/Documents/Codex/SakuraShowdown/apps/server/config/game.json`
+- `/Users/farzan/Documents/Codex/SakuraShowdown/apps/server/config/game.json`
 
-You can override it with:
+Override config at runtime:
 
 ```bash
 GAME_CONFIG_PATH=/absolute/path/to/game.json npm run dev:server
 ```
 
-The client reads configuration from the server at `/config`.
+Client config behavior:
 
-For GitHub Pages hosting, the client reads `/game.json` instead (in `apps/client/public`).
+- local/dev multiplayer: reads `/config` from the server
+- GitHub Pages build: reads static `/game.json` from `apps/client/public`
 
-## Customize cards (in browser)
+## Rule-pack compatibility contract
 
-Open the **Customize Cards** panel in the client UI to edit card names and moves.
-Changes are saved to local browser storage and applied immediately to the local game.
-Use **Export JSON** to download a new config file.
+`GameConfig` includes a required `rulePackVersion`.
+Server and clients compute deterministic `configHash` values and exchange them at room join.
+If values do not match, join is rejected with `RULEPACK_MISMATCH`.
+
+Shared contracts:
+
+- `/Users/farzan/Documents/Codex/SakuraShowdown/packages/rules/src/rulePack.ts`
+- `/Users/farzan/Documents/Codex/SakuraShowdown/packages/rules/src/network.ts`
+
+## Customize cards (browser)
+
+Use the **Customize Cards** panel in the client UI to edit card names and movement patterns.
+Changes persist to browser storage and apply immediately.
+Use **Export JSON** to download config.
+
+Production behavior:
+
+- card customization is hidden by default in production web sessions
+- enable in dev with `VITE_ENABLE_DEV_CARD_EDITOR=1` or `?devCardEditor=1`
 
 ## 3D assets (optional)
 
-You can replace the procedural pieces with custom GLTF models:
+You can replace procedural pieces with custom GLTF models:
 
 - `/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/models/master.glb`
 - `/Users/farzan/Documents/Codex/SakuraShowdown/apps/client/public/models/student.glb`
 
-Models should be centered at origin and roughly fit within a 1x1x1 size.
+Model guidance:
 
-### Editable values
+- center at origin
+- keep scale around a 1x1x1 volume
 
-- Board size
-- Player orientation + temples
-- Piece types + starting positions
-- Card definitions (movement offsets)
-- Deck composition + hand size
-- Mechanics list (rule hooks)
+## Adding mechanics
 
-## Adding new mechanics
+Mechanics are pluggable rule hooks.
+Add implementations in:
 
-Mechanics are pluggable rule hooks. Add a new mechanic implementation in:
+- `/Users/farzan/Documents/Codex/SakuraShowdown/packages/rules/src/mechanics.ts`
 
-`/Users/farzan/Documents/Codex/SakuraShowdown/packages/rules/src/mechanics.ts`
-
-Then reference it in `game.json` under `mechanics`:
+Reference mechanics in `game.json`:
 
 ```json
 { "id": "your_mechanic_id", "params": { "yourParam": 123 } }
@@ -116,16 +144,12 @@ Then reference it in `game.json` under `mechanics`:
 
 Available hooks:
 
-- `modifyMoves` (filter or transform legal moves)
-- `afterMove` (apply state changes after a move)
-- `checkWinner` (custom win conditions)
-
-## Production path (no rebuild required)
-
-The frontend is already PWA-friendly. If you later want App Store / Play Store builds,
-add Capacitor without rebuilding the core game or rules engine.
+- `modifyMoves`
+- `afterMove`
+- `checkWinner`
 
 ## Notes
 
-- This project avoids copying Onitama art/names. You can swap in original assets and card names.
-- The server is authoritative for multiplayer, but anti-cheat is intentionally omitted for now.
+- This project avoids copying Onitama art/names.
+- The server is authoritative for multiplayer.
+- Android-specific app/build assets were removed to keep this repository web-only.

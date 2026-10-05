@@ -3,10 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node --check index.mjs",
+    "dev": "node index.mjs",
     "start": "node index.mjs",
     "typecheck": "echo \"server: no typecheck\""
   },
   "dependencies": {
+    "@game/rules": "*",
     "colyseus": "^0.15.57",
     "cors": "^2.8.5",
     "express": "^4.19.2"

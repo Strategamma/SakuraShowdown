@@ -19,12 +19,17 @@ function resolveServerUrl() {
     if (dataServer) return dataServer;
     const meta = document.querySelector("meta[name=\"sakura-server\"]") as HTMLMetaElement | null;
     if (meta?.content) return meta.content;
+    const hostname = window.location.hostname;
     const host = window.location.host;
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const isLocal = host === "localhost" || host === "127.0.0.1";
+    const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
     const staticHosts = ["github.io", "vercel.app", "netlify.app", "pages.dev"];
-    if (host && staticHosts.some((suffix) => host.endsWith(suffix))) {
+    if (hostname && staticHosts.some((suffix) => hostname.endsWith(suffix))) {
       return DEFAULT_REMOTE_SERVER;
+    }
+    if (isLocal) {
+      const localHost = hostname === "::1" ? "[::1]" : hostname || "127.0.0.1";
+      return `ws://${localHost}:2567`;
     }
     if (host && !isLocal) {
       return `${protocol}//${host}`;
@@ -66,10 +71,7 @@ function toHttpUrl(wsUrl: string) {
 
 function getConfigUrl() {
   if (ENV_CONFIG_URL) return ENV_CONFIG_URL;
-  const serverUrl = getServerUrl();
-  if (serverUrl.startsWith("ws")) {
-    return `${toHttpUrl(serverUrl).replace(/\/$/, "")}/config`;
-  }
+  // Local play must remain usable when the optional multiplayer service is offline.
   return DEFAULT_CONFIG_URL;
 }
 
@@ -89,6 +91,13 @@ const LOCAL_START_KEY = "sakura.localStartingPlayer";
 const VIEW_MODE_KEY = "sakura.viewMode";
 const ONLINE_NAME_KEY = "sakura.onlineName";
 const RECONNECT_KEY = "sakura.reconnectToken";
+const DEV_CARD_EDITOR_KEY = "sakura.devCardEditor";
+const MOBILE_EMBED_KEY = "mobileEmbed";
+const MOBILE_MODE_KEY = "mobileMode";
+const MOBILE_NAME_KEY = "mobileName";
+const MOBILE_SERVER_KEY = "mobileServer";
+
+type EmbeddedLaunchMode = "local" | "online" | undefined;
 
 type CardConfig = GameConfig["cards"][number];
 
@@ -209,6 +218,41 @@ const onlineStatusEl = document.getElementById("online-status") as HTMLElement |
 appEl.dataset.started = "false";
 document.body.dataset.mode = appEl.dataset.mode || "local";
 document.body.dataset.cards = "rails";
+const queryParams =
+  typeof window !== "undefined" ? new URLSearchParams(window.location.search) : undefined;
+const enableDevCardEditor =
+  import.meta.env.VITE_ENABLE_DEV_CARD_EDITOR === "1" ||
+  queryParams?.get("devCardEditor") === "1" ||
+  localStorage.getItem(DEV_CARD_EDITOR_KEY) === "1" ||
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+const isEmbeddedMobileClient = queryParams?.get(MOBILE_EMBED_KEY) === "1";
+const mobileModeParam = queryParams?.get(MOBILE_MODE_KEY)?.trim().toLowerCase();
+const embeddedLaunchMode: EmbeddedLaunchMode =
+  mobileModeParam === "online"
+    ? "online"
+    : mobileModeParam === "offline"
+      ? "local"
+      : undefined;
+const embeddedDisplayName = queryParams?.get(MOBILE_NAME_KEY)?.trim() ?? "";
+const embeddedServerUrl = queryParams?.get(MOBILE_SERVER_KEY)?.trim() ?? "";
+document.body.dataset.embed = isEmbeddedMobileClient ? "mobile" : "web";
+document.body.dataset.devCardEditor = enableDevCardEditor ? "1" : "0";
+
+type MobileBridgeEvent = {
+  type: string;
+  payload?: Record<string, unknown>;
+};
+
+function postMobileBridgeEvent(event: MobileBridgeEvent) {
+  const bridge = (window as Window & {
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void;
+    };
+  }).ReactNativeWebView;
+  if (!bridge?.postMessage) return;
+  bridge.postMessage(JSON.stringify(event));
+}
 
 const unlockSound = () => sound.unlock();
 window.addEventListener("pointerdown", unlockSound, { once: true });
@@ -292,6 +336,28 @@ let draftConfig: GameConfig | undefined;
 let lastActivePlayerId: string | undefined;
 let lastReadyAll = false;
 let lastCheckOwners = new Set<string>();
+let pendingOnlineLeaveStatus: string | undefined;
+let moveFeedbackTimer: number | undefined;
+
+function applyEmbeddedOverrides() {
+  if (!isEmbeddedMobileClient) return;
+  if (embeddedDisplayName) {
+    localName = embeddedDisplayName;
+    onlineName = embeddedDisplayName;
+    localStorage.setItem(LOCAL_NAME_KEY, embeddedDisplayName);
+    localStorage.setItem(ONLINE_NAME_KEY, embeddedDisplayName);
+  }
+  if (embeddedServerUrl) {
+    localStorage.setItem(SERVER_OVERRIDE_KEY, embeddedServerUrl);
+  }
+}
+
+applyEmbeddedOverrides();
+
+function queueOnlineLeaveStatus(message: string) {
+  pendingOnlineLeaveStatus = message;
+  statusEl.textContent = message;
+}
 
 const controller = new GameController({
   onState: (state) => {
@@ -324,6 +390,17 @@ const controller = new GameController({
       } else if (moved) {
         sound.play("move");
         sound.play("swap");
+      }
+      if (captured || moved) {
+        gameConsole?.classList.remove("move-resolved", "capture-resolved");
+        // Restart the feedback animation even when moves happen in quick succession.
+        void gameConsole?.offsetWidth;
+        gameConsole?.classList.add(captured ? "capture-resolved" : "move-resolved");
+        if (moveFeedbackTimer) window.clearTimeout(moveFeedbackTimer);
+        moveFeedbackTimer = window.setTimeout(() => {
+          gameConsole?.classList.remove("move-resolved", "capture-resolved");
+          moveFeedbackTimer = undefined;
+        }, 520);
       }
       if (!previous.winnerId && state.winnerId) {
         sound.play("victory");
@@ -389,9 +466,9 @@ const controller = new GameController({
   },
   onRematchCancel: () => {
     setRematchPending(false);
+    queueOnlineLeaveStatus("Opponent left. Back to lobby.");
     controller.disconnectOnline();
     setReconnectToken("");
-    statusEl.textContent = "Opponent left. Back to lobby.";
     setSpectatorMode(false);
     currentRoomId = undefined;
     currentRoomCode = undefined;
@@ -403,9 +480,13 @@ const controller = new GameController({
   },
   onLeave: () => {
     if (currentMode !== "online") return;
+    const queuedStatus = pendingOnlineLeaveStatus;
+    pendingOnlineLeaveStatus = undefined;
     if (latestState?.winnerId) {
       setReconnectToken("");
       statusEl.textContent = "Match ended. Back to lobby.";
+    } else if (queuedStatus) {
+      statusEl.textContent = queuedStatus;
     } else {
       statusEl.textContent = "Disconnected. You can resume from the lobby.";
     }
@@ -672,6 +753,16 @@ function renderAll() {
     lastActivePlayerId = activeId;
   }
   const selection = controller.getSelection();
+  gameConsole?.setAttribute(
+    "data-selection",
+    selection.selectedPieceId && selection.selectedCardId
+      ? "ready"
+      : selection.selectedPieceId
+        ? "piece"
+        : selection.selectedCardId
+          ? "card"
+          : "none"
+  );
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
   const checkOwners = computeCheckOwners(state, config);
   renderer.render(state, moves, {
@@ -707,7 +798,16 @@ function renderAll() {
       config.players.find((p) => p.id === state.activePlayerId)?.name ??
       state.activePlayerId;
     const isChecked = checkOwners.includes(state.activePlayerId);
-    statusEl.textContent = `Turn ${state.turn} · ${activeName}${isChecked ? " · CHECK" : ""}`;
+    const actionHint = pendingMove
+      ? "Choose a highlighted card"
+      : selection.selectedPieceId && selection.selectedCardId
+        ? "Choose a glowing square"
+        : selection.selectedPieceId
+          ? "Choose a glowing square or movement card"
+          : selection.selectedCardId
+            ? "Choose one of your pieces"
+            : "Choose a piece or movement card";
+    statusEl.textContent = `Turn ${state.turn} · ${activeName}${isChecked ? " · CHECK" : ""} · ${actionHint}`;
     lastWinnerId = undefined;
   }
 
@@ -926,6 +1026,7 @@ function updateLobbyOverlay() {
 }
 
 function leaveOnlineLobby() {
+  queueOnlineLeaveStatus("Returned to lobby.");
   controller.cancelRematch();
   controller.disconnectOnline();
   setReconnectToken("");
@@ -1077,7 +1178,6 @@ function showLanding(tab: "local" | "online" = "online") {
   syncOnlineNameInput();
   updateResumeButton();
   setLobbyBusy(false);
-  refreshLobby();
   lastReadyAll = false;
   sound.play("modalOpen");
   if (tab === "online") {
@@ -1098,6 +1198,22 @@ function hideLanding() {
   sound.stopAmbience();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = undefined;
+}
+
+function applyEmbeddedLaunchMode() {
+  if (!isEmbeddedMobileClient) return;
+  if (!embeddedLaunchMode) return;
+  if (embeddedLaunchMode === "local") {
+    setMode("local");
+    startChoiceResolved = true;
+    startRandomFive();
+    hideLanding();
+    statusEl.textContent = "Offline mobile session ready.";
+    return;
+  }
+  setMode("online");
+  showLanding("online");
+  statusEl.textContent = "Join or create an online room.";
 }
 
 function setButtonDisabled(
@@ -1619,7 +1735,16 @@ function createCardElement(
   el.appendChild(pattern);
 
   if (role === "player") {
-    el.addEventListener("click", () => handleCardClick(card.id, "player"));
+    el.tabIndex = 0;
+    el.setAttribute("role", "button");
+    el.setAttribute("aria-label", `Use ${card.name || card.id} movement card`);
+    const activateCard = () => handleCardClick(card.id, "player");
+    el.addEventListener("click", activateCard);
+    el.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      activateCard();
+    });
   }
 
   return el;
@@ -1645,6 +1770,7 @@ function updateCustomizeHeader() {
 }
 
 function openCustomize(scope: "local" | "lobby" = "local", mode: "edit" | "new" = "edit") {
+  if (!enableDevCardEditor) return;
   if (!latestConfig) return;
   customizeScope = scope;
   customizeMode = mode;
@@ -1661,6 +1787,15 @@ function openCustomize(scope: "local" | "lobby" = "local", mode: "edit" | "new" 
   }
   overlay.classList.remove("hidden");
   sound.play("modalOpen");
+}
+
+function applyCardEditorVisibility() {
+  // Production hides card editing so ranked/online rules stay consistent for all players.
+  if (enableDevCardEditor) return;
+  customizeBtn.classList.add("hidden");
+  openCustomizeBtn?.classList.add("hidden");
+  landingCustomizeBtn.classList.add("hidden");
+  lobbyCustomizeBtn?.classList.add("hidden");
 }
 
 function closeCustomize() {
@@ -1742,10 +1877,19 @@ function renderCardGrid(card: { moves: { x: number; y: number }[] }) {
       const key = `${moveX},${moveY}`;
       const cell = document.createElement("div");
       cell.className = "grid-cell";
+      const isOrigin = moveX === 0 && moveY === 0;
+      cell.setAttribute("role", "button");
+      cell.setAttribute("aria-label", isOrigin ? "Piece origin" : `Toggle move ${moveX}, ${moveY}`);
+      cell.tabIndex = isOrigin ? -1 : 0;
+      if (isOrigin) {
+        cell.classList.add("origin");
+        cell.setAttribute("aria-disabled", "true");
+      }
       if (moveSet.has(key)) {
         cell.classList.add("active");
       }
-      cell.addEventListener("click", () => {
+      const toggleMove = () => {
+        if (isOrigin) return;
         const index = card.moves.findIndex((m) => m.x === moveX && m.y === moveY);
         if (index >= 0) {
           card.moves.splice(index, 1);
@@ -1753,6 +1897,12 @@ function renderCardGrid(card: { moves: { x: number; y: number }[] }) {
           card.moves.push({ x: moveX, y: moveY });
         }
         renderCardEditor();
+      };
+      cell.addEventListener("click", toggleMove);
+      cell.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        toggleMove();
       });
       cardGridEl.appendChild(cell);
     }
@@ -1874,6 +2024,14 @@ function showVictory(winnerName: string) {
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
   if (victoryRematchBtn) victoryRematchBtn.disabled = false;
   victoryOverlay.classList.remove("hidden");
+  postMobileBridgeEvent({
+    type: "sakura.match_finished",
+    payload: {
+      mode: currentMode,
+      winnerName,
+      winnerId: latestState?.winnerId
+    }
+  });
   sound.play("modalOpen");
   triggerConfetti();
 }
@@ -2114,6 +2272,8 @@ newGameBtn.addEventListener("click", () => {
   showLanding("local");
 });
 
+applyCardEditorVisibility();
+
 landingCloseBtn.addEventListener("click", hideLanding);
 landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
@@ -2127,6 +2287,7 @@ landingLocalBtn.addEventListener("click", () => {
   hideLanding();
 });
 landingCustomizeBtn.addEventListener("click", () => {
+  if (!enableDevCardEditor) return;
   returnToLandingOnCustomizeClose = true;
   hideLanding();
   openCustomize("local", "new");
@@ -2328,6 +2489,7 @@ exitOnlineBtn?.addEventListener("click", () => {
   leaveOnlineLobby();
 });
 lobbyCustomizeBtn?.addEventListener("click", () => {
+  if (!enableDevCardEditor) return;
   if (!canEditOnlineLobby()) {
     statusEl.textContent = "Lobby cards can only be edited before the match starts.";
     return;
@@ -2437,12 +2599,16 @@ draftStartBtn.addEventListener("click", () => {
 });
 
 appEl.dataset.mode = "local";
-bootstrap();
-showLanding();
+void (async () => {
+  await bootstrap();
+  showLanding(embeddedLaunchMode === "online" ? "online" : "local");
+  applyEmbeddedLaunchMode();
+})();
 
 const renderGameToText = () => {
   const state = latestState;
   const config = latestConfig;
+  const selection = controller.getSelection();
   const payload = {
     mode: currentMode,
     view: viewMode,
@@ -2463,7 +2629,15 @@ const renderGameToText = () => {
       name: config?.players.find((p) => p.id === player.id)?.name,
       hand: player.hand
     })),
-    poolCard: state?.poolCard
+    poolCard: state?.poolCard,
+    selection,
+    pendingMove,
+    legalMoves: latestMoves.map((move) => ({
+      pieceId: move.pieceId,
+      cardId: move.cardId,
+      to: move.to,
+      capture: Boolean(move.capture)
+    }))
   };
   return JSON.stringify(payload);
 };

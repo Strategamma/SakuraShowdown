@@ -46,6 +46,7 @@ export const MechanicConfigSchema = z.object({
 });
 
 export const GameConfigSchema = z.object({
+  rulePackVersion: z.string().min(1),
   board: BoardConfigSchema,
   players: z.array(PlayerConfigSchema).min(2),
   pieceTypes: z.array(PieceTypeSchema).min(1),

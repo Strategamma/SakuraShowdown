@@ -1,13 +1,51 @@
 import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import colyseus from "colyseus";
 const { Server, Room, matchMaker } = colyseus;
-import { createInitialState, applyMove, listLegalMoves, loadConfig } from "./rules.mjs";
+import {
+  createInitialState,
+  applyMove,
+  listLegalMoves,
+  validateConfig,
+  getRulePackMetadata,
+  checkRulePackCompatibility
+} from "@game/rules";
 
 const PORT = Number(process.env.PORT ?? 2567);
+const HOST = process.env.HOST ?? "0.0.0.0";
+const SERVICE_VERSION = process.env.SAKURA_SERVER_VERSION ?? "0.1.0";
+const SERVICE_ENVIRONMENT = process.env.NODE_ENV ?? "development";
 const ACTIVE_CODES = new Set();
 const PRIVATE_CODES = new Map();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function loadConfig() {
+  // The override keeps the server flexible for custom deployment rule packs.
+  const overridePath = process.env.GAME_CONFIG_PATH;
+  const configPath = overridePath
+    ? path.resolve(overridePath)
+    : path.resolve(__dirname, "./config/game.json");
+  const raw = fs.readFileSync(configPath, "utf-8");
+  return validateConfig(JSON.parse(raw));
+}
+
+function buildRulePackMismatchPayload(expected, received, reason) {
+  return {
+    code: "RULEPACK_MISMATCH",
+    message: "Client and server rule packs do not match.",
+    details: {
+      reason,
+      expected,
+      received
+    }
+  };
+}
 
 class GameRoom extends Room {
   maxClients = 20;
@@ -26,6 +64,7 @@ class GameRoom extends Room {
   rematchTimer;
   sandboxName;
   isSandbox = false;
+  rulePack;
 
   updateMetadata() {
     const active = new Set();
@@ -68,6 +107,7 @@ class GameRoom extends Room {
       this.config = loadConfig();
       this.isSandbox = false;
     }
+    this.rulePack = getRulePackMetadata(this.config);
     this.stateData = createInitialState(this.config);
     this.maxPlayers = this.config.players.length;
     this.updateMetadata();
@@ -87,7 +127,10 @@ class GameRoom extends Room {
           this.scheduleRematchTimeout();
         }
       } catch {
-        client.send("error", { message: "Illegal move." });
+        client.send("error", {
+          code: "ILLEGAL_MOVE",
+          message: "Illegal move."
+        });
       }
     });
 
@@ -122,10 +165,14 @@ class GameRoom extends Room {
       const configPayload = payload?.config ?? payload;
       const nextConfig = normalizeCustomConfig(configPayload);
       if (!nextConfig) {
-        client.send("error", { message: "Invalid card configuration." });
+        client.send("error", {
+          code: "INVALID_CONFIG",
+          message: "Invalid card configuration."
+        });
         return;
       }
       this.config = nextConfig;
+      this.rulePack = getRulePackMetadata(this.config);
       this.stateData = createInitialState(this.config, Date.now());
       this.maxPlayers = this.config.players.length;
       this.readyByPlayer.clear();
@@ -136,6 +183,7 @@ class GameRoom extends Room {
         this.sandboxName = trimmedSandboxName;
       }
       this.broadcast("config", this.config);
+      this.broadcast("rule_pack", this.rulePack);
       this.broadcast("state", this.stateData);
       this.broadcastReadyState();
     });
@@ -191,9 +239,32 @@ class GameRoom extends Room {
   }
 
   onJoin(client, options = {}) {
+    const isReconnect = Boolean(options?.reconnectionToken);
+    const expectedRulePackVersion =
+      typeof options?.expectedRulePackVersion === "string"
+        ? options.expectedRulePackVersion.trim()
+        : "";
+    const expectedConfigHash =
+      typeof options?.expectedConfigHash === "string" ? options.expectedConfigHash.trim() : "";
+    const compatibility = checkRulePackCompatibility(this.rulePack, {
+      rulePackVersion: expectedRulePackVersion || undefined,
+      configHash: expectedConfigHash || undefined
+    });
+    if (!isReconnect && !compatibility.ok) {
+      client.send(
+        "error",
+        buildRulePackMismatchPayload(
+          compatibility.expected,
+          compatibility.received,
+          compatibility.reason
+        )
+      );
+      client.leave(4001);
+      return;
+    }
+
     let assigned = this.playerByClient.get(client.sessionId);
     const wantsSpectate = Boolean(options?.spectator);
-    const isReconnect = Boolean(options?.reconnectionToken);
     const rawName = typeof options?.name === "string" ? options.name : "";
     const requestedName = rawName.trim().slice(0, 30);
     const requestedKey = requestedName.toLowerCase();
@@ -203,7 +274,10 @@ class GameRoom extends Room {
         .filter(Boolean)
     );
     if (wantsSpectate && !this.gameStarted) {
-      client.send("error", { message: "Spectator mode opens once the match starts." });
+      client.send("error", {
+        code: "SPECTATOR_LOCKED",
+        message: "Spectator mode opens once the match starts."
+      });
       client.leave(4000);
       return;
     }
@@ -252,6 +326,7 @@ class GameRoom extends Room {
       private: this.isPrivate,
       started: this.gameStarted
     });
+    client.send("rule_pack", this.rulePack);
     client.send("config", this.config);
     client.send("state", this.stateData);
     client.send("ready_state", {
@@ -485,13 +560,37 @@ const app = express();
 app.use(cors());
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true });
+  try {
+    const config = loadConfig();
+    const rulePack = getRulePackMetadata(config);
+    res.json({
+      ok: true,
+      service: "sakura-server",
+      version: SERVICE_VERSION,
+      environment: SERVICE_ENVIRONMENT,
+      rulePack,
+      uptimeMs: Math.round(process.uptime() * 1000),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      service: "sakura-server",
+      version: SERVICE_VERSION,
+      environment: SERVICE_ENVIRONMENT,
+      error: error instanceof Error ? error.message : "Health check failed.",
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 app.get("/config", (_req, res) => {
   try {
     const config = loadConfig();
-    res.json(config);
+    res.json({
+      config,
+      rulePack: getRulePackMetadata(config)
+    });
   } catch {
     res.status(500).json({ error: "Failed to load config." });
   }
@@ -577,5 +676,5 @@ const gameServer = new Server({ server });
 
 gameServer.define("onitama", GameRoom);
 
-gameServer.listen(PORT);
-console.log(`Game server listening on ws/http://localhost:${PORT}`);
+gameServer.listen(PORT, HOST);
+console.log(`Game server listening on ws/http://${HOST}:${PORT}`);

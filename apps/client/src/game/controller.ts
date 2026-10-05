@@ -1,5 +1,10 @@
-import { applyMove, createInitialState, listLegalMoves } from "@game/rules";
-import type { GameConfig, GameState, LegalMove, Move } from "@game/rules";
+import {
+  applyMove,
+  createInitialState,
+  listLegalMoves,
+  getRulePackMetadata
+} from "@game/rules";
+import type { GameConfig, GameState, LegalMove, Move, RulePackMetadata } from "@game/rules";
 import { OnlineSession } from "./network";
 
 export type GameMode = "local" | "online";
@@ -18,6 +23,7 @@ export type ControllerCallbacks = {
   onLeave?: (code?: number) => void;
   onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
   onGameStart?: () => void;
+  onRulePack?: (rulePack: RulePackMetadata) => void;
 };
 
 export class GameController {
@@ -49,9 +55,15 @@ export class GameController {
     if (!response.ok) {
       throw new Error("Failed to load config.");
     }
-    const config = (await response.json()) as GameConfig;
+    const payload = (await response.json()) as
+      | GameConfig
+      | { config: GameConfig; rulePack?: RulePackMetadata };
+    const config = "config" in payload ? payload.config : payload;
     this.config = config;
     this.callbacks.onConfig(config);
+    if ("rulePack" in payload && payload.rulePack) {
+      this.callbacks.onRulePack?.(payload.rulePack);
+    }
   }
 
   setConfig(config: GameConfig) {
@@ -120,11 +132,17 @@ export class GameController {
       onGameStart: () => {
         this.onlineStarted = true;
         this.callbacks.onGameStart?.();
-      }
+      },
+      onRulePack: (rulePack) => this.callbacks.onRulePack?.(rulePack)
     });
 
     try {
-      await this.online.connect(roomId, name, options);
+      const expected = getRulePackMetadata(this.config);
+      await this.online.connect(roomId, name, {
+        ...(options ?? {}),
+        expectedRulePackVersion: expected.rulePackVersion,
+        expectedConfigHash: expected.configHash
+      });
       this.callbacks.onStatus("Connected.");
       return true;
     } catch {
@@ -177,7 +195,8 @@ export class GameController {
       onGameStart: () => {
         this.onlineStarted = true;
         this.callbacks.onGameStart?.();
-      }
+      },
+      onRulePack: (rulePack) => this.callbacks.onRulePack?.(rulePack)
     });
 
     try {
@@ -239,11 +258,17 @@ export class GameController {
       onGameStart: () => {
         this.onlineStarted = true;
         this.callbacks.onGameStart?.();
-      }
+      },
+      onRulePack: (rulePack) => this.callbacks.onRulePack?.(rulePack)
     });
 
     try {
-      await this.online.create(name, options);
+      const expected = getRulePackMetadata(this.config);
+      await this.online.create(name, {
+        ...(options ?? {}),
+        expectedRulePackVersion: expected.rulePackVersion,
+        expectedConfigHash: expected.configHash
+      });
       this.callbacks.onStatus("Connected.");
       return true;
     } catch {

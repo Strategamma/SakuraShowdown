@@ -8,6 +8,35 @@ const MODEL_BASE = MODEL_BASE_RAW
   ? MODEL_BASE_RAW.endsWith("/") ? MODEL_BASE_RAW : `${MODEL_BASE_RAW}/`
   : "";
 
+type TeamPalette = {
+  cloth: number;
+  trim: number;
+  weaponWood: number;
+  weaponMetal: number;
+  skin: number;
+  hair: number;
+};
+
+// Keep palettes in an array so adding extra team colors later is just an append.
+const TEAM_PALETTES: TeamPalette[] = [
+  {
+    cloth: 0xb5404c,
+    trim: 0xf1dcc5,
+    weaponWood: 0x7a5638,
+    weaponMetal: 0xc8a97d,
+    skin: 0xf6e2cd,
+    hair: 0x3d2d27
+  },
+  {
+    cloth: 0x2f63c8,
+    trim: 0xdce8ff,
+    weaponWood: 0x6d543e,
+    weaponMetal: 0xb6c5e6,
+    skin: 0xf2ddc6,
+    hair: 0x342a24
+  }
+];
+
 export type RendererSelection = {
   selectedPieceId?: string;
   selectedCardId?: string;
@@ -511,7 +540,10 @@ export class GameRenderer {
       : undefined;
 
     for (const piece of state.pieces) {
-      const visual = this.getOrCreatePiece(piece.id, piece.ownerId === this.config.players[0].id);
+      // Resolve the owning player index so piece colors can scale past two teams in future configs.
+      const ownerIndex = this.config.players.findIndex((player) => player.id === piece.ownerId);
+      const teamIndex = ownerIndex >= 0 ? ownerIndex : 0;
+      const visual = this.getOrCreatePiece(piece.id, teamIndex);
       visual.alive = piece.alive;
       visual.selected = selection.selectedPieceId === piece.id;
 
@@ -909,7 +941,7 @@ export class GameRenderer {
     return texture;
   }
 
-  private getOrCreatePiece(pieceId: string, isPrimary: boolean): PieceVisual {
+  private getOrCreatePiece(pieceId: string, teamIndex: number): PieceVisual {
     const existing = this.pieces.get(pieceId);
     if (existing) return existing;
 
@@ -923,12 +955,12 @@ export class GameRenderer {
 
     if (modelEntry) {
       group = modelEntry.group.clone(true);
-      this.prepareModel(group, isPrimary);
+      this.prepareModel(group, teamIndex);
       body = this.extractPrimaryMesh(group);
       ring = this.createSelectionRing();
       group.add(ring);
     } else {
-      ({ group, body, ring } = this.createProceduralPiece(typeId, isPrimary));
+      ({ group, body, ring } = this.createProceduralPiece(typeId, teamIndex));
     }
 
     group.userData = { type: "piece", pieceId };
@@ -951,18 +983,21 @@ export class GameRenderer {
     return visual;
   }
 
-  private createProceduralPiece(typeId: string, isPrimary: boolean) {
+  private createProceduralPiece(typeId: string, teamIndex: number) {
     const group = new THREE.Group();
-    const isMaster = typeId === "master";
-    const scale = isMaster ? 1.05 : 0.92;
-    const height = isMaster ? 0.82 : 0.62;
-    const baseRadius = isMaster ? 0.32 : 0.26;
+    const isMaster = this.masterTypeIds.has(typeId) || typeId === "master";
+    const palette = this.getTeamPalette(teamIndex);
+
+    // Masters are intentionally scaled up so they read as commanders at a glance.
+    const scale = isMaster ? 1.16 : 0.9;
+    const height = isMaster ? 0.96 : 0.66;
+    const baseRadius = isMaster ? 0.34 : 0.24;
 
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(baseRadius * 1.05, baseRadius * 1.2, 0.12, 48),
       new THREE.MeshStandardMaterial({
         map: this.accentTexture,
-        color: 0xf2eadf,
+        color: palette.trim,
         roughness: 0.4,
         metalness: 0.2
       })
@@ -970,21 +1005,30 @@ export class GameRenderer {
     base.castShadow = true;
     base.position.y = 0.06;
 
-    const robeColor = isPrimary ? 0xb43b46 : 0x2a64c7;
     const clothMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: robeColor,
+      color: palette.cloth,
       roughness: 0.35,
       metalness: 0.18
     });
     const skinMat = new THREE.MeshStandardMaterial({
-      color: 0xf5e1c9,
+      color: palette.skin,
       roughness: 0.45,
       metalness: 0.05
     });
     const hairMat = new THREE.MeshStandardMaterial({
-      color: 0x3b2a25,
+      color: palette.hair,
       roughness: 0.7
+    });
+    const weaponWoodMat = new THREE.MeshStandardMaterial({
+      color: palette.weaponWood,
+      roughness: 0.72,
+      metalness: 0.08
+    });
+    const weaponMetalMat = new THREE.MeshStandardMaterial({
+      color: palette.weaponMetal,
+      roughness: 0.28,
+      metalness: 0.72
     });
 
     const legHeight = 0.2 * scale;
@@ -1088,53 +1132,66 @@ export class GameRenderer {
 
     if (isMaster) {
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.36, 0.58, 24),
+        new THREE.ConeGeometry(baseRadius * 0.34, 0.5, 24),
         new THREE.MeshStandardMaterial({
-          color: 0xf4efe9,
+          color: 0xf2ebe3,
           roughness: 0.6
         })
       );
-      beard.position.set(0, head.position.y - 0.08, baseRadius * 0.1);
+      beard.position.set(0, head.position.y - 0.08, baseRadius * 0.14);
       beard.rotation.x = Math.PI;
 
-      const moustache = new THREE.Mesh(
-        new THREE.TorusGeometry(baseRadius * 0.2, 0.03, 12, 32, Math.PI),
-        new THREE.MeshStandardMaterial({
-          color: 0xdfd2c2,
-          roughness: 0.5
-        })
-      );
-      moustache.position.set(0, head.position.y + 0.02, baseRadius * 0.2);
-      moustache.rotation.x = Math.PI / 2;
-
-      const topknot = new THREE.Mesh(
-        new THREE.SphereGeometry(baseRadius * 0.22, 20, 16),
+      const crest = new THREE.Mesh(
+        new THREE.ConeGeometry(baseRadius * 0.18, 0.28, 18),
         hairMat
       );
-      topknot.position.y = head.position.y + 0.28;
+      crest.position.set(0, head.position.y + 0.24, 0.01);
 
-      const staff = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.03, 0.035, 1.1, 16),
+      // Sword rig: a sheathed blade and handle fixed diagonally on the master's back.
+      const swordRig = new THREE.Group();
+      swordRig.position.set(0, torso.position.y + torsoHeight * 0.12, -baseRadius * 0.5);
+      swordRig.rotation.x = -0.78;
+
+      const scabbard = new THREE.Mesh(
+        new THREE.BoxGeometry(baseRadius * 0.22, 0.68, baseRadius * 0.24),
+        weaponWoodMat
+      );
+      scabbard.castShadow = true;
+
+      const swordGuard = new THREE.Mesh(
+        new THREE.BoxGeometry(baseRadius * 0.75, 0.045, 0.04),
+        weaponMetalMat
+      );
+      swordGuard.position.y = 0.34;
+      swordGuard.castShadow = true;
+
+      const swordHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.032, 0.032, 0.2, 12),
+        weaponWoodMat
+      );
+      swordHandle.position.y = 0.47;
+      swordHandle.castShadow = true;
+
+      const swordPommel = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 14, 12),
+        weaponMetalMat
+      );
+      swordPommel.position.y = 0.59;
+      swordPommel.castShadow = true;
+
+      const strap = new THREE.Mesh(
+        new THREE.BoxGeometry(baseRadius * 1.45, 0.05, 0.04),
         new THREE.MeshStandardMaterial({
-          color: 0x8b6a4a,
-          roughness: 0.7
+          color: 0x33242f,
+          roughness: 0.75
         })
       );
-      staff.position.set(baseRadius * 0.6, 0.7, 0);
-      staff.rotation.z = Math.PI / 16;
-      staff.castShadow = true;
+      strap.position.set(0, torso.position.y + 0.09, -baseRadius * 0.22);
+      strap.rotation.z = Math.PI / 4.2;
+      strap.castShadow = true;
 
-      const staffOrb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.06, 16, 12),
-        new THREE.MeshStandardMaterial({
-          color: 0xc84b58,
-          roughness: 0.4,
-          metalness: 0.3
-        })
-      );
-      staffOrb.position.set(baseRadius * 0.6, 1.25, 0);
-
-      group.add(beard, moustache, topknot, staff, staffOrb);
+      swordRig.add(scabbard, swordGuard, swordHandle, swordPommel);
+      group.add(beard, crest, strap, swordRig);
     } else {
       const hair = new THREE.Mesh(
         new THREE.SphereGeometry(baseRadius * 0.34, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
@@ -1142,25 +1199,21 @@ export class GameRenderer {
       );
       hair.position.set(0, head.position.y + 0.12, 0);
 
-      const staff = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.025, 0.03, 0.85, 14),
-        new THREE.MeshStandardMaterial({
-          color: 0x6a4a33,
-          roughness: 0.75
-        })
+      // Students carry a simple wooden training stick.
+      const trainingStick = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.022, 0.024, 0.82, 14),
+        weaponWoodMat
       );
-      staff.position.set(baseRadius * 0.55, 0.45, 0);
-      staff.rotation.z = Math.PI / 12;
-      staff.castShadow = true;
+      trainingStick.position.set(baseRadius * 0.62, 0.48, baseRadius * 0.08);
+      trainingStick.rotation.z = Math.PI / 11;
+      trainingStick.castShadow = true;
 
-      const staffCap = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 14, 12),
-        new THREE.MeshStandardMaterial({
-          color: 0xd6c4a6,
-          roughness: 0.6
-        })
+      const stickCap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 12, 10),
+        weaponMetalMat
       );
-      staffCap.position.set(baseRadius * 0.55, 0.9, 0);
+      stickCap.position.set(baseRadius * 0.62, 0.88, baseRadius * 0.08);
+      stickCap.castShadow = true;
 
       const belt = new THREE.Mesh(
         new THREE.TorusGeometry(baseRadius * 0.55, 0.04, 12, 32),
@@ -1172,7 +1225,7 @@ export class GameRenderer {
       belt.position.y = 0.36;
       belt.rotation.x = Math.PI / 2;
 
-      group.add(hair, staff, staffCap, belt);
+      group.add(hair, trainingStick, stickCap, belt);
     }
 
     return { group, body, ring };
@@ -1234,17 +1287,18 @@ export class GameRenderer {
     }
   }
 
-  private prepareModel(group: THREE.Group, isPrimary: boolean) {
-    this.applySharedMaterial(group, isPrimary);
+  private prepareModel(group: THREE.Group, teamIndex: number) {
+    this.applySharedMaterial(group, teamIndex);
     this.normalizeModel(group);
   }
 
-  private applySharedMaterial(group: THREE.Group, isPrimary: boolean) {
+  private applySharedMaterial(group: THREE.Group, teamIndex: number) {
+    const palette = this.getTeamPalette(teamIndex);
     group.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) {
         const material = new THREE.MeshStandardMaterial({
           map: this.fabricTexture,
-          color: isPrimary ? 0xc0392b : 0x1f6feb,
+          color: palette.cloth,
           roughness: 0.35,
           metalness: 0.2
         });
@@ -1272,6 +1326,21 @@ export class GameRenderer {
     group.position.x -= (min.x + max.x) / 2;
     group.position.z -= (min.z + max.z) / 2;
     group.position.y -= min.y;
+  }
+
+  private getTeamPalette(teamIndex: number): TeamPalette {
+    if (TEAM_PALETTES.length === 0) {
+      return {
+        cloth: 0x7b5f4b,
+        trim: 0xe8dac8,
+        weaponWood: 0x6f5238,
+        weaponMetal: 0xc0b4a1,
+        skin: 0xf3dec8,
+        hair: 0x3a2d27
+      };
+    }
+    const wrappedIndex = ((teamIndex % TEAM_PALETTES.length) + TEAM_PALETTES.length) % TEAM_PALETTES.length;
+    return TEAM_PALETTES[wrappedIndex];
   }
 
   private getMoveStyle(cardId: string): MoveStyle {

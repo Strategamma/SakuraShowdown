@@ -1,6 +1,7 @@
 import type { GameConfig } from "@game/rules";
 
 const defaultConfig: GameConfig = {
+  rulePackVersion: "sakura.v1.0.0",
   board: { width: 5, height: 5 },
   players: [
     { id: "p1", name: "Red", forward: -1, temple: { x: 2, y: 4 } },

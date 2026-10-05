@@ -1,5 +1,12 @@
 import { Client, Room } from "colyseus.js";
-import type { GameConfig, GameState, Move } from "@game/rules";
+import type {
+  GameConfig,
+  GameState,
+  Move,
+  JoinOptions,
+  ServerErrorPayload,
+  RulePackMetadata
+} from "@game/rules";
 
 export type OnlineHandlers = {
   onState: (state: GameState) => void;
@@ -8,6 +15,7 @@ export type OnlineHandlers = {
   onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; started?: boolean }) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
+  onRulePack?: (rulePack: RulePackMetadata) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
@@ -27,9 +35,17 @@ export class OnlineSession {
     this.handlers = handlers;
   }
 
-  async connect(roomId?: string, name?: string, options?: { spectator?: boolean }) {
+  async connect(
+    roomId?: string,
+    name?: string,
+    options?: {
+      spectator?: boolean;
+      expectedRulePackVersion?: string;
+      expectedConfigHash?: string;
+    }
+  ) {
     try {
-      const joinOptions = { ...(options ?? {}) } as { spectator?: boolean; name?: string };
+      const joinOptions = { ...(options ?? {}) } as JoinOptions;
       if (name) joinOptions.name = name;
       this.room = roomId
         ? await this.client.joinById(roomId, joinOptions)
@@ -47,8 +63,11 @@ export class OnlineSession {
         (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
-      this.room.onMessage("error", (payload: { message: string }) =>
+      this.room.onMessage("error", (payload: ServerErrorPayload) =>
         this.handlers.onError(payload.message)
+      );
+      this.room.onMessage("rule_pack", (payload: RulePackMetadata) =>
+        this.handlers.onRulePack?.(payload)
       );
       this.room.onMessage("rematch_start", () => {
         this.handlers.onRematchStart?.();
@@ -109,8 +128,11 @@ export class OnlineSession {
         (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
-      this.room.onMessage("error", (payload: { message: string }) =>
+      this.room.onMessage("error", (payload: ServerErrorPayload) =>
         this.handlers.onError(payload.message)
+      );
+      this.room.onMessage("rule_pack", (payload: RulePackMetadata) =>
+        this.handlers.onRulePack?.(payload)
       );
       this.room.onMessage("rematch_start", () => {
         this.handlers.onRematchStart?.();
@@ -158,18 +180,19 @@ export class OnlineSession {
 
   async create(
     name?: string,
-    options?: { spectator?: boolean; private?: boolean; config?: GameConfig; sandboxName?: string }
+    options?: {
+      spectator?: boolean;
+      private?: boolean;
+      config?: GameConfig;
+      sandboxName?: string;
+      expectedRulePackVersion?: string;
+      expectedConfigHash?: string;
+    }
   ) {
     try {
       const joinOptions = {
         ...(options ?? {})
-      } as {
-        spectator?: boolean;
-        name?: string;
-        private?: boolean;
-        config?: GameConfig;
-        sandboxName?: string;
-      };
+      } as JoinOptions & { private?: boolean; config?: GameConfig; sandboxName?: string };
       if (name) joinOptions.name = name;
       this.room = await this.client.create("onitama", joinOptions);
 
@@ -185,8 +208,11 @@ export class OnlineSession {
         (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
-      this.room.onMessage("error", (payload: { message: string }) =>
+      this.room.onMessage("error", (payload: ServerErrorPayload) =>
         this.handlers.onError(payload.message)
+      );
+      this.room.onMessage("rule_pack", (payload: RulePackMetadata) =>
+        this.handlers.onRulePack?.(payload)
       );
       this.room.onMessage("rematch_start", () => {
         this.handlers.onRematchStart?.();

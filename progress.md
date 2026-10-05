@@ -59,3 +59,62 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - Added inline online status messaging and required display-name validation for lobby create/join flows.
 - Fixed landing online actions hidden state when lobby busy; invalid display name now focuses input.
 - Customize flow updated: opens in new-card mode, sets Add to Deck button, hides list/add/remove in new mode, prevents auto-start when adding.
+- Mechanics parity pass: identified legacy local flow default (random first player) and aligned native offline start logic.
+- Added `packages/rules/test/legacyParity.test.js` to compare Android rule pack JSON with legacy web/server configs and run seeded move/state parity simulations.
+- Playwright runtime check (embedded offline mode) captured board/state in `output/web-game/shot-0.png` and `output/web-game/state-0.json`.
+- Validation run: `npm run test -w packages/rules`, `npm run quality`, and `npm run typecheck -w apps/android-app` all passed after parity changes.
+- Fresh APK built and copied to `/Users/farzan/Documents/Codex/SakuraShowdown/SakuraShowdown-android-arm64-release-20260306-015630.apk`.
+- Refactored native offline board into modular components: `NativeBoardSection`, `NativeHandSection`, and shared `nativeGameplayModel` helpers.
+- Added web-to-android rule-pack sync pipeline (`apps/android-app/scripts/sync-web-rule-pack.mjs`) and now source Android gameplay config from web `apps/client/public/game.json`.
+- Added npm pre-hooks so `rulepack:sync` runs before Android start/typecheck/build/bundle.
+- Removed legacy duplicate Android rule-pack file (`rulePack.v1.json`) to avoid config drift.
+- Updated parity test fixture path to `rulePack.from-web.json` so quality checks remain green after removing duplicate config.
+- Validation run passed: `npm run typecheck -w apps/android-app`, `npm run test -w packages/rules`, and `npm run quality`.
+- Fresh APK built at `/Users/farzan/Documents/Codex/SakuraShowdown/SakuraShowdown-android-arm64-release-20260306-021031.apk`.
+- Final fresh APK after cleanup rebuild: `/Users/farzan/Documents/Codex/SakuraShowdown/SakuraShowdown-android-arm64-release-20260306-021446.apk`.
+- Recheck fix for blank gameplay: online entry now also opens native board surface (local simulation mode) instead of WebView fallback when native gameplay is enabled, ensuring board/pieces/cards always render.
+- Fresh APK built after blank-board routing fix verification: `/Users/farzan/Documents/Codex/SakuraShowdown-android-arm64-release-20260306-022533.apk` (SHA-256 `aac830a934c6a28b767dbe3224ee6fe15e3adbd64754a898e6cebf30c249b617`).
+- Native gameplay redesign pass: board now uses dedicated piece tokens and temple markers (`NativePieceToken` + updated `NativeBoardSection`), with selection-driven move UX and auto-submit when a destination maps to one legal move.
+- Fresh APK built after board/piece/movement redesign: `/Users/farzan/Documents/Codex/SakuraShowdown-android-arm64-release-20260306-024228.apk` (SHA-256 `9348ab6a51b95f2b04599be2d03668d9bb3ee814e50786b2fc4877fa5bb28523`).
+- Implemented new procedural 3D piece silhouettes in `apps/client/src/game/renderer.ts`: master is larger, has a back-mounted sheathed sword, and student carries a training stick.
+- Added extendable `TEAM_PALETTES` color system (2 default palettes) and switched piece/material color assignment to team index mapping for future palette expansion.
+- Updated README with the new default procedural piece behavior and palette extension instructions.
+- Playwright verification run against `http://127.0.0.1:5176` captured `output/web-game/shot-0.png` + `state-0.json`; screenshot confirms larger master silhouette with back-mounted sword and students with training sticks.
+- Playwright reported existing console resource error (`ERR_CONNECTION_REFUSED`) during run (same recurring server-connection warning), no new renderer runtime errors observed.
+- Fresh APK built after 3D piece redesign: `/Users/farzan/Documents/Codex/SakuraShowdown/SakuraShowdown-android-arm64-release-20260306-031600.apk` (SHA-256 `28aba9aa1673021f8278149903492395764c27414d8df455dcf52f77218dcead`).
+- 2026-03-07 web QA pass (no code changes):
+  - Ran `npm run quality:ci` successfully before browser QA.
+  - Ran skill Playwright client scenarios:
+    - Local embedded baseline: `output/web-game/qa-local/*` (state + screenshots captured).
+    - Local action burst: `output/web-game/qa-local-actions/*` (no state transition observed).
+    - Online tab/create selector attempts in skill client timed out for visibility/stability (`qa-online-tab`, `qa-online-create`) but still produced snapshots.
+  - Ran full Playwright QA script with artifacts at:
+    - `/Users/farzan/Documents/Codex/SakuraShowdown/output/web-game/qa-full-2026-03-07T10-04-02-932Z`
+    - Passed checks: landing visibility, online tab/name input, public room create, ready toggle, return to landing, local start via draft, toolbar zoom/toggle/rotate, new game return.
+    - Failing/uncertain checks:
+      - `local_make_move_via_ui`: automated brute-force clicks selected pieces/highlights but did not commit a move (active player unchanged).
+      - `customize_add_card_persists`: initial full QA failure due trying to click non-visible grid cell in create mode; focused follow-up check confirmed Add-to-Deck persistence works (`persisted true`).
+  - Focused customize persistence recheck succeeded (`QA Card 2` stored in `sakura.customConfig`).
+- TODO (next QA pass):
+  - Verify move commit path with deterministic selector-driven interaction (or instrument temporary debug hooks) to conclusively validate end-to-end local move submission.
+  - Revisit create-card move-grid visibility in new-card mode (grid appears absent in screenshot `08_after_customize_apply.png`; confirm intended behavior vs UI regression).
+- 2026-10-05 diagnostic bug bash (no game-code changes):
+  - `npm run quality:ci` passed: 12 rule tests, rules/client typechecks, and server health contract.
+  - `npm run build` fails because the root script invokes `npm run build -w apps/server`, but `apps/server/package.json` has no `build` script.
+  - `npm run lint` fails because ESLint is not installed; the root script would also reach a server workspace with no `lint` script.
+  - Production Koyeb endpoint `arrogant-leeanne-strategamma-82d356d8.koyeb.app` returns Koyeb's `404: No active service` for `/health` and `/lobby`; deployed online multiplayer cannot work until a live endpoint is configured.
+  - Card-editor move grid regression confirmed: `.card-grid` and `.grid-cell` rules exist only in unused `styles.legacy.css`, not imported `styles.css`, so the 5x5 grid collapses/appears absent.
+  - Local server starts successfully and `/health`, `/config`, and `/lobby` respond correctly.
+  - Browser QA was blocked by the environment: Playwright Chromium installation succeeded in `/tmp`, but macOS denied the headless process Mach registration; interactive localhost browser access was also denied by browser security policy.
+  - Suggested fix order: restore deployment endpoint; add/fix build and lint workspace scripts; port card-grid CSS; then add a deterministic move-interaction test using stable cell/piece hooks rather than coordinate brute force.
+- 2026-10-05 first upgrade slice:
+  - Local config now loads from the bundled static rule pack instead of depending on multiplayer; local landing no longer refreshes the lobby unnecessarily.
+  - Added the missing server build validation, restoring the root `npm run build` workflow.
+  - Restored and redesigned the card-editor move grid; disabled the invalid origin cell and added keyboard activation/labels.
+  - Added keyboard support for playable cards, visible focus, contextual turn guidance, active-player/selection treatment, and move/capture feedback.
+  - Refined palette tokens with red/blue team identity plus jade valid-action and gold focus cues.
+  - Added restrained modal/selection/status animations and a global reduced-motion fallback.
+  - Expanded `render_game_to_text` with selection, pending move, and legal moves for deterministic interaction diagnosis.
+  - Verification: `npm run quality:ci` passed; `npm run build` passed; dev client/server started and local server endpoints responded.
+  - Prescribed Playwright rerun remains blocked before page launch by macOS Mach registration denial in the restricted environment; no fresh visual screenshot claim.
+  - Remaining: deploy/configure a live multiplayer endpoint, repair the currently nonfunctional lint script, and perform visual/responsive QA on an unrestricted browser.
