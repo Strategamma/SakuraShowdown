@@ -49,3 +49,27 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Online features require a live authoritative server; account sync requires a storage/authentication decision; automated browser QA remains restricted on this host.
 
 **Verification:** Pure rules/AI checks where possible, workspace quality gate and production build each phase, browser interaction and responsive checks when the host permits Chromium.
+
+## Full UI state audit
+
+**Goal:** Make every modal and setup flow usable and visually consistent across desktop and mobile, with priority on Choose 5 Cards.
+
+**Scope:** Landing/rules, new-game setup, draft, editor, victory, tutorial, settings, confirmation, spectator, and lobby overlays.
+
+**Approach:** Repair shared overlay sizing/scrolling first, then give dense task screens their own responsive grids and accessible controls.
+
+**Risks:** Shared `.card-pattern` phone rules can leak into setup screens; rebuilding draft tiles can lose keyboard focus.
+
+**Verification:** Typecheck, rules/server quality gate, production build, DOM/CSS source audit, and prescribed browser attempt.
+
+## Cohesive interaction polish
+
+**Goal:** Make controls, movement, typography, and feedback feel sleek and immediately understandable.
+
+**Scope:** Global buttons/tooltips, gameplay guidance, movement/capture animation, type hierarchy, and responsive interaction states.
+
+**Approach:** Refine the existing design system and renderer instead of changing rules or page structure; make motion communicate state and respect reduced-motion preferences.
+
+**Risks:** Capture animation must not leave dead pieces interactive; tooltips must not obstruct coarse-pointer/mobile play.
+
+**Verification:** Full quality/build gates, source-level state audit, and prescribed Playwright interaction attempt.

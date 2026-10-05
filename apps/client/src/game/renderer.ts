@@ -65,6 +65,7 @@ type PieceVisual = {
   moveStyle?: MoveStyle;
   moveStartTime?: number;
   moveDuration?: number;
+  captureStartTime?: number;
 };
 
 type CardVisual = {
@@ -195,6 +196,11 @@ export class GameRenderer {
   private zoom = 1;
   private readonly zoomMin = 0.5;
   private readonly zoomMax = 1.35;
+  private reducedMotion = false;
+  private animationPosition = new THREE.Vector3();
+  private animationDirection = new THREE.Vector3();
+  private animationRight = new THREE.Vector3();
+  private animationUp = new THREE.Vector3(0, 1, 0);
 
   constructor(container: HTMLElement, callbacks: RendererCallbacks) {
     this.container = container;
@@ -324,6 +330,10 @@ export class GameRenderer {
 
   getZoom() {
     return this.zoom;
+  }
+
+  setReducedMotion(reduced: boolean) {
+    this.reducedMotion = reduced;
   }
 
   private updateBaseYaw() {
@@ -544,15 +554,23 @@ export class GameRenderer {
       const ownerIndex = this.config.players.findIndex((player) => player.id === piece.ownerId);
       const teamIndex = ownerIndex >= 0 ? ownerIndex : 0;
       const visual = this.getOrCreatePiece(piece.id, teamIndex);
+      const wasAlive = visual.alive;
       visual.alive = piece.alive;
       visual.selected = selection.selectedPieceId === piece.id;
+
+      if (wasAlive && !piece.alive) {
+        visual.captureStartTime = performance.now();
+      } else if (piece.alive) {
+        visual.captureStartTime = undefined;
+        visual.group.scale.setScalar(1);
+      }
 
       const target = this.gridToWorld(piece.x, piece.y, this.pieceBaseHeight);
       if (!visual.target.equals(target)) {
         visual.start.copy(visual.group.position);
         visual.target.copy(target);
         visual.startTime = performance.now();
-        visual.duration = 240;
+        visual.duration = this.reducedMotion ? 0 : 300;
       }
 
       if (
@@ -562,7 +580,7 @@ export class GameRenderer {
       ) {
         visual.moveStyle = this.getMoveStyle(lastMove.cardId);
         visual.moveStartTime = performance.now();
-        visual.moveDuration = 520;
+        visual.moveDuration = this.reducedMotion ? 0 : 560;
         this.lastMoveKey = lastMoveKey;
       }
 
@@ -588,7 +606,7 @@ export class GameRenderer {
         visual.ring.visible = false;
       }
 
-      visual.group.visible = piece.alive;
+      visual.group.visible = piece.alive || visual.captureStartTime !== undefined;
     }
   }
 
@@ -1470,7 +1488,7 @@ export class GameRenderer {
   private updateAnimations() {
     const now = performance.now();
     const time = now / 1000;
-    const up = new THREE.Vector3(0, 1, 0);
+    const up = this.animationUp;
 
     if (this.currentFlip !== this.targetFlip) {
       const elapsed = now - this.flipStart;
@@ -1492,11 +1510,26 @@ export class GameRenderer {
     this.pieceGroup.rotation.x = this.dragPitch;
 
     for (const visual of this.pieces.values()) {
-      if (!visual.alive) continue;
+      if (!visual.alive) {
+        if (visual.captureStartTime === undefined || this.reducedMotion) {
+          visual.group.visible = false;
+          continue;
+        }
+        const captureT = Math.min((now - visual.captureStartTime) / 320, 1);
+        const scale = Math.max(0, 1 - this.easeInOutCubic(captureT));
+        visual.group.scale.setScalar(scale);
+        visual.group.position.y = visual.target.y + Math.sin(captureT * Math.PI) * 0.22;
+        visual.group.rotation.y = captureT * Math.PI * 0.7;
+        if (captureT >= 1) {
+          visual.group.visible = false;
+          visual.captureStartTime = undefined;
+        }
+        continue;
+      }
 
       const elapsed = now - visual.startTime;
       const t = visual.duration === 0 ? 1 : Math.min(elapsed / visual.duration, 1);
-      const basePosition = new THREE.Vector3();
+      const basePosition = this.animationPosition;
       if (visual.duration > 0) {
         basePosition.lerpVectors(visual.start, visual.target, this.easeOutCubic(t));
       } else {
@@ -1529,10 +1562,10 @@ export class GameRenderer {
         tiltZ += tilt * motionScale;
         rollX += roll * motionScale;
 
-        const dir = new THREE.Vector3().subVectors(visual.target, visual.start);
+        const dir = this.animationDirection.subVectors(visual.target, visual.start);
         if (dir.lengthSq() > 0.0001) {
           dir.normalize();
-          const right = new THREE.Vector3().crossVectors(dir, up);
+          const right = this.animationRight.crossVectors(dir, up);
           extraX += (right.x * arc + dir.x * sway * 0.15) * motionScale;
           extraZ += (right.z * arc + dir.z * sway * 0.15) * motionScale;
         }
@@ -1542,7 +1575,10 @@ export class GameRenderer {
         }
       }
 
-      basePosition.y += (visual.selected ? 0.04 : 0) + extraY;
+      const selectedLift = visual.selected && !this.reducedMotion
+        ? 0.055 + Math.sin(time * 3.2) * 0.012
+        : visual.selected ? 0.045 : 0;
+      basePosition.y += selectedLift + extraY;
       basePosition.x += extraX;
       basePosition.z += extraZ;
       visual.group.position.copy(basePosition);
@@ -1569,7 +1605,7 @@ export class GameRenderer {
     for (const card of this.cards.values()) {
       const elapsed = now - card.startTime;
       const t = card.duration === 0 ? 1 : Math.min(elapsed / card.duration, 1);
-      const pos = new THREE.Vector3();
+      const pos = this.animationPosition;
       if (card.duration > 0) {
         pos.lerpVectors(card.start, card.target, this.easeOutCubic(t));
       } else {
@@ -1591,7 +1627,7 @@ export class GameRenderer {
       for (const fly of this.cardFly) {
         const t = Math.min(Math.max((now - fly.startTime) / fly.duration, 0), 1);
         const eased = this.easeInOutCubic(t);
-        const pos = new THREE.Vector3().lerpVectors(fly.start, fly.target, eased);
+        const pos = this.animationPosition.lerpVectors(fly.start, fly.target, eased);
         pos.y += fly.arc * Math.sin(Math.PI * eased);
         fly.mesh.position.copy(pos);
         fly.mesh.scale.set(

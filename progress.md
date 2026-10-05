@@ -166,3 +166,20 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Restyled mode tabs as a calmer segmented control and improved intro, difficulty, hover, arrow, and mobile presentation details.
   - Full quality gate and production build pass; no gameplay logic changed.
   - Prescribed visual run was attempted and remains blocked before launch by macOS Chromium Mach registration.
+- 2026-10-05 phone gameplay redesign:
+  - Replaced the compressed-desktop phone treatment with a dedicated compact game surface.
+  - Phone movement cards now use horizontal title/pattern layouts with substantially reduced rail height; board width is nearly edge-to-edge.
+  - Removed heavy arena trim on phones, shortened the sticky header/status area, tightened nameplates/guidance, and reduced bottom action-dock bulk.
+  - Added extra-small phone tuning and a dedicated short landscape grid with hands, board, and pool visible side by side.
+  - Full quality gate and production build pass; physical-device visual QA remains required because browser automation is host-blocked.
+- 2026-10-05 full UI-state audit:
+  - Audited landing/rules, new-game choice, choose-five draft, card editor, settings, tutorial, victory, exit confirmation, spectator, and lobby overlays.
+  - Fixed the choose-five grid inheriting oversized in-game mobile card rules; phones now show a compact two-column selector with visible selection order, unavailable states, keyboard controls, and restored focus after selection.
+  - Standardized safe-area-aware dialogs, dynamic viewport scrolling, mobile editor layout, touch-sized actions, setup option panels, rules spacing, and victory/spectator action sizing.
+  - Full quality gate and production build pass. The prescribed browser run was attempted; its cached executable is currently absent after QA-cache cleanup, and earlier installed runs were blocked by the host's macOS Mach-service policy, so fresh screenshots remain an external-device follow-up.
+- 2026-10-05 cohesive interaction polish:
+  - Refined the type system with a clearer editorial display face and highly legible UI face, plus stronger title and card hierarchy.
+  - Added concise desktop tooltips for board controls, touch-safe hover suppression, tactile button lift/press/ripple feedback, and more consistent control depth.
+  - Improved piece travel timing, selected-piece breathing, and animated capture removal; the reduced-motion preference now reaches the Three.js renderer.
+  - Reduced animation-loop garbage by reusing temporary vectors.
+  - Full tests, typechecks, server health, production build, and diff validation pass. Playwright lacks its cached Chromium executable; the in-app browser is also blocked from localhost by saved user policy, so visual QA remains an external-device follow-up.

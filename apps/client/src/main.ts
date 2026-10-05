@@ -302,6 +302,19 @@ document.addEventListener("click", (event) => {
   if (!button || (button as HTMLButtonElement).disabled) return;
   sound.play("click");
 });
+document.addEventListener("pointerdown", (event) => {
+  if (preferences.reducedMotion || event.button !== 0) return;
+  const target = event.target as HTMLElement | null;
+  const button = target?.closest<HTMLButtonElement>("button");
+  if (!button || button.disabled) return;
+  const rect = button.getBoundingClientRect();
+  const ripple = document.createElement("span");
+  ripple.className = "button-ripple";
+  ripple.style.left = `${event.clientX - rect.left}px`;
+  ripple.style.top = `${event.clientY - rect.top}px`;
+  button.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
+});
 
 let cardHintOverlay: HTMLElement | null = null;
 let canvasNameTop: HTMLElement | null = null;
@@ -429,6 +442,7 @@ function applyPreferences() {
   settingView.value = viewMode;
   sound.setEnabled(preferences.sound);
   sound.setVolume(preferences.volume);
+  renderer.setReducedMotion(preferences.reducedMotion);
   localStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify(preferences));
 }
 
@@ -2454,9 +2468,24 @@ function renderDraft() {
     draftSelectedEl.innerHTML = "";
   }
   for (const card of sourceConfig.cards) {
-    const item = document.createElement("div");
+    const item = document.createElement("button");
+    item.type = "button";
     item.className = "draft-item";
-    if (draftSelection.has(card.id)) item.classList.add("selected");
+    item.dataset.cardId = card.id;
+    const isSelected = draftSelection.has(card.id);
+    const selectionOrder = [...draftSelection].indexOf(card.id) + 1;
+    if (isSelected) {
+      item.classList.add("selected");
+      item.dataset.selectionOrder = String(selectionOrder);
+    } else if (draftSelection.size >= 5) {
+      item.classList.add("unavailable");
+    }
+    item.setAttribute("aria-pressed", String(isSelected));
+    item.setAttribute("aria-disabled", String(!isSelected && draftSelection.size >= 5));
+    item.setAttribute(
+      "aria-label",
+      `${card.name}${isSelected ? `, selected ${selectionOrder} of 5` : draftSelection.size >= 5 ? ", selection full" : ", not selected"}`
+    );
     const title = document.createElement("div");
     title.className = "card-title";
     title.textContent = card.name;
@@ -2470,6 +2499,9 @@ function renderDraft() {
         draftSelection.add(card.id);
       }
       renderDraft();
+      const replacement = Array.from(draftGrid.querySelectorAll<HTMLButtonElement>(".draft-item"))
+        .find((candidate) => candidate.dataset.cardId === card.id);
+      replacement?.focus();
     });
     draftGrid.appendChild(item);
   }

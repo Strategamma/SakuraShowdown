@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>Sakura Showdown</title>
@@ -41,7 +41,7 @@
         </div>
         <div class="toolbar">
           <div class="toolbar-group board-controls" aria-label="Board controls">
-            <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board">
+            <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board" data-tooltip="Rotate the board 90°">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   d="M12 5a7 7 0 0 1 6.6 4.6h2.1l-3 3-3-3h2.1A5 5 0 1 0 12 17a5 5 0 0 0 4.7-3h2.1A7 7 0 1 1 12 5z"
@@ -50,7 +50,7 @@
               <span class="icon-label">Rotate</span>
             </button>
             <div class="zoom-controls" role="group" aria-label="Zoom controls">
-              <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out">−</button>
+              <button id="zoom-out" class="ghost-button icon-button zoom-button" aria-label="Zoom out" data-tooltip="Zoom out">−</button>
               <input
                 id="zoom-range"
                 class="zoom-range"
@@ -62,9 +62,9 @@
                 aria-label="Zoom level"
               />
               <span id="zoom-value" class="zoom-value">50%</span>
-              <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in">+</button>
+              <button id="zoom-in" class="ghost-button icon-button zoom-button" aria-label="Zoom in" data-tooltip="Zoom in">+</button>
             </div>
-            <button id="toggle-view" class="ghost-button">3D View</button>
+            <button id="toggle-view" class="ghost-button" data-tooltip="Switch between flat and angled board views">3D View</button>
           </div>
           <div class="toolbar-group action-controls" aria-label="Game actions">
             <button id="exit-online" class="ghost-button icon-button online-only" aria-label="Exit to lobby">
@@ -74,9 +74,9 @@
               </svg>
             </button>
             <button id="open-customize" class="ghost-button local-only">Customize</button>
-            <button id="hint-move" class="ghost-button emphasis-button">Hint</button>
-            <button id="open-settings" class="ghost-button" aria-label="Open settings">Settings</button>
-            <button id="new-game" class="ghost-button">New Game</button>
+            <button id="hint-move" class="ghost-button emphasis-button" data-tooltip="Highlight a strong move">Hint</button>
+            <button id="open-settings" class="ghost-button" aria-label="Open settings" data-tooltip="Sound, motion and display">Settings</button>
+            <button id="new-game" class="ghost-button" data-tooltip="Start a fresh match">New Game</button>
           </div>
           <div class="toolbar-status">
             <div class="status-pill">
