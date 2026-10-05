@@ -25,6 +25,6 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 ## Current major state
 
 - Local pass-and-play, online public/private rooms, spectator/rematch flows, custom card creation, 2D/3D views, rotate and zoom controls exist.
-- Consumer entry includes first-run onboarding, solo play against Beginner/Standard/Expert AI, hints, persistent accessibility/audio preferences, and installable PWA/offline-shell metadata.
+- Consumer entry includes first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
 - Procedural pieces distinguish Masters and Students.
 - The previously configured Koyeb multiplayer endpoint is inactive as of 2026-10-05; online play requires a live replacement endpoint.

@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#160c0a" />
     <meta name="description" content="A focused tactical board duel for one or two players." />
     <link rel="icon" href="./sakura-icon.svg" />
+    <link rel="apple-touch-icon" href="./sakura-icon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -231,6 +232,7 @@
           <button id="victory-close" class="ghost-button close-button" aria-label="Close">X</button>
         </div>
         <div class="victory-body">
+          <div id="victory-summary" class="victory-summary"></div>
           <div class="victory-hint">Rematch options</div>
           <div class="victory-actions local-only">
             <button id="victory-random">Rematch (Random Cards)</button>
@@ -290,9 +292,10 @@
     <div id="landing-overlay" class="overlay landing-overlay hidden">
       <div class="overlay-card landing-card">
         <div class="overlay-header">
-          <div>
+          <div class="landing-heading">
+            <div class="landing-eyebrow">A tactical duel in five moves</div>
             <div class="overlay-title">Sakura Showdown</div>
-            <div class="overlay-subtitle">Choose how you want to play.</div>
+            <div class="overlay-subtitle">Read the pattern. Outthink your rival. Claim the temple.</div>
           </div>
           <div class="overlay-header-actions">
             <button id="landing-close" class="ghost-button close-button" aria-label="Close">X</button>
@@ -302,20 +305,41 @@
           <div class="landing-tabs-row">
             <div class="landing-tabs">
               <button id="landing-tab-local" class="ghost-button tab-button active">
-                Local Pass &amp; Play
+                Play Locally
               </button>
-              <button id="landing-tab-online" class="ghost-button tab-button">Online Multiplayer</button>
+              <button id="landing-tab-online" class="ghost-button tab-button">Play Online</button>
             </div>
             <button id="landing-rules" class="ghost-button rules-button">Rules</button>
           </div>
           <div id="landing-panel-local" class="landing-panel">
+            <div class="mode-intro">
+              <span>Choose your duel</span>
+              <p>Start instantly—no account required.</p>
+            </div>
+            <div class="profile-summary" aria-label="Your local record">
+              <div><span class="profile-label">Solo record</span><strong id="profile-record">No games yet</strong></div>
+              <div><span class="profile-label">Best streak</span><strong id="profile-streak">0</strong></div>
+              <button id="install-app" class="ghost-button hidden">Install App</button>
+            </div>
             <div class="landing-actions">
-              <button id="landing-ai">Play vs Computer</button>
-              <button id="landing-local">Start Local Match</button>
-              <button id="landing-customize" class="ghost-button">Create New Card</button>
+              <button id="landing-ai" class="play-option featured">
+                <span class="play-option-icon" aria-hidden="true">✦</span>
+                <span class="play-option-copy"><strong>Play vs Computer</strong><small>A solo match at your pace</small></span>
+                <span class="play-option-arrow" aria-hidden="true">→</span>
+              </button>
+              <button id="landing-local" class="play-option ghost-button">
+                <span class="play-option-icon" aria-hidden="true">対</span>
+                <span class="play-option-copy"><strong>Pass &amp; Play</strong><small>Share this screen with a friend</small></span>
+                <span class="play-option-arrow" aria-hidden="true">→</span>
+              </button>
+              <button id="landing-customize" class="play-option ghost-button">
+                <span class="play-option-icon" aria-hidden="true">＋</span>
+                <span class="play-option-copy"><strong>Create a Card</strong><small>Design a custom movement pattern</small></span>
+                <span class="play-option-arrow" aria-hidden="true">→</span>
+              </button>
             </div>
             <div class="consumer-options">
-              <label class="label" for="ai-difficulty">Computer difficulty</label>
+              <label for="ai-difficulty"><span class="label">Computer difficulty</span><small>Change this anytime before a solo match.</small></label>
               <select id="ai-difficulty">
                 <option value="beginner">Beginner</option>
                 <option value="standard" selected>Standard</option>
@@ -419,6 +443,20 @@
       </div>
     </div>
 
+    <div id="confirm-exit-overlay" class="overlay hidden">
+      <div class="overlay-card confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-exit-title">
+        <div class="confirm-body">
+          <div class="confirm-mark" aria-hidden="true">?</div>
+          <div id="confirm-exit-title" class="overlay-title">Leave this match?</div>
+          <p>Your current game will be lost.</p>
+          <div class="confirm-actions">
+            <button id="confirm-exit-cancel" class="ghost-button">Keep Playing</button>
+            <button id="confirm-exit-accept">Leave Match</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="tutorial-overlay" class="overlay hidden">
       <div class="overlay-card tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
         <div class="overlay-header">
@@ -505,6 +543,7 @@
       </div>
     </div>
 
+    <button id="app-update" class="app-update hidden">Update ready · Reload</button>
     <canvas id="confetti"></canvas>
     <script type="module" src="/src/main.ts"></script>
   </body>

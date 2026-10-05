@@ -153,3 +153,16 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Improved mobile arena/card spacing and converted the pool into a compact horizontal exchange panel on narrow screens.
   - Preserved two cards per hand, a full-width square board, scrollable small-screen play, and compact desktop behavior at intermediate widths.
   - Full quality gate and production build pass. Direct localhost browser access is blocked by saved browser policy, and Playwright remains blocked by macOS Chromium Mach registration, so fresh visual screenshots could not be captured here.
+- 2026-10-05 consumer finishing pass:
+  - Added persistent solo win/loss and best-streak statistics to the local landing screen.
+  - Victory now explains the win condition and summarizes match length and mode.
+  - Added a designed leave-match confirmation, browser refresh/close protection, and AI timer cleanup when returning to the menu.
+  - Added PWA install discovery, Apple touch icon metadata, and a non-blocking update-ready reload prompt.
+  - Full quality gate and production build pass; the existing bundle-size warning remains non-blocking.
+  - Prescribed gameplay browser run was attempted; macOS again blocked Chromium Mach registration before launch, so visual QA remains an external-device follow-up.
+- 2026-10-05 landing UI polish:
+  - Strengthened the opening brand hierarchy with a concise tactical promise and clearer editorial typography.
+  - Replaced generic local-mode buttons with descriptive, icon-led play cards; solo play is now the recommended path and pass-and-play explains its shared-screen behavior.
+  - Restyled mode tabs as a calmer segmented control and improved intro, difficulty, hover, arrow, and mobile presentation details.
+  - Full quality gate and production build pass; no gameplay logic changed.
+  - Prescribed visual run was attempted and remains blocked before launch by macOS Chromium Mach registration.

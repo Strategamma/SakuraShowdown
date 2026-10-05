@@ -97,6 +97,7 @@ const DEV_CARD_EDITOR_KEY = "sakura.devCardEditor";
 const TUTORIAL_COMPLETE_KEY = "sakura.tutorialComplete";
 const AI_DIFFICULTY_KEY = "sakura.aiDifficulty";
 const ACCESSIBILITY_KEY = "sakura.preferences";
+const STATS_KEY = "sakura.stats";
 const MOBILE_EMBED_KEY = "mobileEmbed";
 const MOBILE_MODE_KEY = "mobileMode";
 const MOBILE_NAME_KEY = "mobileName";
@@ -171,6 +172,7 @@ const cardsExportBtn = document.getElementById("cards-export") as HTMLButtonElem
 const victoryOverlay = document.getElementById("victory-overlay") as HTMLElement;
 const victoryTitle = document.getElementById("victory-title") as HTMLElement;
 const victorySubtitle = document.getElementById("victory-subtitle") as HTMLElement;
+const victorySummary = document.getElementById("victory-summary") as HTMLElement;
 const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
 const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
 const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
@@ -236,6 +238,13 @@ const tutorialProgress = document.getElementById("tutorial-progress") as HTMLEle
 const tutorialSymbol = document.getElementById("tutorial-symbol") as HTMLElement;
 const tutorialStepTitle = document.getElementById("tutorial-step-title") as HTMLElement;
 const tutorialStepCopy = document.getElementById("tutorial-step-copy") as HTMLElement;
+const profileRecord = document.getElementById("profile-record") as HTMLElement;
+const profileStreak = document.getElementById("profile-streak") as HTMLElement;
+const installAppBtn = document.getElementById("install-app") as HTMLButtonElement;
+const confirmExitOverlay = document.getElementById("confirm-exit-overlay") as HTMLElement;
+const confirmExitCancel = document.getElementById("confirm-exit-cancel") as HTMLButtonElement;
+const confirmExitAccept = document.getElementById("confirm-exit-accept") as HTMLButtonElement;
+const appUpdateBtn = document.getElementById("app-update") as HTMLButtonElement;
 const settingsOverlay = document.getElementById("settings-overlay") as HTMLElement;
 const settingsCloseBtn = document.getElementById("settings-close") as HTMLButtonElement;
 const settingSound = document.getElementById("setting-sound") as HTMLInputElement;
@@ -351,6 +360,20 @@ try {
 } catch {
   localStorage.removeItem(ACCESSIBILITY_KEY);
 }
+type LocalStats = { played: number; wins: number; streak: number; bestStreak: number };
+let localStats: LocalStats = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+try {
+  const storedStats = JSON.parse(localStorage.getItem(STATS_KEY) ?? "null") as Partial<LocalStats> | null;
+  if (storedStats) localStats = { ...localStats, ...storedStats };
+} catch {
+  localStorage.removeItem(STATS_KEY);
+}
+
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+let installPrompt: InstallPromptEvent | undefined;
 let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
 let reconnectToken = localStorage.getItem(RECONNECT_KEY) ?? "";
 let currentMode: "local" | "online" = "local";
@@ -1015,6 +1038,10 @@ function renderAll() {
 
 window.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  if (!confirmExitOverlay.classList.contains("hidden")) {
+    confirmExitCancel.click();
+    return;
+  }
   if (!settingsOverlay.classList.contains("hidden")) {
     closeSettings();
     return;
@@ -1395,6 +1422,7 @@ function showLanding(tab: "local" | "online" = "online") {
   setLandingTab(tab);
   syncOnlineNameInput();
   updateResumeButton();
+  renderLocalStats();
   setLobbyBusy(false);
   lastReadyAll = false;
   sound.play("modalOpen");
@@ -2235,9 +2263,48 @@ function exportConfig() {
   URL.revokeObjectURL(url);
 }
 
+function renderLocalStats() {
+  profileRecord.textContent = localStats.played
+    ? `${localStats.wins}W · ${localStats.played - localStats.wins}L`
+    : "No games yet";
+  profileStreak.textContent = String(localStats.bestStreak);
+}
+
+function recordLocalResult() {
+  if (currentMode !== "local" || localGameType !== "ai" || !latestState || !latestConfig) return;
+  const humanId = latestConfig.players[0]?.id;
+  const won = latestState.winnerId === humanId;
+  localStats.played += 1;
+  if (won) {
+    localStats.wins += 1;
+    localStats.streak += 1;
+    localStats.bestStreak = Math.max(localStats.bestStreak, localStats.streak);
+  } else {
+    localStats.streak = 0;
+  }
+  localStorage.setItem(STATS_KEY, JSON.stringify(localStats));
+  renderLocalStats();
+}
+
+function describeVictory() {
+  if (!latestState || !latestConfig?.players.length) return "A masterful duel.";
+  const winnerId = latestState.winnerId;
+  const winnerMaster = latestState.pieces.find(
+    (piece) => piece.alive && piece.ownerId === winnerId &&
+      latestConfig?.pieceTypes.some((type) => type.id === piece.typeId && (type.tag === "king" || type.id === "master"))
+  );
+  const enemyTemple = latestConfig.players.find((player) => player.id !== winnerId)?.temple;
+  if (winnerMaster && enemyTemple && winnerMaster.x === enemyTemple.x && winnerMaster.y === enemyTemple.y) {
+    return "Temple captured.";
+  }
+  return "The opposing Master was captured.";
+}
+
 function showVictory(winnerName: string) {
   victoryTitle.textContent = `${winnerName} Wins!`;
-  victorySubtitle.textContent = "A masterful duel.";
+  victorySubtitle.textContent = describeVictory();
+  victorySummary.textContent = `${Math.max(1, (latestState?.turn ?? 2) - 1)} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
+  recordLocalResult();
   rematchPending = false;
   victoryOverlay.classList.toggle("spectator", isSpectator);
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
@@ -2472,7 +2539,11 @@ async function bootstrap() {
 }
 
 
-newGameBtn.addEventListener("click", () => {
+function returnToMenu() {
+  if (aiMoveTimer) {
+    window.clearTimeout(aiMoveTimer);
+    aiMoveTimer = undefined;
+  }
   if (currentMode === "online") {
     controller.cancelRematch();
   }
@@ -2487,8 +2558,39 @@ newGameBtn.addEventListener("click", () => {
   currentRoomId = undefined;
   currentRoomCode = undefined;
   currentRoomPrivate = false;
+  appEl.dataset.started = "false";
+  lastActivePlayerId = undefined;
   updateRoomCode();
   showLanding("local");
+}
+
+newGameBtn.addEventListener("click", () => {
+  const matchInProgress = appEl.dataset.started === "true" && !latestState?.winnerId;
+  if (matchInProgress) {
+    confirmExitOverlay.classList.remove("hidden");
+    sound.play("question");
+    confirmExitCancel.focus();
+    return;
+  }
+  returnToMenu();
+});
+
+confirmExitCancel.addEventListener("click", () => {
+  confirmExitOverlay.classList.add("hidden");
+  sound.play("modalClose");
+});
+confirmExitAccept.addEventListener("click", () => {
+  confirmExitOverlay.classList.add("hidden");
+  returnToMenu();
+});
+confirmExitOverlay.addEventListener("click", (event) => {
+  if (event.target === confirmExitOverlay) confirmExitCancel.click();
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (appEl.dataset.started !== "true" || latestState?.winnerId) return;
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 applyCardEditorVisibility();
@@ -2892,9 +2994,39 @@ void (async () => {
   }
 })();
 
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPrompt = event as InstallPromptEvent;
+  installAppBtn.classList.remove("hidden");
+});
+
+installAppBtn.addEventListener("click", async () => {
+  if (!installPrompt) return;
+  await installPrompt.prompt();
+  const choice = await installPrompt.userChoice;
+  if (choice.outcome === "accepted") installAppBtn.classList.add("hidden");
+  installPrompt = undefined;
+});
+
+window.addEventListener("appinstalled", () => {
+  installPrompt = undefined;
+  installAppBtn.classList.add("hidden");
+});
+
+appUpdateBtn.addEventListener("click", () => window.location.reload());
+
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(`${BASE_URL}sw.js`).catch(() => undefined);
+    navigator.serviceWorker.register(`${BASE_URL}sw.js`).then((registration) => {
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        worker?.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            appUpdateBtn.classList.remove("hidden");
+          }
+        });
+      });
+    }).catch(() => undefined);
   });
 }
 
