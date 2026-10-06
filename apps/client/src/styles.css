@@ -2796,29 +2796,33 @@ body.reduce-motion *::after {
 
 /* Phone-first gameplay surface: compact hands, dominant board, minimal chrome. */
 @media (max-width: 520px) {
-  :root { --topbar-height: 78px; }
+  :root { --topbar-height: 54px; }
 
   #top-bar {
     grid-template-columns: minmax(0, 1fr);
+    min-height: var(--topbar-height);
+    height: auto;
+    gap: 0;
     padding:
-      max(7px, env(safe-area-inset-top))
+      max(6px, env(safe-area-inset-top))
       max(8px, env(safe-area-inset-right))
-      7px
+      6px
       max(8px, env(safe-area-inset-left));
     background: rgba(10, 8, 11, 0.94);
     box-shadow: 0 8px 22px rgba(5, 3, 5, 0.22);
   }
 
-  #top-bar .brand { display: none; }
-  .brand-text { text-align: center; }
-  .brand-title { font-size: 0.8rem; letter-spacing: 0.14em; }
-  .toolbar { gap: 5px; padding: 0; }
-  .toolbar-status { min-height: 38px; gap: 5px; }
+  #top-bar .brand,
+  #top-bar .brand-text { display: none; }
+  .toolbar { gap: 0; padding: 0; }
+  .toolbar-status { min-height: 40px; gap: 5px; }
   .toolbar-status .status-pill {
-    min-height: 38px;
-    padding: 7px 10px;
-    font-size: 0.6rem;
+    min-height: 40px;
+    padding: 7px 11px;
+    font-size: 0.62rem;
     letter-spacing: 0.08em;
+    border-color: rgba(255, 235, 215, 0.12);
+    background: rgba(20, 14, 20, 0.5);
   }
 
   .status-dot { width: 6px; height: 6px; }
@@ -2849,17 +2853,52 @@ body.reduce-motion *::after {
   .game-console::before,
   .game-console::after { display: none; }
 
-  .board-column { gap: 5px; }
+  .board-column { gap: 6px; }
   .board-stage-controls {
     width: 100%;
-    min-height: 48px;
-    justify-content: center;
+    min-height: 50px;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    justify-content: stretch;
+    gap: 6px;
+    padding: 4px 5px;
     border-radius: 13px;
   }
-  .board-stage-controls .zoom-range,
   .board-stage-controls .zoom-value,
   .board-stage-controls .rotate-button .icon-label { display: none; }
-  .board-stage-controls > button { min-height: 40px; }
+  .board-stage-controls > button {
+    min-width: 0;
+    min-height: 40px;
+    height: 40px;
+    padding: 7px 10px;
+    touch-action: manipulation;
+  }
+  .board-stage-controls .rotate-button { width: 42px; padding: 0; }
+  .board-stage-controls #toggle-view { min-width: 74px; }
+  .board-stage-controls .zoom-controls {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 38px minmax(46px, 1fr) 38px;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+  }
+  .board-stage-controls .zoom-button {
+    width: 38px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    touch-action: manipulation;
+  }
+  .board-stage-controls .zoom-range {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    margin: 0;
+  }
   .board-hint { top: 36px; right: 6px; width: 40px; height: 40px; }
 
   .card-rail {
@@ -2909,7 +2948,7 @@ body.reduce-motion *::after {
   }
 
   #board-stage {
-    min-height: calc(100vw - max(14px, env(safe-area-inset-left) + env(safe-area-inset-right)));
+    min-height: min(calc(100vw - max(14px, env(safe-area-inset-left) + env(safe-area-inset-right))), 520px);
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -2963,6 +3002,7 @@ body.reduce-motion *::after {
     font-size: 0.7rem;
     white-space: normal;
     line-height: 1.15;
+    touch-action: manipulation;
   }
 
   .action-controls #exit-online:not(.hidden) ~ button { min-width: 0; }

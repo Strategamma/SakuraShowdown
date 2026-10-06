@@ -181,3 +181,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Suggestions may use different pieces/cards; tapping a marker must execute the matching full move without leaving stale hint state.
 
 **Verification:** Typecheck/build, rules regression suite, source-level interaction audit, and prescribed browser attempt.
+
+## 9.5 mobile-first final pass
+
+**Goal:** Make phone gameplay feel intentionally composed rather than a compressed desktop interface.
+
+**Scope:** Phone header, board sizing, board controls, touch targets, cards, fixed match actions, setup overlays, and short landscape.
+
+**Approach:** Consolidate conflicting phone overrides, reserve the top bar for live status, keep a visible compact zoom track, and validate the complete flow at 320–430px before tuning dense overlays.
+
+**Risks:** Fixed actions must not cover content; additional board controls must not reduce the playable surface or create horizontal overflow.
+
+**Verification:** Responsive source audit, client typecheck/build, gameplay tests, overflow checks, and prescribed browser attempt.

@@ -23,3 +23,4 @@
 - Phone board navigation is direct: one finger taps pieces/cells or scrolls the page, while a two-finger pinch zooms the board without triggering a move.
 - Board manipulation controls live directly beneath the play surface; the global header is reserved for match status/actions, while Hint is a discoverable icon at the board's top-right.
 - Hints present up to two numbered, directly playable destinations; matching card badges explain the required movement card and the strongest move is preselected.
+- Phone match chrome uses one compact status header and a dedicated three-part board toolbar; zoom remains visibly adjustable rather than being hidden behind gestures alone.
