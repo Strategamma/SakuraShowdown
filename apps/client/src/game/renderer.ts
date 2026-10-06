@@ -42,6 +42,7 @@ export type RendererSelection = {
   pendingCardIds?: string[];
   viewerId?: string;
   checkOwners?: string[];
+  hintMoves?: Array<{ x: number; y: number; rank: number }>;
 };
 
 export type RendererCallbacks = {
@@ -142,7 +143,7 @@ export class GameRenderer {
   private lastSelection: RendererSelection = {};
   private pieces = new Map<string, PieceVisual>();
   private cells: THREE.Mesh[] = [];
-  private highlights: Array<{ fill: THREE.Mesh; border: THREE.LineSegments }> = [];
+  private highlights: Array<{ fill: THREE.Mesh; border: THREE.LineSegments; marker: THREE.Sprite }> = [];
   private cards = new Map<string, CardVisual>();
   private cardFly: CardFly[] = [];
   private lastCardSwapKey?: string;
@@ -296,7 +297,7 @@ export class GameRenderer {
     this.lastMoves = legalMoves;
     this.lastSelection = selection;
 
-    this.updateHighlights(legalMoves);
+    this.updateHighlights(legalMoves, selection.hintMoves);
     this.updatePieces(state, selection);
     if (this.cardsEnabled) {
       this.updateCards(state, selection);
@@ -507,6 +508,11 @@ export class GameRenderer {
   }
 
   private buildHighlights() {
+    for (const highlight of this.highlights) {
+      const material = highlight.marker.material as THREE.SpriteMaterial;
+      material.map?.dispose();
+      material.dispose();
+    }
     this.disposeGroupResources(this.highlightGroup);
     this.highlightGroup.clear();
     this.highlights = [];
@@ -530,25 +536,65 @@ export class GameRenderer {
         });
         const fill = new THREE.Mesh(planeGeom, fillMat);
         const border = new THREE.LineSegments(edgeGeom, borderMat);
+        const marker = this.createHintMarker();
         fill.rotation.x = -Math.PI / 2;
         border.rotation.x = -Math.PI / 2;
         fill.position.copy(this.gridToWorld(x, y, 0.145));
         border.position.copy(this.gridToWorld(x, y, 0.155));
+        marker.position.copy(this.gridToWorld(x, y, 0.38));
         fill.userData = { type: "highlight", x, y, baseOpacity: 0 };
         border.userData = fill.userData;
-        this.highlightGroup.add(fill, border);
-        this.highlights.push({ fill, border });
+        this.highlightGroup.add(fill, border, marker);
+        this.highlights.push({ fill, border, marker });
       }
     }
   }
 
-  private updateHighlights(legalMoves: LegalMove[]) {
+  private createHintMarker() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 96;
+    canvas.height = 96;
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const marker = new THREE.Sprite(material);
+    marker.scale.set(0.58, 0.58, 1);
+    marker.visible = false;
+    marker.renderOrder = 6;
+    marker.userData.hintCanvas = canvas;
+    return marker;
+  }
+
+  private drawHintMarker(marker: THREE.Sprite, rank: number) {
+    const canvas = marker.userData.hintCanvas as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d");
+    const material = marker.material as THREE.SpriteMaterial;
+    if (!ctx || !material.map) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(48, 48, 34, 0, Math.PI * 2);
+    ctx.fillStyle = rank === 1 ? "#f28a9b" : "#e8bd70";
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#fff8f2";
+    ctx.stroke();
+    ctx.fillStyle = "#171015";
+    ctx.font = "700 46px Manrope, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(rank), 48, 51);
+    material.map.needsUpdate = true;
+    marker.visible = true;
+  }
+
+  private updateHighlights(legalMoves: LegalMove[], hintMoves: RendererSelection["hintMoves"] = []) {
     for (const highlight of this.highlights) {
       const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
       const borderMat = highlight.border.material as THREE.LineBasicMaterial;
       fillMat.opacity = 0;
       borderMat.opacity = 0;
       highlight.fill.userData.baseOpacity = 0;
+      highlight.marker.visible = false;
     }
 
     const primaryId = this.config?.players[0]?.id;
@@ -570,6 +616,12 @@ export class GameRenderer {
       fillMat.opacity = opacity;
       borderMat.opacity = opacity + 0.35;
       highlight.fill.userData.baseOpacity = opacity;
+    }
+
+    for (const hint of hintMoves) {
+      const index = hint.y * this.boardSize.width + hint.x;
+      const highlight = this.highlights[index];
+      if (highlight) this.drawHintMarker(highlight.marker, hint.rank);
     }
   }
 
@@ -1574,8 +1626,8 @@ export class GameRenderer {
   }
 
   private disposeObjectResources(object: THREE.Object3D, disposeTextures = false) {
-    if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.LineSegments)) return;
-    object.geometry.dispose();
+    if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.LineSegments) && !(object instanceof THREE.Sprite)) return;
+    if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments) object.geometry.dispose();
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     for (const material of materials) {
       if (disposeTextures) {

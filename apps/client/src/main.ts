@@ -348,6 +348,7 @@ if (canvasContainer) {
 let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
+let hintSuggestions: LegalMove[] = [];
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let customizeMode: "edit" | "new" = "edit";
@@ -466,15 +467,30 @@ function showMoveHint() {
   const masterIds = new Set(
     latestConfig.pieceTypes.filter((type) => type.tag === "king" || type.id === "master").map((type) => type.id)
   );
-  const move = [...latestMoves].sort((a, b) => {
+  const rankedMoves = [...latestMoves].sort((a, b) => {
     const score = (candidate: LegalMove) => {
       const target = latestState?.pieces.find(
         (piece) => piece.alive && piece.x === candidate.to.x && piece.y === candidate.to.y
       );
-      return target ? (masterIds.has(target.typeId) ? 100 : 10) : 0;
+      const piece = latestState?.pieces.find((candidatePiece) => candidatePiece.id === candidate.pieceId);
+      const opponent = latestConfig?.players.find((player) => player.id !== candidate.playerId);
+      const templeWin = Boolean(
+        piece && masterIds.has(piece.typeId) && opponent &&
+        candidate.to.x === opponent.temple.x && candidate.to.y === opponent.temple.y
+      );
+      if (target && masterIds.has(target.typeId)) return 1000;
+      if (templeWin) return 900;
+      if (target) return 100;
+      return 0;
     };
     return score(b) - score(a);
-  })[0];
+  });
+  const move = rankedMoves[0];
+  hintSuggestions = rankedMoves
+    .filter((candidate, index, moves) =>
+      moves.findIndex((other) => other.to.x === candidate.to.x && other.to.y === candidate.to.y) === index
+    )
+    .slice(0, 2);
   pendingMove = undefined;
   controller.selectPiece(move.pieceId);
   controller.selectCard(move.cardId);
@@ -483,7 +499,9 @@ function showMoveHint() {
   window.setTimeout(() => gameConsole?.classList.remove("hint-active"), 1800);
   sound.play("question");
   renderAll();
-  statusEl.textContent = `Hint · Try ${cardName} to the glowing square.`;
+  statusEl.textContent = hintSuggestions.length > 1
+    ? `Hint · ${cardName} is ready. Tap move 1, or try move 2.`
+    : `Hint · ${cardName} is ready. Tap the numbered square.`;
 }
 
 function getViewPlayerId(state: GameState, config: GameConfig) {
@@ -587,6 +605,7 @@ function queueOnlineLeaveStatus(message: string) {
 const controller = new GameController({
   onState: (state) => {
     const previous = latestState;
+    if (previous && state.turn !== previous.turn) hintSuggestions = [];
     latestState = state;
     latestMoves = controller.getLegalMoves();
     if (state.winnerId && (!previous || previous.winnerId !== state.winnerId) && latestConfig) {
@@ -744,12 +763,24 @@ function handleCellTap(x: number, y: number) {
   if (!latestState || !latestConfig) return;
   const state = latestState;
   if (!controller.canAct()) return;
+  const hintedMove = hintSuggestions.find((move) => move.to.x === x && move.to.y === y);
+  if (hintedMove) {
+    controller.selectPiece(hintedMove.pieceId);
+    controller.selectCard(hintedMove.cardId);
+    hintSuggestions = [];
+    controller.tryMove(x, y);
+    controller.clearSelection();
+    pendingMove = undefined;
+    renderAll();
+    return;
+  }
   const pieceAt = state.pieces.find(
     (p) => p.alive && p.x === x && p.y === y && p.ownerId === state.activePlayerId
   );
   if (pieceAt) {
     const selection = controller.getSelection();
     pendingMove = undefined;
+    hintSuggestions = [];
     const next = selection.selectedPieceId === pieceAt.id ? undefined : pieceAt.id;
     controller.selectPiece(next);
     sound.play(next ? "select" : "deselect");
@@ -828,6 +859,7 @@ function handleCardClick(cardId: string, role: "player" | "opponent" | "pool") {
   if (!latestState || !latestConfig) return;
   if (!controller.canAct()) return;
   if (role !== "player") return;
+  hintSuggestions = [];
 
   if (pendingMove && pendingMove.cardIds.includes(cardId)) {
     controller.selectCard(cardId);
@@ -968,6 +1000,10 @@ function updateZoomUI(value?: number) {
   if (!zoomRange || !zoomValue) return;
   const zoom = value ?? renderer.getZoom();
   zoomRange.value = String(zoom);
+  const min = Number.parseFloat(zoomRange.min);
+  const max = Number.parseFloat(zoomRange.max);
+  const fill = ((zoom - min) / (max - min)) * 100;
+  zoomRange.style.setProperty("--zoom-fill", `${Math.max(0, Math.min(100, fill))}%`);
   zoomValue.textContent = `${Math.round(zoom * 100)}%`;
 }
 
@@ -1011,7 +1047,8 @@ function renderAll() {
     ...selection,
     pendingCardIds: pendingMove?.cardIds,
     viewerId: viewPlayerId,
-    checkOwners
+    checkOwners,
+    hintMoves: hintSuggestions.map((move, index) => ({ ...move.to, rank: index + 1 }))
   });
   updateCheckIndicators(checkOwners, viewPlayerId);
   const currentChecks = new Set(checkOwners);
@@ -1810,6 +1847,11 @@ function renderCards() {
       const el = createCardElement(card, playerState.id, "player", viewPlayerId);
       if (selection.selectedCardId === cardId) {
         el.classList.add("active");
+      }
+      const hintRank = hintSuggestions.findIndex((move) => move.cardId === cardId);
+      if (hintRank >= 0) {
+        el.classList.add("hint-suggested");
+        el.dataset.hintRank = String(hintRank + 1);
       }
       if (pendingCardIds.includes(cardId)) {
         el.classList.add("choice");

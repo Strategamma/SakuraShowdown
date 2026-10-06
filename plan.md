@@ -169,3 +169,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Existing mobile rules must not hide the relocated controls, and the added control row must not make the canvas unusably short in landscape.
 
 **Verification:** Responsive source audit, full quality/build gates, and prescribed browser attempt.
+
+## 9.5 actionable hints
+
+**Goal:** Turn Hint into clear, ranked guidance the player can act on immediately.
+
+**Scope:** Move ranking, board markers, card highlighting, and hinted-move interaction.
+
+**Approach:** Rank two distinct destinations, preselect the leading move, number both board targets and their cards, and let either numbered target execute its exact suggested move.
+
+**Risks:** Suggestions may use different pieces/cards; tapping a marker must execute the matching full move without leaving stale hint state.
+
+**Verification:** Typecheck/build, rules regression suite, source-level interaction audit, and prescribed browser attempt.
