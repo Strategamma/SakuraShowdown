@@ -1,5 +1,6 @@
 Original prompt: Target all UI issues on the gameplay page and landing page, add a wallpaper background, and add + / - zoom controls for the board.
 
+- Reworked phone gameplay from the supplied render: replaced oversized Settings/New Game blocks with icon actions beside status, reduced board-control chrome, compressed hands to 68px rows, fixed pool-card diagram overflow, and replaced the noisy mobile wood field with a calmer play surface.
 - Began the mobile-first final pass: reduced the phone header to live status, rebuilt the under-board controls as a no-overflow touch grid, restored the visible compact zoom track, and capped oversized board growth on large phones.
 - Mobile-first slice passes client typecheck, all 16 gameplay/rules tests, production build, bundle budgets, and diff validation; the prescribed screenshot run remains blocked by the missing Playwright Chromium executable.
 - Completed mobile source pass across landing, setup, Choose 5 Cards, gameplay, settings, tutorial, victory, confirmation, 320px portrait, and short landscape: standardized touch targets/forms, contained scrolling, compacted dense states, and moved landscape match actions out of the header.

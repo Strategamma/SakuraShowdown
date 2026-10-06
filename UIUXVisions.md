@@ -24,3 +24,4 @@
 - Board manipulation controls live directly beneath the play surface; the global header is reserved for match status/actions, while Hint is a discoverable icon at the board's top-right.
 - Hints present up to two numbered, directly playable destinations; matching card badges explain the required movement card and the strongest move is preselected.
 - Phone match chrome uses one compact status header and a dedicated three-part board toolbar; zoom remains visibly adjustable rather than being hidden behind gestures alone.
+- Phone gameplay uses icon-sized match actions beside status, 68px horizontal movement cards, a contained two-column pool row, restrained framing, and low-noise surfaces so the board—not chrome—owns the screen.

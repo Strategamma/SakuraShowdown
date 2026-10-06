@@ -3150,6 +3150,178 @@ body.reduce-motion *::after {
   .pool-caption { display: none; }
 }
 
+/* Screenshot-led phone redesign: compact chrome, calmer surfaces, and contained cards. */
+@media (max-width: 520px) and (orientation: portrait) {
+  body {
+    background:
+      radial-gradient(circle at 50% 18%, rgba(92, 48, 55, 0.22), transparent 42%),
+      linear-gradient(180deg, #211419 0%, #100c10 58%, #0b090c 100%);
+  }
+
+  body::before { opacity: 0.2; }
+
+  #top-bar {
+    min-height: 54px;
+    padding-block: max(6px, env(safe-area-inset-top)) 6px;
+    border-bottom-color: rgba(255, 235, 215, 0.1);
+  }
+
+  #top-bar .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #top-bar .toolbar-status {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 42px;
+  }
+
+  #top-bar .toolbar-status .status-pill {
+    min-height: 42px;
+    padding: 7px 10px;
+    border-radius: 13px;
+  }
+
+  #top-bar .action-controls {
+    position: static;
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    gap: 5px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  #top-bar .action-controls button {
+    flex: 0 0 42px;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 13px;
+  }
+
+  #top-bar .action-controls .button-label { display: none; }
+  #top-bar .action-controls svg { width: 17px; height: 17px; }
+
+  #game-area {
+    padding-top: 5px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  .game-console {
+    --card-grid: clamp(44px, 14vw, 54px);
+    --card-min-height: 68px;
+    gap: 7px;
+  }
+
+  #board-stage {
+    min-height: min(calc(100vw - max(14px, env(safe-area-inset-left) + env(safe-area-inset-right))), 440px);
+    background: radial-gradient(circle at 50% 46%, rgba(80, 62, 62, 0.15), transparent 58%);
+  }
+
+  .board-stage-controls {
+    min-height: 46px;
+    padding: 3px 4px;
+    gap: 5px;
+    border-color: rgba(255, 235, 215, 0.08);
+    border-radius: 12px;
+    background: rgba(12, 10, 14, 0.66);
+    box-shadow: none;
+  }
+
+  .board-stage-controls > button,
+  .board-stage-controls .zoom-button {
+    height: 38px;
+    min-height: 38px;
+    border-color: rgba(229, 111, 132, 0.28);
+    background: rgba(22, 16, 22, 0.42);
+    box-shadow: none;
+  }
+
+  .board-stage-controls .zoom-range { height: 30px; }
+
+  .card-rail {
+    gap: 5px;
+    padding: 7px;
+    border-radius: 11px;
+    background: linear-gradient(145deg, rgba(29, 21, 27, 0.82), rgba(14, 12, 16, 0.76));
+    box-shadow: none;
+  }
+
+  .rail-header { min-height: 16px; }
+  .player-name { font-size: 0.64rem; }
+  .captured-row { min-height: 4px; margin-top: 0; }
+  .rail-cards { gap: 6px; }
+
+  .card {
+    min-height: 68px;
+    height: 68px;
+    grid-template-columns: minmax(0, 1fr) var(--card-grid);
+    grid-template-rows: 1fr;
+    gap: 4px;
+    padding: 5px 6px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-title {
+    font-size: clamp(0.54rem, 2.5vw, 0.64rem);
+    line-height: 1.08;
+  }
+
+  .card-pattern {
+    width: var(--card-grid) !important;
+    height: var(--card-grid) !important;
+  }
+
+  .card.hint-suggested::after {
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    font-size: 0.62rem;
+  }
+
+  .card-rail.active::after {
+    top: 6px;
+    right: 6px;
+  }
+
+  .pool-rail {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    padding: 7px 9px;
+  }
+
+  .pool-rail .rail-cards {
+    width: 100%;
+    max-width: 230px;
+  }
+
+  .pool-rail .card {
+    width: 100%;
+    min-height: 68px;
+    height: 68px;
+    grid-template-columns: minmax(0, 1fr) var(--card-grid);
+    overflow: hidden;
+  }
+
+  .pool-caption { display: none; }
+  .group-label { font-size: 0.56rem; }
+}
+
 /* Mobile completion pass: safe touch geometry, contained dialogs, and true short-landscape composition. */
 @media (max-width: 700px) {
   button,
