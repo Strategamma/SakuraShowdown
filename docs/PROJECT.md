@@ -28,6 +28,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 
 - Local pass-and-play, online public/private rooms, spectator/rematch flows, custom card creation, 2D/3D views, rotate and zoom controls exist.
 - Consumer entry includes first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
+- Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
 - Procedural pieces distinguish Masters and Students.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.

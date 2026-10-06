@@ -2,6 +2,8 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 
 - Began the mobile-first final pass: reduced the phone header to live status, rebuilt the under-board controls as a no-overflow touch grid, restored the visible compact zoom track, and capped oversized board growth on large phones.
 - Mobile-first slice passes client typecheck, all 16 gameplay/rules tests, production build, bundle budgets, and diff validation; the prescribed screenshot run remains blocked by the missing Playwright Chromium executable.
+- Completed mobile source pass across landing, setup, Choose 5 Cards, gameplay, settings, tutorial, victory, confirmation, 320px portrait, and short landscape: standardized touch targets/forms, contained scrolling, compacted dense states, and moved landscape match actions out of the header.
+- Installed the matching Playwright Chromium build in temporary storage, but macOS sandbox policy rejects browser launch (`MachPortRendezvousServer: Permission denied`); full quality/build gates pass, so physical-device screenshots remain the sole mobile verification follow-up.
 - Upgraded Hint to rank two distinct destinations, number them on the 3D board, badge the required cards, preselect the strongest option, and execute either suggestion directly when its marker is tapped.
 - Actionable-hint verification passed client typecheck, 16 rules/gameplay tests, production build, bundle budgets, and whitespace checks; Playwright screenshot capture remains blocked by its missing Chromium executable.
 - Simplified the under-board zoom group, added a high-contrast filled track with a smaller thumb, and explicitly centered the Hint icon.
