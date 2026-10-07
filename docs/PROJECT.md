@@ -23,6 +23,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - UI uses accessible DOM controls around a Three.js board and exposes `window.render_game_to_text` plus `window.advanceTime` for QA.
 - The Three.js renderer is typechecked with version-matched official types, pauses while hidden, and owns explicit GPU/resource cleanup.
 - Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
+- Same-Wi-Fi play uses `npm run host:lan`: the authoritative server serves the production client on one LAN origin, and private room codes/share links join the second device. Hosted HTTPS pages cannot directly use insecure LAN websockets.
 
 ## Current major state
 
@@ -30,7 +31,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Consumer entry includes first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
-- The PWA uses versioned offline caches and bypasses HTTP caches for live requests so GitHub Pages releases replace stale mobile UI reliably.
+- The installable PWA uses generated 192/512 PNG icons, native install prompts plus iOS guidance, Solo/Together shortcuts, and versioned offline caches that bypass HTTP caches for fresh releases.
 - Procedural pieces distinguish Masters and Students.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
-- The previously configured Koyeb multiplayer endpoint is inactive as of 2026-10-05; online play requires a live replacement endpoint.
+- The previously configured Koyeb multiplayer endpoint is inactive as of 2026-10-05; internet rooms require a live replacement endpoint, while same-Wi-Fi hosting works locally.

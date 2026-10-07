@@ -102,6 +102,8 @@ const MOBILE_EMBED_KEY = "mobileEmbed";
 const MOBILE_MODE_KEY = "mobileMode";
 const MOBILE_NAME_KEY = "mobileName";
 const MOBILE_SERVER_KEY = "mobileServer";
+const JOIN_CODE_KEY = "join";
+const LAUNCH_MODE_KEY = "play";
 
 type EmbeddedLaunchMode = "local" | "online" | undefined;
 
@@ -205,6 +207,9 @@ const lobbyOverlay = document.getElementById("lobby-overlay") as HTMLElement | n
 const lobbyTitle = document.getElementById("lobby-title") as HTMLElement | null;
 const lobbySubtitle = document.getElementById("lobby-subtitle") as HTMLElement | null;
 const lobbyRoomCodeEl = document.getElementById("lobby-room-code") as HTMLElement | null;
+const lobbyShareEl = document.getElementById("lobby-share") as HTMLElement | null;
+const lobbyShareLink = document.getElementById("lobby-share-link") as HTMLInputElement | null;
+const lobbyCopyLinkBtn = document.getElementById("lobby-copy-link") as HTMLButtonElement | null;
 const lobbyPlayersEl = document.getElementById("lobby-players") as HTMLElement | null;
 const lobbyReadyToggle = document.getElementById("lobby-ready") as HTMLInputElement | null;
 const lobbyBackBtn = document.getElementById("lobby-back") as HTMLButtonElement | null;
@@ -241,6 +246,9 @@ const tutorialStepCopy = document.getElementById("tutorial-step-copy") as HTMLEl
 const profileRecord = document.getElementById("profile-record") as HTMLElement;
 const profileStreak = document.getElementById("profile-streak") as HTMLElement;
 const installAppBtn = document.getElementById("install-app") as HTMLButtonElement;
+const installOverlay = document.getElementById("install-overlay") as HTMLElement;
+const installCloseBtn = document.getElementById("install-close") as HTMLButtonElement;
+const installCopy = document.getElementById("install-copy") as HTMLElement;
 const confirmExitOverlay = document.getElementById("confirm-exit-overlay") as HTMLElement;
 const confirmExitCancel = document.getElementById("confirm-exit-cancel") as HTMLButtonElement;
 const confirmExitAccept = document.getElementById("confirm-exit-accept") as HTMLButtonElement;
@@ -274,6 +282,13 @@ const embeddedLaunchMode: EmbeddedLaunchMode =
       : undefined;
 const embeddedDisplayName = queryParams?.get(MOBILE_NAME_KEY)?.trim() ?? "";
 const embeddedServerUrl = queryParams?.get(MOBILE_SERVER_KEY)?.trim() ?? "";
+const launchMode = queryParams?.get(LAUNCH_MODE_KEY)?.trim().toLowerCase();
+const launchJoinCode = queryParams?.get(JOIN_CODE_KEY)?.trim().toLowerCase() ?? "";
+const launchDisplayName = queryParams?.get("name")?.trim() ?? "";
+const isStandalone =
+  window.matchMedia("(display-mode: standalone)").matches ||
+  ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
 document.body.dataset.embed = isEmbeddedMobileClient ? "mobile" : "web";
 document.body.dataset.devCardEditor = enableDevCardEditor ? "1" : "0";
 
@@ -1252,7 +1267,7 @@ function renderLobbyOverlay() {
   const playerId = controller.getPlayerId();
   const maxPlayers = latestConfig.players.length || 2;
   const readyCount = onlineReadyIds.size;
-  const title = currentRoomPrivate ? "Private Lobby" : "Public Lobby";
+  const title = currentRoomPrivate ? "Same-Wi-Fi Lobby" : "Internet Lobby";
   if (lobbyTitle) lobbyTitle.textContent = title;
   if (lobbySubtitle) {
     lobbySubtitle.textContent =
@@ -1265,6 +1280,11 @@ function renderLobbyOverlay() {
       lobbyRoomCodeEl.textContent = `Room Code · ${currentRoomCode?.toUpperCase()}`;
     }
   }
+  const shareUrl = currentRoomCode
+    ? new URL(`?${JOIN_CODE_KEY}=${encodeURIComponent(currentRoomCode)}`, window.location.href).href
+    : "";
+  lobbyShareEl?.classList.toggle("hidden", !shareUrl);
+  if (lobbyShareLink) lobbyShareLink.value = shareUrl;
   lobbyPlayersEl.innerHTML = "";
   for (const player of latestConfig.players) {
     const row = document.createElement("div");
@@ -1415,11 +1435,11 @@ function setLobbyBusy(busy: boolean) {
   if (busy) {
     lobbyCreateBtn.textContent = "Creating...";
     if (privateJoinBtn) privateJoinBtn.textContent = "Joining...";
-    if (privateCreateBtn) privateCreateBtn.textContent = "Creating...";
+    if (privateCreateBtn) privateCreateBtn.textContent = "Hosting...";
   } else {
-    lobbyCreateBtn.textContent = "Create Public Room";
-    if (privateJoinBtn) privateJoinBtn.textContent = "Join Private";
-    if (privateCreateBtn) privateCreateBtn.textContent = "Create Private Room";
+    lobbyCreateBtn.textContent = "Create Internet Room";
+    if (privateJoinBtn) privateJoinBtn.textContent = "Join Game";
+    if (privateCreateBtn) privateCreateBtn.textContent = "Host a Game";
   }
 }
 
@@ -2811,6 +2831,25 @@ privateJoinBtn?.addEventListener("click", async () => {
     setLobbyBusy(false);
   }
 });
+lobbyCopyLinkBtn?.addEventListener("click", async () => {
+  const invite = lobbyShareLink?.value;
+  if (!invite) return;
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(invite);
+    } else {
+      lobbyShareLink.select();
+      if (!document.execCommand("copy")) throw new Error("copy_failed");
+    }
+    lobbyCopyLinkBtn.textContent = "Copied";
+    window.setTimeout(() => {
+      lobbyCopyLinkBtn.textContent = "Copy Invite";
+    }, 1600);
+  } catch {
+    lobbyShareLink?.select();
+    setOnlineStatus("Select and copy the invite link.", "info");
+  }
+});
 
 toggleViewBtn.textContent = viewMode === "3d" ? "2D View" : "3D View";
 toggleViewBtn.addEventListener("click", () => {
@@ -3068,9 +3107,30 @@ draftStartBtn.addEventListener("click", () => {
 appEl.dataset.mode = "local";
 void (async () => {
   await bootstrap();
-  showLanding(embeddedLaunchMode === "online" ? "online" : "local");
+  if (launchDisplayName) {
+    onlineName = launchDisplayName.slice(0, 30);
+    localStorage.setItem(ONLINE_NAME_KEY, onlineName);
+  }
+  if (!isStandalone && window.isSecureContext) installAppBtn.classList.remove("hidden");
+  if (launchJoinCode && privateKeyInput) privateKeyInput.value = launchJoinCode;
+  const openTogether =
+    embeddedLaunchMode === "online" ||
+    launchMode === "online" ||
+    launchMode === "together" ||
+    Boolean(launchJoinCode);
+  showLanding(openTogether ? "online" : "local");
   applyEmbeddedLaunchMode();
-  if (!embeddedLaunchMode && localStorage.getItem(TUTORIAL_COMPLETE_KEY) !== "1") {
+  if (launchMode === "solo" && !isEmbeddedMobileClient) {
+    localGameType = "ai";
+    setMode("local");
+    setSpectatorMode(false);
+    hideLanding();
+    startRandomFive();
+  }
+  if (launchJoinCode && launchDisplayName && !isEmbeddedMobileClient) {
+    await privateJoinBtn?.click();
+  }
+  if (!embeddedLaunchMode && !openTogether && localStorage.getItem(TUTORIAL_COMPLETE_KEY) !== "1") {
     window.setTimeout(openTutorial, 250);
   }
 })();
@@ -3082,11 +3142,22 @@ window.addEventListener("beforeinstallprompt", (event) => {
 });
 
 installAppBtn.addEventListener("click", async () => {
-  if (!installPrompt) return;
-  await installPrompt.prompt();
-  const choice = await installPrompt.userChoice;
-  if (choice.outcome === "accepted") installAppBtn.classList.add("hidden");
-  installPrompt = undefined;
+  if (installPrompt) {
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") installAppBtn.classList.add("hidden");
+    installPrompt = undefined;
+    return;
+  }
+  installCopy.textContent = isIos
+    ? "Tap Share, then choose Add to Home Screen. Open Sakura from the new icon when it appears."
+    : "Open your browser menu and choose Install app or Add to Home Screen.";
+  installOverlay.classList.remove("hidden");
+});
+
+installCloseBtn.addEventListener("click", () => installOverlay.classList.add("hidden"));
+installOverlay.addEventListener("click", (event) => {
+  if (event.target === installOverlay) installOverlay.classList.add("hidden");
 });
 
 window.addEventListener("appinstalled", () => {

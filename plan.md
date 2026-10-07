@@ -205,3 +205,27 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Offline play must continue from the app-shell cache when the network is unavailable.
 
 **Verification:** Service-worker syntax check, client typecheck/build, and generated artifact inspection.
+
+## Same-Wi-Fi multiplayer
+
+**Goal:** Let two players open Sakura on separate devices on one Wi-Fi network and join the same authoritative match.
+
+**Scope:** A self-hosted LAN entrypoint, same-origin game serving, host/join setup, share links, and homesite launch parameters.
+
+**Approach:** Serve the production client from the existing game server, advertise local device URLs, and reuse private Colyseus rooms with code/deep-link joining.
+
+**Risks:** The host computer firewall may require approval; `https://decadenceinc.com` cannot directly open an insecure LAN websocket, so LAN players must use the host's local HTTP address.
+
+**Verification:** Typecheck, rules tests, production build, server health/static-route checks, and setup-flow source/DOM inspection.
+
+## PWA install experience
+
+**Goal:** Make Sakura easy to install and reopen from a phone or desktop home screen.
+
+**Scope:** Install discovery, iOS guidance, standard app icons, manifest shortcuts, and offline shell freshness.
+
+**Approach:** Keep the install entry visible on supported secure origins, use the native browser prompt when available, provide concise manual instructions otherwise, and hide install UI in standalone mode.
+
+**Risks:** LAN HTTP origins are not PWA-installable; installed HTTPS copies still cannot connect directly to insecure LAN websocket hosts.
+
+**Verification:** Manifest/service-worker validation, typecheck, production build, asset inspection, and prescribed browser attempt.

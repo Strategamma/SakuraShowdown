@@ -6,6 +6,8 @@
     "dev": "npm run dev -w apps/client",
     "dev:server": "npm run build -w packages/rules && npm run dev -w apps/server",
     "dev:all": "npm run build -w packages/rules && npm run dev -w apps/server & npm run dev -w apps/client",
+    "host:lan": "npm run build && npm run start -w apps/server",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "build": "npm run build -w packages/rules && npm run build -w apps/client && npm run build -w apps/server",
     "postinstall": "echo \"postinstall complete\"",
     "test": "npm run build -w packages/rules && npm run test -w packages/rules",

@@ -1,5 +1,6 @@
 import http from "node:http";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
@@ -24,6 +25,18 @@ const PRIVATE_CODES = new Map();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const CLIENT_DIST = path.resolve(__dirname, "../client/dist");
+
+function getLanUrls(port) {
+  const urls = [];
+  for (const addresses of Object.values(os.networkInterfaces())) {
+    for (const address of addresses ?? []) {
+      if (address.family !== "IPv4" || address.internal) continue;
+      urls.push(`http://${address.address}:${port}`);
+    }
+  }
+  return urls;
+}
 
 function loadConfig() {
   // The override keeps the server flexible for custom deployment rule packs.
@@ -596,6 +609,13 @@ app.get("/config", (_req, res) => {
   }
 });
 
+app.get("/lan", (_req, res) => {
+  res.json({
+    available: fs.existsSync(path.join(CLIENT_DIST, "index.html")),
+    urls: getLanUrls(PORT)
+  });
+});
+
 app.get("/lobby", async (_req, res) => {
   try {
     const rooms = await matchMaker.query({ name: "onitama" });
@@ -663,6 +683,13 @@ app.get("/private", async (req, res) => {
   }
 });
 
+if (fs.existsSync(path.join(CLIENT_DIST, "index.html"))) {
+  app.use(express.static(CLIENT_DIST, { index: false }));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(CLIENT_DIST, "index.html"));
+  });
+}
+
 const server = http.createServer(app);
 server.prependListener("request", (_req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -678,3 +705,6 @@ gameServer.define("onitama", GameRoom);
 
 gameServer.listen(PORT, HOST);
 console.log(`Game server listening on ws/http://${HOST}:${PORT}`);
+for (const url of getLanUrls(PORT)) {
+  console.log(`Same-Wi-Fi game: ${url}`);
+}

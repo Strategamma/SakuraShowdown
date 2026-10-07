@@ -32,6 +32,35 @@ Local URLs:
 - Client: `http://localhost:5173`
 - Server: `http://localhost:2567`
 
+## Play on the same Wi-Fi
+
+On one computer connected to the shared Wi-Fi, install dependencies once and run:
+
+```bash
+npm run host:lan
+```
+
+The host prints one or more `Same-Wi-Fi game` addresses. Open one on the host and the other player's phone or computer. Choose **Play Together**, then **Host a Game**. Share the invite link or four-letter room code.
+
+The host computer must stay awake and may ask for firewall permission. This LAN path serves the page and authoritative match from the same local address, avoiding the browser security block that prevents `https://decadenceinc.com` from connecting directly to an unsecured local websocket.
+
+The homesite can open the game setup with `?play=together`, or prefill/auto-join with `?join=CODE&name=PLAYER`.
+
+## Install as an app
+
+Open Sakura from its HTTPS website and choose **Install App**:
+
+- Chrome/Edge: accept the browser's Install prompt.
+- iPhone/iPad Safari: tap **Share**, then **Add to Home Screen**.
+
+The installed app opens full-screen and keeps solo/pass-and-play available offline. Its app shortcuts open Solo or Play Together directly. Same-Wi-Fi hosting still starts with `npm run host:lan`; browsers do not allow an HTTPS-installed app to connect directly to an unsecured local websocket.
+
+Regenerate the checked-in PNG application icons after changing the icon design with:
+
+```bash
+npm run generate:pwa-icons
+```
+
 ## Workspace structure
 
 - `apps/client`: Three.js web game UI, match flow, card editor UI.

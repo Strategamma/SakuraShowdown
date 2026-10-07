@@ -1723,6 +1723,29 @@ button:disabled {
   min-height: 300px;
 }
 
+.same-wifi-card .private-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.same-wifi-card #private-create {
+  margin-bottom: 8px;
+}
+
+.lobby-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.lobby-share input {
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .lobby-share { grid-template-columns: 1fr; }
+}
+
 .landing-lobby-header,
 .landing-private-header {
   display: flex;
@@ -2078,6 +2101,28 @@ button:disabled {
   border-color: rgba(121, 198, 163, 0.62);
   background: rgba(19, 54, 42, 0.94);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+}
+
+.install-card { width: min(460px, calc(100vw - 28px)); }
+
+.install-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+}
+
+.install-body img {
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(8, 4, 8, 0.35);
+}
+
+.install-body p { margin: 0 0 8px; line-height: 1.55; }
+
+@media (max-width: 420px) {
+  .install-body { grid-template-columns: 1fr; text-align: center; }
+  .install-body img { margin: 0 auto; }
 }
 
 .connection-notice {

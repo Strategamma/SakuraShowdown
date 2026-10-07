@@ -1,5 +1,13 @@
-const CACHE = "sakura-showdown-v2";
-const APP_SHELL = ["./", "./manifest.webmanifest", "./sakura-icon.svg", "./game.json"];
+const CACHE = "sakura-showdown-v3";
+const APP_SHELL = [
+  "./",
+  "./manifest.webmanifest",
+  "./sakura-icon.svg",
+  "./sakura-icon-192.png",
+  "./sakura-icon-512.png",
+  "./sakura-icon-maskable-512.png",
+  "./game.json"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)));
