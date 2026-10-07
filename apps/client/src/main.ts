@@ -3098,7 +3098,8 @@ appUpdateBtn.addEventListener("click", () => window.location.reload());
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(`${BASE_URL}sw.js`).then((registration) => {
+    navigator.serviceWorker.register(`${BASE_URL}sw.js`, { updateViaCache: "none" }).then((registration) => {
+      void registration.update();
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         worker?.addEventListener("statechange", () => {

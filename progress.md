@@ -240,3 +240,6 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Added bounded two-finger pinch zoom directly to the Three.js canvas, retaining one-finger vertical page scrolling.
   - Pinch state uses pointer capture and suppresses the final release click, preventing accidental piece moves after resizing the board.
   - All 16 tests, typechecks, server health, production build, bundle budgets, and diff validation pass. Browser gesture playback remains blocked by the absent Chromium executable, so physical touch validation is still required.
+- 2026-10-06 mobile release freshness:
+  - Confirmed the reported phone screenshot was the previous cached release rather than the current mobile composition.
+  - Versioned the offline cache, bypassed browser HTTP caches for live requests, cached only successful responses, and forced a service-worker update check on load.

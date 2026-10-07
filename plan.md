@@ -193,3 +193,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Fixed actions must not cover content; additional board controls must not reduce the playable surface or create horizontal overflow.
 
 **Verification:** Responsive source audit, client typecheck/build, gameplay tests, overflow checks, and prescribed browser attempt.
+
+## Mobile release freshness
+
+**Goal:** Ensure deployed mobile UI changes replace stale cached releases promptly.
+
+**Scope:** Service-worker cache versioning, network refresh policy, and update checks.
+
+**Approach:** Bypass the browser HTTP cache for live app requests, cache only successful responses for offline fallback, and explicitly check for a fresh worker on load.
+
+**Risks:** Offline play must continue from the app-shell cache when the network is unavailable.
+
+**Verification:** Service-worker syntax check, client typecheck/build, and generated artifact inspection.
