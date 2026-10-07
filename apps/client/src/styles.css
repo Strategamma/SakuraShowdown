@@ -1526,7 +1526,7 @@ button:disabled {
 
 .landing-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   flex: 1;
   padding: 5px;
@@ -1680,20 +1680,35 @@ button:disabled {
 
 .landing-panel-online {
   display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
-  grid-template-areas:
-    "name name"
-    "public private";
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
+
+#landing-network-name { width: 100%; }
+
+.landing-panel-wifi {
+  width: min(100%, 620px);
+  margin-inline: auto;
+  align-content: start;
+  gap: 14px;
+}
+
+.same-wifi-intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 4px 6px;
+}
+
+.same-wifi-intro strong { display: block; color: var(--text-strong); }
+.same-wifi-intro p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.74rem; }
+
+.landing-panel-wifi .landing-private { min-height: 0; }
 
 @media (max-width: 1100px) {
   .landing-panel-online {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "name"
-      "public"
-      "private";
   }
 
   .landing-card {
@@ -1709,17 +1724,7 @@ button:disabled {
   }
 }
 
-.landing-panel-online .landing-name {
-  grid-area: name;
-}
-
 .landing-panel-online .landing-lobby {
-  grid-area: public;
-  min-height: 300px;
-}
-
-.landing-panel-online .landing-private {
-  grid-area: private;
   min-height: 300px;
 }
 
@@ -1731,6 +1736,26 @@ button:disabled {
 .same-wifi-card #private-create {
   margin-bottom: 8px;
 }
+
+.wifi-primary { min-height: 54px; font-size: 0.86rem; }
+
+.wifi-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.wifi-divider::before,
+.wifi-divider::after { content: ""; height: 1px; flex: 1; background: rgba(255,255,255,0.1); }
+
+.wifi-code-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.wifi-code-row .label { grid-column: 1 / -1; }
+.wifi-code-row input { min-width: 0; text-transform: uppercase; letter-spacing: 0.16em; }
+.wifi-footnote { margin: 0; text-align: center; color: var(--text-muted); font-size: 0.64rem; }
 
 .lobby-share {
   display: grid;
@@ -2434,14 +2459,9 @@ body.reduce-motion *::after {
 
   .landing-panel-online {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "name"
-      "public"
-      "private";
   }
 
   .landing-panel-online .landing-lobby,
-  .landing-panel-online .landing-private,
   .landing-lobby {
     min-height: 0;
   }
@@ -3425,13 +3445,13 @@ body.reduce-motion *::after {
 
 @media (max-width: 520px) {
   .landing-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .landing-tabs .tab-button {
     padding-inline: 8px;
     letter-spacing: 0.08em;
-    font-size: 0.72rem;
+    font-size: 0.64rem;
   }
 
   .landing-tabs-row .rules-button {
@@ -3440,9 +3460,19 @@ body.reduce-motion *::after {
   }
 
   .landing-panel,
+  .landing-panel-wifi,
   .landing-panel-online {
     overflow: visible;
   }
+
+  .landing-network-name,
+  .landing-panel-wifi .landing-private { padding: 12px; }
+
+  .same-wifi-intro { padding-block: 0; }
+  .same-wifi-intro .play-option-icon { width: 38px; height: 38px; }
+  .wifi-code-row { grid-template-columns: 1fr; }
+  .wifi-code-row .label { grid-column: auto; }
+  .wifi-code-row button { min-height: 48px; }
 
   .start-card,
   .victory-card,

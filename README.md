@@ -40,7 +40,7 @@ On one computer connected to the shared Wi-Fi, install dependencies once and run
 npm run host:lan
 ```
 
-The host prints one or more `Same-Wi-Fi game` addresses. Open one on the host and the other player's phone or computer. Choose **Play Together**, then **Host a Game**. Share the invite link or four-letter room code.
+The host prints one or more `Same-Wi-Fi game` addresses. Open one on both players' phones. Choose **Same Wi-Fi**; one player taps **Host on This Phone** and shares the invite link or six-letter code. Each phone displays its owner's pieces at the bottom of the board.
 
 The host computer must stay awake and may ask for firewall permission. This LAN path serves the page and authoritative match from the same local address, avoiding the browser security block that prevents `https://decadenceinc.com` from connecting directly to an unsecured local websocket.
 

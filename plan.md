@@ -229,3 +229,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** LAN HTTP origins are not PWA-installable; installed HTTPS copies still cannot connect directly to insecure LAN websocket hosts.
 
 **Verification:** Manifest/service-worker validation, typecheck, production build, asset inspection, and prescribed browser attempt.
+
+## Phone-first Wi-Fi flow
+
+**Goal:** Give in-person Wi-Fi matches a dedicated setup and ensure both phones see their own side at the bottom.
+
+**Scope:** Landing navigation, Wi-Fi host/join pairing, error isolation, deep links, lobby copy, and per-player board orientation.
+
+**Approach:** Split Local, Same Wi-Fi, and Internet into distinct panels; never refresh internet rooms from Wi-Fi; retain the authoritative online session while deriving board flip and hand order from the assigned player ID.
+
+**Risks:** Private and public rooms share networking internals, so return paths must remember which setup surface created the session.
+
+**Verification:** Typecheck/build/tests, host/join source-state audit, responsive CSS audit, and prescribed browser attempt.

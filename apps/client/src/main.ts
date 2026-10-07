@@ -223,10 +223,13 @@ const lobbyRandomBtn = document.getElementById("lobby-random") as HTMLButtonElem
 const lobbyChooseBtn = document.getElementById("lobby-choose") as HTMLButtonElement | null;
 const onlineNameInput = document.getElementById("online-name") as HTMLInputElement | null;
 const landingTabLocal = document.getElementById("landing-tab-local") as HTMLButtonElement | null;
+const landingTabWifi = document.getElementById("landing-tab-wifi") as HTMLButtonElement | null;
 const landingTabOnline = document.getElementById("landing-tab-online") as HTMLButtonElement | null;
 const landingRulesBtn = document.getElementById("landing-rules") as HTMLButtonElement | null;
 const landingPanelLocal = document.getElementById("landing-panel-local") as HTMLElement | null;
+const landingPanelWifi = document.getElementById("landing-panel-wifi") as HTMLElement | null;
 const landingPanelOnline = document.getElementById("landing-panel-online") as HTMLElement | null;
+const landingNetworkName = document.getElementById("landing-network-name") as HTMLElement | null;
 const landingPanelRules = document.getElementById("landing-panel-rules") as HTMLElement | null;
 const lobbyListEl = document.getElementById("lobby-list") as HTMLElement;
 const lobbyRefreshBtn = document.getElementById("lobby-refresh") as HTMLButtonElement;
@@ -420,7 +423,9 @@ let rematchPending = false;
 let isSpectator = false;
 let lobbyBusy = false;
 let spectatorNoticeHidden = false;
-let landingTab: "local" | "online" = "local";
+type LandingTab = "local" | "wifi" | "online";
+let landingTab: LandingTab = "local";
+let networkEntry: "wifi" | "online" = "wifi";
 let rulesVisible = false;
 let onlineReadyIds = new Set<string>();
 let onlineGameStarted = false;
@@ -686,6 +691,7 @@ const controller = new GameController({
     currentRoomId = info.roomId;
     currentRoomCode = info.code;
     currentRoomPrivate = Boolean(info.private);
+    networkEntry = info.private ? "wifi" : "online";
     if (typeof info.started === "boolean") {
       onlineGameStarted = info.started;
     }
@@ -736,7 +742,7 @@ const controller = new GameController({
     onlineReadyIds = new Set();
     onlineGameStarted = true;
     updateRoomCode();
-    showLanding("online");
+    showLanding(networkEntry);
   },
   onLeave: () => {
     if (currentMode !== "online") return;
@@ -757,7 +763,7 @@ const controller = new GameController({
     onlineReadyIds = new Set();
     onlineGameStarted = true;
     updateRoomCode();
-    showLanding("online");
+    showLanding(networkEntry);
   },
   onReconnectToken: (token) => {
     if (token) setReconnectToken(token);
@@ -1075,6 +1081,7 @@ function renderAll() {
   lastCheckOwners = currentChecks;
   const primaryId = config.players[0]?.id;
   const flip = Boolean(primaryId && viewPlayerId !== primaryId);
+  if (gameConsole) gameConsole.dataset.viewerSide = flip ? "secondary" : "primary";
   renderer.setBoardFlip(flip);
 
   if (state.winnerId) {
@@ -1182,11 +1189,14 @@ function updateStartedUI() {
   if (playerNameSaveBtn) playerNameSaveBtn.disabled = started;
 }
 function applyLandingView() {
-  if (!landingTabLocal || !landingTabOnline || !landingPanelLocal || !landingPanelOnline) return;
+  if (!landingTabLocal || !landingTabWifi || !landingTabOnline || !landingPanelLocal || !landingPanelWifi || !landingPanelOnline) return;
   landingTabLocal.classList.toggle("active", landingTab === "local");
+  landingTabWifi.classList.toggle("active", landingTab === "wifi");
   landingTabOnline.classList.toggle("active", landingTab === "online");
   landingPanelLocal.classList.toggle("hidden", rulesVisible || landingTab !== "local");
+  landingPanelWifi.classList.toggle("hidden", rulesVisible || landingTab !== "wifi");
   landingPanelOnline.classList.toggle("hidden", rulesVisible || landingTab !== "online");
+  landingNetworkName?.classList.toggle("hidden", rulesVisible || landingTab === "local");
   if (landingPanelRules) {
     landingPanelRules.classList.toggle("hidden", !rulesVisible);
   }
@@ -1197,12 +1207,15 @@ function applyLandingView() {
   landingOverlay.dataset.rules = rulesVisible ? "true" : "false";
 }
 
-function setLandingTab(tab: "local" | "online") {
+function setLandingTab(tab: LandingTab) {
   landingTab = tab;
   rulesVisible = false;
   applyLandingView();
   if (tab === "online") {
     refreshLobby();
+    sound.startAmbience();
+  } else if (tab === "wifi") {
+    setOnlineStatus();
     sound.startAmbience();
   } else {
     sound.stopAmbience();
@@ -1268,6 +1281,7 @@ function renderLobbyOverlay() {
   const maxPlayers = latestConfig.players.length || 2;
   const readyCount = onlineReadyIds.size;
   const title = currentRoomPrivate ? "Same-Wi-Fi Lobby" : "Internet Lobby";
+  lobbyOverlay.dataset.flow = networkEntry;
   if (lobbyTitle) lobbyTitle.textContent = title;
   if (lobbySubtitle) {
     lobbySubtitle.textContent =
@@ -1312,7 +1326,7 @@ function renderLobbyOverlay() {
   }
   lastReadyAll = readyAll;
   if (lobbySandboxEl) {
-    const showSandbox = currentRoomPrivate;
+    const showSandbox = currentRoomPrivate && networkEntry !== "wifi";
     lobbySandboxEl.classList.toggle("hidden", !showSandbox);
     if (showSandbox && lobbySandboxNote) {
       const active = isCustomConfig(latestConfig);
@@ -1363,7 +1377,7 @@ function leaveOnlineLobby() {
   lastActivePlayerId = undefined;
   updateRoomCode();
   lobbyOverlay?.classList.add("hidden");
-  showLanding("online");
+  showLanding(networkEntry);
 }
 
 function isCustomConfig(config: GameConfig) {
@@ -1492,7 +1506,7 @@ function showNotice(message: string) {
   }, 2200);
 }
 
-function showLanding(tab: "local" | "online" = "online") {
+function showLanding(tab: LandingTab = "wifi") {
   landingOverlay.classList.remove("hidden");
   landingOverlay.dataset.tab = tab;
   landingOverlay.dataset.rules = "false";
@@ -1504,13 +1518,10 @@ function showLanding(tab: "local" | "online" = "online") {
   setLobbyBusy(false);
   lastReadyAll = false;
   sound.play("modalOpen");
-  if (tab === "online") {
-    sound.startAmbience();
-  } else {
-    sound.stopAmbience();
-  }
+  if (tab === "local") sound.stopAmbience();
+  else sound.startAmbience();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
-  lobbyTimer = window.setInterval(refreshLobby, 8000);
+  lobbyTimer = tab === "online" ? window.setInterval(refreshLobby, 8000) : undefined;
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     statusEl.textContent = "You appear to be offline.";
   }
@@ -2698,6 +2709,7 @@ applyCardEditorVisibility();
 
 landingCloseBtn.addEventListener("click", hideLanding);
 landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
+landingTabWifi?.addEventListener("click", () => setLandingTab("wifi"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
 landingLocalBtn.addEventListener("click", () => {
@@ -2753,6 +2765,7 @@ lobbyRefreshBtn.addEventListener("click", refreshLobby);
 lobbyCreateBtn.addEventListener("click", async () => {
   const name = ensureOnlineName();
   if (!name) return;
+  networkEntry = "online";
   setMode("online");
   setLobbyBusy(true);
   const ok = await controller.createOnline(getServerUrl(), name);
@@ -2773,6 +2786,7 @@ privateCreateBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
   const name = ensureOnlineName();
   if (!name) return;
+  networkEntry = "wifi";
   setMode("online");
   setLobbyBusy(true);
   const ok = await controller.createOnline(getServerUrl(), name, {
@@ -2795,6 +2809,7 @@ privateJoinBtn?.addEventListener("click", async () => {
   if (lobbyBusy) return;
   const name = ensureOnlineName();
   if (!name) return;
+  networkEntry = "wifi";
   const code = privateKeyInput?.value.trim().toLowerCase() ?? "";
   if (!code) {
     statusEl.textContent = "Enter a private lobby key.";
@@ -3118,7 +3133,7 @@ void (async () => {
     launchMode === "online" ||
     launchMode === "together" ||
     Boolean(launchJoinCode);
-  showLanding(openTogether ? "online" : "local");
+  showLanding(openTogether ? "wifi" : "local");
   applyEmbeddedLaunchMode();
   if (launchMode === "solo" && !isEmbeddedMobileClient) {
     localGameType = "ai";
@@ -3189,10 +3204,15 @@ const renderGameToText = () => {
   const selection = controller.getSelection();
   const payload = {
     mode: currentMode,
+    networkEntry: currentMode === "online" ? networkEntry : undefined,
     localGameType,
     aiDifficulty: localGameType === "ai" ? aiDifficulty : undefined,
     view: viewMode,
     activePlayerId: state?.activePlayerId,
+    viewerId: state && config ? getViewPlayerId(state, config) : undefined,
+    boardFlipped: Boolean(
+      state && config?.players[0]?.id && getViewPlayerId(state, config) !== config.players[0].id
+    ),
     winnerId: state?.winnerId,
     board: config?.board,
     coordinateSystem: "origin top-left; +x right; +y down",

@@ -24,8 +24,8 @@
       "icons": [{ "src": "./sakura-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Play Together",
-      "short_name": "Together",
+      "name": "Same Wi-Fi",
+      "short_name": "Wi-Fi",
       "url": "./?play=together",
       "icons": [{ "src": "./sakura-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

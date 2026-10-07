@@ -310,9 +310,10 @@
           <div class="landing-tabs-row">
             <div class="landing-tabs">
               <button id="landing-tab-local" class="ghost-button tab-button active">
-                Play Locally
+                Local
               </button>
-              <button id="landing-tab-online" class="ghost-button tab-button">Play Together</button>
+              <button id="landing-tab-wifi" class="ghost-button tab-button">Same Wi-Fi</button>
+              <button id="landing-tab-online" class="ghost-button tab-button">Internet</button>
             </div>
             <button id="landing-rules" class="ghost-button rules-button">Rules</button>
           </div>
@@ -353,27 +354,37 @@
               <button id="landing-tutorial" class="ghost-button">How to Play</button>
             </div>
           </div>
-          <div id="landing-panel-online" class="landing-panel landing-panel-online hidden">
-            <div class="landing-name">
+          <div id="landing-network-name" class="landing-name hidden">
               <label class="label" for="online-name">Your name</label>
               <input id="online-name" type="text" maxlength="30" placeholder="Enter your name" />
               <div class="room-info">Both players use their own phone or computer.</div>
               <div id="online-status" class="online-status hidden" role="status"></div>
+          </div>
+          <div id="landing-panel-wifi" class="landing-panel landing-panel-wifi hidden">
+            <div class="same-wifi-intro">
+              <span class="play-option-icon" aria-hidden="true">対</span>
+              <div><strong>Two phones. One board.</strong><p>Each player sees their own pieces from their side.</p></div>
             </div>
             <div class="landing-private same-wifi-card">
               <div class="landing-private-header">
                 <div>
-                  <div class="label">Same Wi-Fi</div>
-                  <div class="room-info">One player hosts. The other opens the shared link or enters the six-letter code.</div>
+                  <div class="label">Start together</div>
+                  <div class="room-info">Connect both phones to the same Wi-Fi. One hosts; the other joins.</div>
                 </div>
               </div>
               <div class="private-actions">
-                <button id="private-create">Host a Game</button>
-                <label class="label" for="private-key">Join a host</label>
-                <input id="private-key" type="text" maxlength="11" autocapitalize="characters" placeholder="Enter code" />
-                <button id="private-join" class="ghost-button">Join Game</button>
+                <button id="private-create" class="wifi-primary">Host on This Phone</button>
+                <div class="wifi-divider"><span>or join the host</span></div>
+                <div class="wifi-code-row">
+                  <label class="label" for="private-key">Invite code</label>
+                  <input id="private-key" type="text" maxlength="11" autocapitalize="characters" autocomplete="one-time-code" placeholder="SIX LETTERS" />
+                  <button id="private-join" class="ghost-button">Join Game</button>
+                </div>
               </div>
             </div>
+            <p class="wifi-footnote">The hosting device must keep Sakura open during the match.</p>
+          </div>
+          <div id="landing-panel-online" class="landing-panel landing-panel-online hidden">
             <div class="landing-actions" id="landing-actions-online"></div>
               <div class="landing-lobby">
                 <div class="landing-lobby-header">
@@ -579,7 +590,7 @@
       <div class="overlay-card fatal-error-card">
         <div class="fatal-error-mark" aria-hidden="true">桜</div>
         <div class="overlay-title" id="fatal-error-title">The match hit a snag</div>
-        <p id="fatal-error-copy">Your local settings are safe. Reload the game to recover.</p>
+        <p id="fatal-error-message">Your local settings are safe. Reload the game to recover.</p>
         <div class="fatal-error-actions">
           <button id="fatal-error-reload">Reload game</button>
           <button id="fatal-error-copy" class="ghost-button">Copy diagnostics</button>
