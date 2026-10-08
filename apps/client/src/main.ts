@@ -12,6 +12,7 @@ const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
 const SERVER_OVERRIDE_KEY = "sakura.serverUrl";
 const DEFAULT_REMOTE_SERVER = "wss://sakurashowdown.onrender.com";
+const RETIRED_SERVER_HOSTS = new Set(["arrogant-leeanne-strategamma-82d356d8.koyeb.app"]);
 
 function resolveServerUrl() {
   const envServer = import.meta.env.VITE_SERVER_URL;
@@ -61,7 +62,15 @@ function getServerUrl() {
     const override = localStorage.getItem(SERVER_OVERRIDE_KEY);
     if (override) {
       const normalized = normalizeServerUrl(override);
-      if (normalized) return normalized;
+      if (normalized) {
+        try {
+          const hostname = new URL(normalized).hostname.toLowerCase();
+          if (!RETIRED_SERVER_HOSTS.has(hostname)) return normalized;
+        } catch {
+          // Invalid legacy overrides fall back to the configured server below.
+        }
+      }
+      localStorage.removeItem(SERVER_OVERRIDE_KEY);
     }
   }
   return resolveServerUrl();

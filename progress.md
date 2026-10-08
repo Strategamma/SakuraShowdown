@@ -255,3 +255,8 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
 - 2026-10-06 mobile release freshness:
   - Confirmed the reported phone screenshot was the previous cached release rather than the current mobile composition.
   - Versioned the offline cache, bypassed browser HTTP caches for live requests, cached only successful responses, and forced a service-worker update check on load.
+- 2026-10-08 private lobby recovery:
+  - Confirmed the published PWA points at the live Render gateway and that the gateway can create private Colyseus rooms.
+  - Added migration for the retired Koyeb gateway saved by older releases; affected installed PWAs now discard that stale override and use the current configured gateway.
+  - Client typecheck and production build pass. A live end-to-end probe created a private room, received its six-letter code, and resolved that code back to the same room through `/private`.
+  - The prescribed browser loop was attempted, but Playwright's Chromium executable is absent on this host; no new screenshot was produced.
