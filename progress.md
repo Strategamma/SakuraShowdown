@@ -266,3 +266,4 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Declared the Linux Rollup binary as an optional dependency and changed GitHub Pages deployment to reproducible `npm ci --include=dev --include=optional`.
   - Clean install, lint, 16 rules/integration tests, all typechecks, server health, production build/budgets, PWA asset validation, and live gateway health passed.
   - A two-client private-room probe verified create, code lookup, opposite seat assignment, ready/start, and mirrored first move. Chromium downloaded but remains blocked at launch by macOS Mach policy, so no fresh visual screenshot was possible.
+  - External launch audit found that `decadenceinc.com` links to the correct game URL but serves a mismatched TLS certificate; homesite certificate/DNS repair is a release blocker outside this repository.
