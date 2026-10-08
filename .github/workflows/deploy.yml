@@ -30,7 +30,7 @@ jobs:
       - name: Build client
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
-          VITE_SERVER_URL: wss://arrogant-leeanne-strategamma-82d356d8.koyeb.app
+          VITE_SERVER_URL: wss://sakurashowdown.onrender.com
         run: npm run build -w apps/client
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -241,3 +241,15 @@ First upgrade slice implemented and build/quality verified. Fresh browser visual
 **Risks:** Private and public rooms share networking internals, so return paths must remember which setup surface created the session.
 
 **Verification:** Typecheck/build/tests, host/join source-state audit, responsive CSS audit, and prescribed browser attempt.
+
+## App entry redesign
+
+**Goal:** Give website visitors and installed-PWA players a deliberate, premium starting page with immediate mode choices.
+
+**Scope:** Home hierarchy, primary mode actions, navigation, Decadence handoff, PWA start URL, and phone layout.
+
+**Approach:** Treat the landing layer as the app home rather than a dismissible modal; lead with Solo, Same Wi-Fi, and Pass & Play, then reveal focused Wi-Fi/Internet setup panels through compact navigation.
+
+**Risks:** Existing setup handlers depend on stable element IDs; dense legacy mobile overrides can conflict with the new home composition.
+
+**Verification:** DOM uniqueness, typecheck/build/tests, responsive source audit, launch-parameter checks, and prescribed browser attempt.

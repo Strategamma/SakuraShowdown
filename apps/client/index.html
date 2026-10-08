@@ -297,20 +297,21 @@
     <div id="landing-overlay" class="overlay landing-overlay hidden">
       <div class="overlay-card landing-card">
         <div class="overlay-header">
+          <img class="landing-brand-mark" src="./sakura-icon-192.png" width="72" height="72" alt="" />
           <div class="landing-heading">
-            <div class="landing-eyebrow">A tactical duel in five moves</div>
+            <div class="landing-eyebrow">Decadence Inc. presents</div>
             <div class="overlay-title">Sakura Showdown</div>
-            <div class="overlay-subtitle">Read the pattern. Outthink your rival. Claim the temple.</div>
+            <div class="overlay-subtitle">A five-minute duel of patterns, pressure, and perfect timing.</div>
           </div>
           <div class="overlay-header-actions">
-            <button id="landing-close" class="ghost-button close-button" aria-label="Close">X</button>
+            <a class="decadence-link" href="https://decadenceinc.com/">Decadence Inc.</a>
           </div>
         </div>
         <div class="landing-body">
           <div class="landing-tabs-row">
             <div class="landing-tabs">
               <button id="landing-tab-local" class="ghost-button tab-button active">
-                Local
+                Home
               </button>
               <button id="landing-tab-wifi" class="ghost-button tab-button">Same Wi-Fi</button>
               <button id="landing-tab-online" class="ghost-button tab-button">Internet</button>
@@ -319,8 +320,8 @@
           </div>
           <div id="landing-panel-local" class="landing-panel">
             <div class="mode-intro">
-              <span>Choose your duel</span>
-              <p>Start instantly—no account required.</p>
+              <span>How do you want to play?</span>
+              <p>No account. No waiting.</p>
             </div>
             <div class="profile-summary" aria-label="Your local record">
               <div><span class="profile-label">Solo record</span><strong id="profile-record">No games yet</strong></div>
@@ -330,17 +331,17 @@
             <div class="landing-actions">
               <button id="landing-ai" class="play-option featured">
                 <span class="play-option-icon" aria-hidden="true">✦</span>
-                <span class="play-option-copy"><strong>Play vs Computer</strong><small>A solo match at your pace</small></span>
+                <span class="play-option-copy"><strong>Solo Duel</strong><small>Play instantly against Kitsune</small></span>
+                <span class="play-option-arrow" aria-hidden="true">→</span>
+              </button>
+              <button id="landing-wifi-quick" class="play-option wifi-option">
+                <span class="play-option-icon" aria-hidden="true">⌁</span>
+                <span class="play-option-copy"><strong>Same Wi-Fi</strong><small>Two phones, mirrored boards</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
               <button id="landing-local" class="play-option ghost-button">
                 <span class="play-option-icon" aria-hidden="true">対</span>
                 <span class="play-option-copy"><strong>Pass &amp; Play</strong><small>Share this screen with a friend</small></span>
-                <span class="play-option-arrow" aria-hidden="true">→</span>
-              </button>
-              <button id="landing-customize" class="play-option ghost-button">
-                <span class="play-option-icon" aria-hidden="true">＋</span>
-                <span class="play-option-copy"><strong>Create a Card</strong><small>Design a custom movement pattern</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
             </div>
@@ -352,6 +353,7 @@
                 <option value="expert">Expert · looks ahead</option>
               </select>
               <button id="landing-tutorial" class="ghost-button">How to Play</button>
+              <button id="landing-customize" class="ghost-button">Create a Card</button>
             </div>
           </div>
           <div id="landing-network-name" class="landing-name hidden">

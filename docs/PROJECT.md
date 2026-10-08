@@ -25,14 +25,15 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
 - Same-Wi-Fi play uses `npm run host:lan`: the authoritative server serves the production client on one LAN origin, and private room codes/share links join the second device. Hosted HTTPS pages cannot directly use insecure LAN websockets.
 - Local, Same Wi-Fi, and Internet have separate entry panels. Wi-Fi avoids public-lobby requests, uses a compact phone-first pairing lobby, and orients each online client from its assigned player side.
+- The landing layer is the non-dismissible app home for website and PWA launches. It leads with Solo, Same Wi-Fi, and Pass & Play; focused setup panels sit behind Home/Wi-Fi/Internet navigation.
 
 ## Current major state
 
 - Local pass-and-play, online public/private rooms, spectator/rematch flows, custom card creation, 2D/3D views, rotate and zoom controls exist.
-- Consumer entry includes first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
+- Consumer entry includes a branded app home, first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
 - The installable PWA uses generated 192/512 PNG icons, native install prompts plus iOS guidance, Solo/Together shortcuts, and versioned offline caches that bypass HTTP caches for fresh releases.
 - Procedural pieces distinguish Masters and Students.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
-- The previously configured Koyeb multiplayer endpoint is inactive as of 2026-10-05; internet rooms require a live replacement endpoint, while same-Wi-Fi hosting works locally.
+- Production internet multiplayer uses `wss://sakurashowdown.onrender.com`; `/health` and `/lobby` were live on 2026-10-08. Keep the service single-instance while room state remains in memory.

@@ -11,7 +11,7 @@ import { sound } from "./sound";
 const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
 const SERVER_OVERRIDE_KEY = "sakura.serverUrl";
-const DEFAULT_REMOTE_SERVER = "wss://arrogant-leeanne-strategamma-82d356d8.koyeb.app";
+const DEFAULT_REMOTE_SERVER = "wss://sakurashowdown.onrender.com";
 
 function resolveServerUrl() {
   const envServer = import.meta.env.VITE_SERVER_URL;
@@ -191,9 +191,9 @@ const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElemen
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
 const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement | null;
 const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
-const landingCloseBtn = document.getElementById("landing-close") as HTMLButtonElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingAiBtn = document.getElementById("landing-ai") as HTMLButtonElement;
+const landingWifiQuickBtn = document.getElementById("landing-wifi-quick") as HTMLButtonElement;
 const landingTutorialBtn = document.getElementById("landing-tutorial") as HTMLButtonElement;
 const aiDifficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
@@ -2707,10 +2707,10 @@ window.addEventListener("beforeunload", (event) => {
 
 applyCardEditorVisibility();
 
-landingCloseBtn.addEventListener("click", hideLanding);
 landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabWifi?.addEventListener("click", () => setLandingTab("wifi"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
+landingWifiQuickBtn.addEventListener("click", () => setLandingTab("wifi"));
 landingRulesBtn?.addEventListener("click", toggleRules);
 landingLocalBtn.addEventListener("click", () => {
   localGameType = "pass-and-play";

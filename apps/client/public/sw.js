@@ -1,4 +1,4 @@
-const CACHE = "sakura-showdown-v3";
+const CACHE = "sakura-showdown-v4";
 const APP_SHELL = [
   "./",
   "./manifest.webmanifest",

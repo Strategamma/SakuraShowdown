@@ -3,7 +3,7 @@
   "short_name": "Sakura",
   "description": "A focused tactical board duel for one or two players.",
   "id": "./",
-  "start_url": "./",
+  "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
@@ -20,13 +20,13 @@
     {
       "name": "Play Solo",
       "short_name": "Solo",
-      "url": "./?play=solo",
+      "url": "./?source=pwa&play=solo",
       "icons": [{ "src": "./sakura-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Same Wi-Fi",
       "short_name": "Wi-Fi",
-      "url": "./?play=together",
+      "url": "./?source=pwa&play=together",
       "icons": [{ "src": "./sakura-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
