@@ -17,6 +17,7 @@
 - Setup and utility overlays use dynamic viewport height, safe-area padding, centered short dialogs, internally scrolling long content, and full-width primary actions on phones.
 - Card-selection grids stay two columns on phones; selection order is visible, unavailable options are subdued, and every tile is a keyboard-focusable button.
 - Controls use short delayed tooltips only where meaning is not obvious; coarse-pointer devices rely on visible labels and never receive hover-only UI.
+- Every transient surface exposes a visible text exit in addition to any X, backdrop, or Escape shortcut. Exit copy names the destination (Home, Setup, Lobby, or Match), and recovery UI can always return to Home without depending on a healthy game session.
 - Piece motion communicates selection, travel, capture, and card exchange; reduced-motion disables renderer motion as well as CSS transitions.
 - The board is an open play surface, not a panel nested inside another panel: the canvas fills its complete center region, camera framing stays tight, and state is communicated with restrained ambient glow rather than borders.
 - Phone gameplay opens on the board first, keeps the active player's cards directly beneath it, moves secondary information below, and uses an equal-width three-action dock rather than horizontally scrolling controls.

@@ -267,3 +267,9 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Clean install, lint, 16 rules/integration tests, all typechecks, server health, production build/budgets, PWA asset validation, and live gateway health passed.
   - A two-client private-room probe verified create, code lookup, opposite seat assignment, ready/start, and mirrored first move. Chromium downloaded but remains blocked at launch by macOS Mach policy, so no fresh visual screenshot was possible.
   - External launch audit found that `decadenceinc.com` links to the correct game URL but serves a mismatched TLS certificate; homesite certificate/DNS repair is a release blocker outside this repository.
+- 2026-10-08 navigation escape audit:
+  - Added visible destination-based exits to setup, draft, customization, settings, install, tutorial, local victory, room lobby, recovery, and update surfaces; Rules now changes to “Back to Home.”
+  - Recovery can hide failed nested dialogs and dispatch a safe return-home action; copied diagnostic feedback resets instead of remaining stuck on “Copied.”
+  - Standardized safe Escape/backdrop behavior and accessible dialog/close labels, while keeping match-leave confirmation intact.
+  - Removed four stale bindings to retired controls. Lint, 16 tests, typechecks, server health, production build/budgets, service-worker syntax, and the 170-ID navigation contract pass.
+  - Prescribed Chromium navigation playback remains blocked by macOS Mach-port policy, so final phone visual validation is still required.

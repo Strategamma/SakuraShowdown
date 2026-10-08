@@ -2123,11 +2123,19 @@ button:disabled {
   right: max(14px, env(safe-area-inset-right));
   bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(121, 198, 163, 0.62);
+  border-radius: 14px;
   color: #d6f3e5;
-  border-color: rgba(121, 198, 163, 0.62);
   background: rgba(19, 54, 42, 0.94);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
 }
+
+.app-update button { min-height: 38px; }
+.app-update #app-update-dismiss { padding-inline: 12px; }
 
 .install-card { width: min(460px, calc(100vw - 28px)); }
 
@@ -2218,6 +2226,8 @@ button:disabled {
   gap: 10px;
 }
 
+#fatal-error-home { grid-column: 1 / -1; }
+
 .app-version {
   margin-top: 18px;
   color: rgba(248, 239, 232, 0.45);
@@ -2288,8 +2298,8 @@ button:disabled {
 }
 
 .tutorial-actions {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
 }
 
 .settings-card { width: min(560px, 94vw); }
@@ -3098,6 +3108,9 @@ body.reduce-motion *::after {
 
   .fatal-error-actions { grid-template-columns: 1fr; }
   .fatal-error-actions button { min-height: 46px; }
+  #fatal-error-home { grid-column: auto; }
+  .tutorial-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tutorial-actions #tutorial-exit { grid-column: 1 / -1; }
   .connection-notice { width: max-content; justify-content: center; }
 
   .overlay-header {

@@ -1,5 +1,19 @@
 # Upgrade plan
 
+## Navigation escape audit (2026-10-08)
+
+**Goal:** Ensure every page, modal, recovery screen, and tooltip has an obvious, understandable way in and out on phones and desktop.
+
+**Scope:** Home/setup panels, tutorial, rules, settings, install, customization, draft, lobby, spectator, victory, confirmation, fatal recovery, update notice, and control tooltips.
+
+**Approach:** Inventory every transient surface and its handlers, add explicit labeled exits where icon-only or missing navigation is ambiguous, standardize Escape/backdrop behavior where safe, and preserve destructive confirmations.
+
+**Risks:** Recovery UI loads before the main app and cannot depend on game state; online exits must disconnect cleanly; backdrop dismissal must not discard irreversible work.
+
+**Verification:** DOM/handler audit, lint, full quality/build gates, keyboard/navigation source checks, and browser validation where the host permits.
+
+**Status:** Complete. All transient surfaces have explicit exits and automated gates pass; physical-phone visual verification remains environment-blocked here.
+
 ## Pre-publish bug scan (2026-10-08)
 
 **Goal:** Identify and fix release-blocking defects before publishing the PWA and multiplayer flow.

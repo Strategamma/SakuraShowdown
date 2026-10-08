@@ -11,6 +11,7 @@ type Diagnostic = {
 const errorOverlay = document.getElementById("fatal-error");
 const reloadButton = document.getElementById("fatal-error-reload") as HTMLButtonElement | null;
 const copyButton = document.getElementById("fatal-error-copy") as HTMLButtonElement | null;
+const homeButton = document.getElementById("fatal-error-home") as HTMLButtonElement | null;
 const connectionNotice = document.getElementById("connection-notice");
 let lastDiagnostic: Diagnostic | undefined;
 let errorShown = false;
@@ -49,15 +50,37 @@ window.addEventListener("unhandledrejection", (event) => showFatalError(event.re
 window.addEventListener("online", updateConnectionNotice);
 window.addEventListener("offline", updateConnectionNotice);
 reloadButton?.addEventListener("click", () => window.location.reload());
+homeButton?.addEventListener("click", () => {
+  errorOverlay?.classList.add("hidden");
+  document
+    .querySelectorAll<HTMLElement>(".overlay:not(#landing-overlay):not(#fatal-error)")
+    .forEach((overlay) => overlay.classList.add("hidden"));
+  document.getElementById("landing-overlay")?.classList.remove("hidden");
+  window.dispatchEvent(new CustomEvent("sakura:return-home"));
+});
 copyButton?.addEventListener("click", async () => {
   if (!lastDiagnostic) return;
   const text = JSON.stringify(lastDiagnostic, null, 2);
   try {
     await navigator.clipboard.writeText(text);
     copyButton.textContent = "Copied";
+    window.setTimeout(() => {
+      copyButton.textContent = "Copy diagnostics";
+    }, 1600);
   } catch {
     copyButton.textContent = "Copy unavailable";
   }
 });
+
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key !== "Escape" || errorOverlay?.classList.contains("hidden")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    homeButton?.click();
+  },
+  true
+);
 
 updateConnectionNotice();

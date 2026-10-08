@@ -137,8 +137,6 @@ const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
-const playerNameEditBtn = document.getElementById("player-name-edit") as HTMLButtonElement | null;
-const playerNameSaveBtn = document.getElementById("player-name-save") as HTMLButtonElement | null;
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
 const zoomInBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
 const zoomOutBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
@@ -179,6 +177,7 @@ const cardRemoveBtn = document.getElementById("card-remove") as HTMLButtonElemen
 const cardsApplyBtn = document.getElementById("cards-apply") as HTMLButtonElement;
 const cardsResetBtn = document.getElementById("cards-reset") as HTMLButtonElement;
 const cardsExportBtn = document.getElementById("cards-export") as HTMLButtonElement;
+const customizeBackBtn = document.getElementById("customize-back") as HTMLButtonElement;
 const victoryOverlay = document.getElementById("victory-overlay") as HTMLElement;
 const victoryTitle = document.getElementById("victory-title") as HTMLElement;
 const victorySubtitle = document.getElementById("victory-subtitle") as HTMLElement;
@@ -186,18 +185,20 @@ const victorySummary = document.getElementById("victory-summary") as HTMLElement
 const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
 const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
 const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
+const victoryHomeBtn = document.getElementById("victory-home") as HTMLButtonElement;
 const victoryRematchBtn = document.getElementById("victory-rematch") as HTMLButtonElement | null;
 const victoryLobbyBtn = document.getElementById("victory-lobby") as HTMLButtonElement | null;
 const victoryWaitEl = document.getElementById("victory-wait") as HTMLElement | null;
 const startOverlay = document.getElementById("start-overlay") as HTMLElement;
 const startRandomBtn = document.getElementById("start-random") as HTMLButtonElement;
 const startChooseBtn = document.getElementById("start-choose") as HTMLButtonElement;
+const startBackBtn = document.getElementById("start-back") as HTMLButtonElement;
 const draftOverlay = document.getElementById("draft-overlay") as HTMLElement;
 const draftGrid = document.getElementById("draft-grid") as HTMLElement;
 const draftCount = document.getElementById("draft-count") as HTMLElement;
 const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElement;
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
-const draftSelectedEl = document.getElementById("draft-selected") as HTMLElement | null;
+const draftBackBtn = document.getElementById("draft-back") as HTMLButtonElement;
 const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingAiBtn = document.getElementById("landing-ai") as HTMLButtonElement;
@@ -206,7 +207,6 @@ const landingTutorialBtn = document.getElementById("landing-tutorial") as HTMLBu
 const aiDifficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
 const landingActionsOnline = document.getElementById("landing-actions-online") as HTMLElement | null;
-const serverUrlInput = document.getElementById("server-url") as HTMLInputElement | null;
 const spectatorOverlay = document.getElementById("spectator-overlay") as HTMLElement;
 const spectatorBackBtn = document.getElementById("spectator-back") as HTMLButtonElement | null;
 const spectatorContinueBtn = document.getElementById("spectator-continue") as HTMLButtonElement | null;
@@ -250,6 +250,7 @@ const tutorialOverlay = document.getElementById("tutorial-overlay") as HTMLEleme
 const tutorialCloseBtn = document.getElementById("tutorial-close") as HTMLButtonElement;
 const tutorialBackBtn = document.getElementById("tutorial-back") as HTMLButtonElement;
 const tutorialNextBtn = document.getElementById("tutorial-next") as HTMLButtonElement;
+const tutorialExitBtn = document.getElementById("tutorial-exit") as HTMLButtonElement;
 const tutorialProgress = document.getElementById("tutorial-progress") as HTMLElement;
 const tutorialSymbol = document.getElementById("tutorial-symbol") as HTMLElement;
 const tutorialStepTitle = document.getElementById("tutorial-step-title") as HTMLElement;
@@ -259,13 +260,17 @@ const profileStreak = document.getElementById("profile-streak") as HTMLElement;
 const installAppBtn = document.getElementById("install-app") as HTMLButtonElement;
 const installOverlay = document.getElementById("install-overlay") as HTMLElement;
 const installCloseBtn = document.getElementById("install-close") as HTMLButtonElement;
+const installDoneBtn = document.getElementById("install-done") as HTMLButtonElement;
 const installCopy = document.getElementById("install-copy") as HTMLElement;
 const confirmExitOverlay = document.getElementById("confirm-exit-overlay") as HTMLElement;
 const confirmExitCancel = document.getElementById("confirm-exit-cancel") as HTMLButtonElement;
 const confirmExitAccept = document.getElementById("confirm-exit-accept") as HTMLButtonElement;
-const appUpdateBtn = document.getElementById("app-update") as HTMLButtonElement;
+const appUpdateNotice = document.getElementById("app-update") as HTMLElement;
+const appUpdateReloadBtn = document.getElementById("app-update-reload") as HTMLButtonElement;
+const appUpdateDismissBtn = document.getElementById("app-update-dismiss") as HTMLButtonElement;
 const settingsOverlay = document.getElementById("settings-overlay") as HTMLElement;
 const settingsCloseBtn = document.getElementById("settings-close") as HTMLButtonElement;
+const settingsDoneBtn = document.getElementById("settings-done") as HTMLButtonElement;
 const settingSound = document.getElementById("setting-sound") as HTMLInputElement;
 const settingVolume = document.getElementById("setting-volume") as HTMLInputElement;
 const settingMotion = document.getElementById("setting-motion") as HTMLInputElement;
@@ -1129,6 +1134,30 @@ window.addEventListener("keydown", (event) => {
     closeTutorial();
     return;
   }
+  if (!installOverlay.classList.contains("hidden")) {
+    installOverlay.classList.add("hidden");
+    return;
+  }
+  if (!overlay.classList.contains("hidden")) {
+    closeCustomize();
+    return;
+  }
+  if (!draftOverlay.classList.contains("hidden")) {
+    draftBackBtn.click();
+    return;
+  }
+  if (!startOverlay.classList.contains("hidden")) {
+    startBackBtn.click();
+    return;
+  }
+  if (!victoryOverlay.classList.contains("hidden")) {
+    hideVictory();
+    return;
+  }
+  if (lobbyOverlay && !lobbyOverlay.classList.contains("hidden")) {
+    leaveOnlineLobby();
+    return;
+  }
   if (!latestState || !controller.canAct()) return;
   const selection = controller.getSelection();
   if (!pendingMove && !selection.selectedPieceId && !selection.selectedCardId) return;
@@ -1183,9 +1212,7 @@ function updateStartedUI() {
     if (namesEditing) setNamesEditing(false);
   }
   if (namesEditBtn) namesEditBtn.disabled = started;
-  if (playerNameEditBtn) playerNameEditBtn.disabled = started;
   if (namesSaveBtn) namesSaveBtn.disabled = started;
-  if (playerNameSaveBtn) playerNameSaveBtn.disabled = started;
 }
 function applyLandingView() {
   if (!landingTabLocal || !landingTabWifi || !landingTabOnline || !landingPanelLocal || !landingPanelWifi || !landingPanelOnline) return;
@@ -1201,6 +1228,7 @@ function applyLandingView() {
   }
   if (landingRulesBtn) {
     landingRulesBtn.classList.toggle("active", rulesVisible);
+    landingRulesBtn.textContent = rulesVisible ? "Back to Home" : "Rules";
   }
   landingOverlay.dataset.tab = landingTab;
   landingOverlay.dataset.rules = rulesVisible ? "true" : "false";
@@ -1913,10 +1941,6 @@ function setNamesEditing(enabled: boolean) {
     namesEditLabel.textContent = enabled ? "Done" : "Edit";
   }
 
-  if (playerNameEditBtn) {
-    playerNameEditBtn.setAttribute("aria-pressed", String(enabled));
-    playerNameEditBtn.classList.toggle("active", enabled);
-  }
 }
 
 function renderCaptured(viewPlayerId: string) {
@@ -2539,9 +2563,6 @@ function renderDraft() {
   const sourceConfig = draftConfig ?? baseConfig;
   if (!sourceConfig) return;
   draftGrid.innerHTML = "";
-  if (draftSelectedEl) {
-    draftSelectedEl.innerHTML = "";
-  }
   for (const card of sourceConfig.cards) {
     const item = document.createElement("button");
     item.type = "button";
@@ -2583,22 +2604,6 @@ function renderDraft() {
   draftCount.textContent = `${draftSelection.size} / 5 selected`;
   draftStartBtn.disabled = draftSelection.size !== 5;
 
-  if (draftSelectedEl) {
-    const selectedSource = baseConfig ?? sourceConfig;
-    for (const cardId of draftSelection) {
-      const card = selectedSource.cards.find((c) => c.id === cardId);
-      if (!card) continue;
-      const item = document.createElement("div");
-      item.className = "draft-selected-item";
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = card.name;
-      const pattern = drawCardPattern(card.moves);
-      item.appendChild(title);
-      item.appendChild(pattern);
-      draftSelectedEl.appendChild(item);
-    }
-  }
 }
 
 async function bootstrap() {
@@ -2661,6 +2666,12 @@ function returnToMenu() {
   draftOverlay.classList.add("hidden");
   victoryOverlay.classList.add("hidden");
   overlay.classList.add("hidden");
+  settingsOverlay.classList.add("hidden");
+  installOverlay.classList.add("hidden");
+  confirmExitOverlay.classList.add("hidden");
+  tutorialOverlay.classList.add("hidden");
+  spectatorOverlay.classList.add("hidden");
+  lobbyOverlay?.classList.add("hidden");
   setSpectatorMode(false);
   currentRoomCode = undefined;
   currentRoomPrivate = false;
@@ -2669,6 +2680,8 @@ function returnToMenu() {
   updateRoomCode();
   showLanding("local");
 }
+
+window.addEventListener("sakura:return-home", returnToMenu);
 
 newGameBtn.addEventListener("click", () => {
   const matchInProgress = appEl.dataset.started === "true" && !latestState?.winnerId;
@@ -2730,6 +2743,7 @@ aiDifficultySelect.addEventListener("change", () => {
 });
 landingTutorialBtn.addEventListener("click", openTutorial);
 tutorialCloseBtn.addEventListener("click", () => closeTutorial());
+tutorialExitBtn.addEventListener("click", () => closeTutorial());
 tutorialBackBtn.addEventListener("click", () => {
   tutorialStep = Math.max(0, tutorialStep - 1);
   renderTutorial();
@@ -2872,6 +2886,7 @@ toggleViewBtn.addEventListener("click", () => {
 hintMoveBtn.addEventListener("click", showMoveHint);
 openSettingsBtn.addEventListener("click", openSettings);
 settingsCloseBtn.addEventListener("click", closeSettings);
+settingsDoneBtn.addEventListener("click", closeSettings);
 settingsOverlay.addEventListener("click", (event) => {
   if (event.target === settingsOverlay) closeSettings();
 });
@@ -2911,14 +2926,6 @@ namesSaveBtn?.addEventListener("click", () => {
   if (appEl.dataset.started === "true") return;
   setNamesEditing(false);
 });
-playerNameEditBtn?.addEventListener("click", () => {
-  if (appEl.dataset.started === "true") return;
-  setNamesEditing(!namesEditing);
-});
-playerNameSaveBtn?.addEventListener("click", () => {
-  if (appEl.dataset.started === "true") return;
-  setNamesEditing(false);
-});
 localNameInput.addEventListener("input", () => {
   localName = localNameInput.value;
   localStorage.setItem(LOCAL_NAME_KEY, localName);
@@ -2954,22 +2961,6 @@ if (privateKeyInput) {
       .slice(0, 6);
     privateKeyInput.value = sanitized;
   });
-}
-
-if (serverUrlInput) {
-  const savedServerUrl = localStorage.getItem(SERVER_OVERRIDE_KEY) ?? "";
-  serverUrlInput.value = savedServerUrl || DEFAULT_REMOTE_SERVER;
-  const applyServerOverride = () => {
-    const raw = serverUrlInput.value.trim();
-    if (raw) {
-      localStorage.setItem(SERVER_OVERRIDE_KEY, raw);
-    } else {
-      localStorage.removeItem(SERVER_OVERRIDE_KEY);
-    }
-    refreshLobby();
-  };
-  serverUrlInput.addEventListener("change", applyServerOverride);
-  serverUrlInput.addEventListener("blur", applyServerOverride);
 }
 
 spectatorBackBtn?.addEventListener("click", () => {
@@ -3050,6 +3041,7 @@ startingPlayerSelect.addEventListener("change", () => {
 customizeBtn.addEventListener("click", () => openCustomize("local", "new"));
 openCustomizeBtn?.addEventListener("click", () => openCustomize("local", "new"));
 closeBtn.addEventListener("click", closeCustomize);
+customizeBackBtn.addEventListener("click", closeCustomize);
 overlay.addEventListener("click", (event) => {
   if (event.target === overlay) closeCustomize();
 });
@@ -3068,6 +3060,7 @@ cardsResetBtn.addEventListener("click", resetCardChanges);
 cardsExportBtn.addEventListener("click", exportConfig);
 
 victoryCloseBtn.addEventListener("click", hideVictory);
+victoryHomeBtn.addEventListener("click", returnToMenu);
 victoryRandomBtn.addEventListener("click", startRandomFive);
 victoryChooseBtn.addEventListener("click", openDraft);
 victoryRematchBtn?.addEventListener("click", () => {
@@ -3085,22 +3078,26 @@ victoryOverlay.addEventListener("click", (event) => {
 
 startRandomBtn.addEventListener("click", startRandomFive);
 startChooseBtn.addEventListener("click", openDraft);
+startBackBtn.addEventListener("click", () => {
+  startOverlay.classList.add("hidden");
+  showLanding("local");
+});
+startOverlay.addEventListener("click", (event) => {
+  if (event.target === startOverlay) startBackBtn.click();
+});
 
-draftCloseBtn.addEventListener("click", () => {
+function closeDraft() {
   draftOverlay.classList.add("hidden");
   sound.play("modalClose");
   if (draftMode === "online") {
     updateLobbyOverlay();
   }
-});
+}
+
+draftCloseBtn.addEventListener("click", closeDraft);
+draftBackBtn.addEventListener("click", closeDraft);
 draftOverlay.addEventListener("click", (event) => {
-  if (event.target === draftOverlay) {
-    draftOverlay.classList.add("hidden");
-    sound.play("modalClose");
-    if (draftMode === "online") {
-      updateLobbyOverlay();
-    }
-  }
+  if (event.target === draftOverlay) closeDraft();
 });
 draftStartBtn.addEventListener("click", () => {
   if (draftSelection.size !== 5) return;
@@ -3164,9 +3161,11 @@ installAppBtn.addEventListener("click", async () => {
   installOverlay.classList.remove("hidden");
 });
 
-installCloseBtn.addEventListener("click", () => installOverlay.classList.add("hidden"));
+const closeInstall = () => installOverlay.classList.add("hidden");
+installCloseBtn.addEventListener("click", closeInstall);
+installDoneBtn.addEventListener("click", closeInstall);
 installOverlay.addEventListener("click", (event) => {
-  if (event.target === installOverlay) installOverlay.classList.add("hidden");
+  if (event.target === installOverlay) closeInstall();
 });
 
 window.addEventListener("appinstalled", () => {
@@ -3174,7 +3173,8 @@ window.addEventListener("appinstalled", () => {
   installAppBtn.classList.add("hidden");
 });
 
-appUpdateBtn.addEventListener("click", () => window.location.reload());
+appUpdateReloadBtn.addEventListener("click", () => window.location.reload());
+appUpdateDismissBtn.addEventListener("click", () => appUpdateNotice.classList.add("hidden"));
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -3184,7 +3184,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
         const worker = registration.installing;
         worker?.addEventListener("statechange", () => {
           if (worker.state === "installed" && navigator.serviceWorker.controller) {
-            appUpdateBtn.classList.remove("hidden");
+            appUpdateNotice.classList.remove("hidden");
           }
         });
       });
