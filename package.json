@@ -1,7 +1,10 @@
 {
   "name": "onitama-like",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run dev -w apps/client",
     "dev:server": "npm run build -w packages/rules && npm run dev -w apps/server",
@@ -16,5 +19,13 @@
     "quality:ci": "npm run quality && npm run test:server:health",
     "typecheck": "npm run typecheck -w packages/rules && npm run typecheck -w apps/server && npm run typecheck -w apps/client",
     "lint": "npm run lint -w apps/client && npm run lint -w apps/server"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.71.1",
+    "@typescript-eslint/parser": "^8.71.1",
+    "eslint": "^10.12.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.57.1"
   }
 }

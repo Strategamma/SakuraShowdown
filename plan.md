@@ -1,5 +1,19 @@
 # Upgrade plan
 
+## Pre-publish bug scan (2026-10-08)
+
+**Goal:** Identify and fix release-blocking defects before publishing the PWA and multiplayer flow.
+
+**Scope:** Rules, types, builds, lint, server health, private/public multiplayer, PWA assets, deployment configuration, and responsive browser flows.
+
+**Approach:** Run automated gates first, audit integration boundaries, exercise live and local multiplayer, then fix only confirmed defects.
+
+**Risks:** Browser automation may remain blocked by the missing Chromium runtime; dependency vulnerabilities require a deliberate major-version migration.
+
+**Verification:** Full workspace quality/build/lint, dependency audit, local and live network probes, PWA validation, source review, and browser QA where available.
+
+**Status:** Complete. Automated gates and two-client multiplayer pass; only physical-device visual QA and the deliberate Colyseus major migration remain.
+
 **Goal:** Make the current web game reliable, clearer to play, and more polished.
 
 **Scope:** First upgrade slice: local startup/play flow, card editor, workspace build, interaction feedback, palette, transitions, accessibility.

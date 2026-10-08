@@ -153,7 +153,6 @@ const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
 const handEl = document.getElementById("hand") as HTMLElement;
 const opponentHandEl = document.getElementById("opponent-hand") as HTMLElement;
 const poolEl = document.getElementById("pool") as HTMLElement;
-const poolSection = poolEl?.closest(".pool-rail") as HTMLElement | null;
 const opponentCapturedEl = document.getElementById("opponent-captured") as HTMLElement;
 const playerCapturedEl = document.getElementById("player-captured") as HTMLElement;
 const gameConsole = document.getElementById("game-console") as HTMLElement | null;
@@ -379,7 +378,6 @@ let hintSuggestions: LegalMove[] = [];
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let customizeMode: "edit" | "new" = "edit";
-let currentRoomId: string | undefined;
 let currentRoomCode: string | undefined;
 let currentRoomPrivate = false;
 let baseConfig: GameConfig | undefined;
@@ -428,7 +426,6 @@ let namesEditing = false;
 let lobbyTimer: number | undefined;
 let returnToLandingOnCustomizeClose = false;
 let noticeTimeout: number | undefined;
-let rematchPending = false;
 let isSpectator = false;
 let lobbyBusy = false;
 let spectatorNoticeHidden = false;
@@ -692,12 +689,10 @@ const controller = new GameController({
     statusEl.textContent = message;
   },
   onRoom: (roomId) => {
-    currentRoomId = roomId;
     statusEl.textContent = `Online match ready · Room ${roomId}`;
     updateRoomCode();
   },
   onRoomInfo: (info) => {
-    currentRoomId = info.roomId;
     currentRoomCode = info.code;
     currentRoomPrivate = Boolean(info.private);
     networkEntry = info.private ? "wifi" : "online";
@@ -745,7 +740,6 @@ const controller = new GameController({
     controller.disconnectOnline();
     setReconnectToken("");
     setSpectatorMode(false);
-    currentRoomId = undefined;
     currentRoomCode = undefined;
     currentRoomPrivate = false;
     onlineReadyIds = new Set();
@@ -766,7 +760,6 @@ const controller = new GameController({
       statusEl.textContent = "Disconnected. You can resume from the lobby.";
     }
     setSpectatorMode(false);
-    currentRoomId = undefined;
     currentRoomCode = undefined;
     currentRoomPrivate = false;
     onlineReadyIds = new Set();
@@ -1046,9 +1039,6 @@ function renderAll() {
   const viewPlayerId = getViewPlayerId(state, config);
   const activeId = state.activePlayerId;
   if (!state.winnerId && activeId !== lastActivePlayerId) {
-    const shouldPlay =
-      currentMode === "local" ||
-      (!isSpectator && viewPlayerId === activeId);
     if (currentMode === "local") {
       const primaryId = config.players[0]?.id;
       sound.play(activeId === primaryId ? "turnRed" : "turnBlue");
@@ -1377,7 +1367,6 @@ function leaveOnlineLobby() {
   controller.disconnectOnline();
   setReconnectToken("");
   setSpectatorMode(false);
-  currentRoomId = undefined;
   currentRoomCode = undefined;
   currentRoomPrivate = false;
   onlineReadyIds = new Set();
@@ -1772,7 +1761,6 @@ function setMode(mode: "local" | "online") {
   updateLobbyOverlay();
   updateRoomCode();
   if (mode === "local") {
-    currentRoomId = undefined;
     currentRoomPrivate = false;
     if (baseConfig) {
       const withName = applyLocalName(baseConfig);
@@ -2340,7 +2328,7 @@ function applyCardChanges() {
     startLocalMatch();
     playerLabel.textContent = localName || "You";
     closeCustomize();
-  } catch (error) {
+  } catch {
     statusEl.textContent = "Invalid card configuration.";
   }
 }
@@ -2408,7 +2396,6 @@ function showVictory(winnerName: string) {
   victorySubtitle.textContent = describeVictory();
   victorySummary.textContent = `${Math.max(1, (latestState?.turn ?? 2) - 1)} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
   recordLocalResult();
-  rematchPending = false;
   victoryOverlay.classList.toggle("spectator", isSpectator);
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
   if (victoryRematchBtn) victoryRematchBtn.disabled = false;
@@ -2431,7 +2418,6 @@ function hideVictory() {
 }
 
 function setRematchPending(pending: boolean) {
-  rematchPending = pending;
   if (victoryWaitEl) victoryWaitEl.classList.toggle("hidden", !pending);
   if (victoryRematchBtn) victoryRematchBtn.disabled = pending;
 }
@@ -2654,7 +2640,7 @@ async function bootstrap() {
         statusEl.textContent = "Using local defaults.";
       }
     }
-  } catch (error) {
+  } catch {
     statusEl.textContent = "Failed to load config.";
   }
 }
@@ -2676,7 +2662,6 @@ function returnToMenu() {
   victoryOverlay.classList.add("hidden");
   overlay.classList.add("hidden");
   setSpectatorMode(false);
-  currentRoomId = undefined;
   currentRoomCode = undefined;
   currentRoomPrivate = false;
   appEl.dataset.started = "false";

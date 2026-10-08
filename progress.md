@@ -260,3 +260,9 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Added migration for the retired Koyeb gateway saved by older releases; affected installed PWAs now discard that stale override and use the current configured gateway.
   - Client typecheck and production build pass. A live end-to-end probe created a private room, received its six-letter code, and resolved that code back to the same room through `/private`.
   - The prescribed browser loop was attempted, but Playwright's Chromium executable is absent on this host; no new screenshot was produced.
+- 2026-10-08 pre-publish bug scan:
+  - Repaired the lint gate and removed six stale client variables/assignments; lint now passes for client and server.
+  - Updated Express and safe transitive dependencies, removing all critical production advisories and reducing the production audit to 13 advisories (1 high, 10 moderate, 2 low) that require a Colyseus major migration.
+  - Declared the Linux Rollup binary as an optional dependency and changed GitHub Pages deployment to reproducible `npm ci --include=dev --include=optional`.
+  - Clean install, lint, 16 rules/integration tests, all typechecks, server health, production build/budgets, PWA asset validation, and live gateway health passed.
+  - A two-client private-room probe verified create, code lookup, opposite seat assignment, ready/start, and mirrored first move. Chromium downloaded but remains blocked at launch by macOS Mach policy, so no fresh visual screenshot was possible.
