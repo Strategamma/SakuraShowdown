@@ -2840,10 +2840,6 @@ body.reduce-motion *::after {
     grid-template-columns: 1fr 1fr;
   }
 
-  .profile-summary #install-app {
-    grid-column: 1 / -1;
-  }
-
   .setting-row {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -3719,6 +3715,28 @@ body.reduce-motion *::after {
 .landing-heading { flex: 1; }
 .landing-heading .overlay-title { font-size: clamp(1.6rem, 3.2vw, 2.5rem); }
 
+.landing-card > .overlay-header .overlay-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.install-home-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 14px;
+  color: #f2fff8;
+  background: linear-gradient(145deg, rgba(68, 135, 108, 0.95), rgba(37, 91, 74, 0.96));
+  border-color: rgba(150, 226, 191, 0.5);
+  box-shadow: 0 10px 24px rgba(15, 53, 42, 0.3), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.install-home-button svg { width: 17px; height: 17px; fill: currentColor; }
+.install-home-button:hover { border-color: rgba(185, 244, 216, 0.78); }
+
 .decadence-link {
   color: var(--text-muted);
   font-size: 0.68rem;
@@ -3778,6 +3796,8 @@ body.reduce-motion *::after {
   .landing-heading .overlay-subtitle { display: block; font-size: 0.68rem; line-height: 1.4; }
   .landing-eyebrow { display: none; }
   .decadence-link { display: none; }
+  .install-home-button { min-width: 44px; padding: 10px; border-radius: 13px; }
+  .install-home-button span { display: none; }
   .landing-body { gap: 12px; overflow-y: auto; }
   .landing-tabs-row { gap: 8px; }
   .landing-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; }
