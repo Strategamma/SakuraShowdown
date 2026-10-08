@@ -13,6 +13,7 @@
 - Mobile keeps two cards per hand in a compact row, uses a full-width square board, preserves 44px touch targets and safe-area insets, and scrolls the match vertically rather than shrinking objects below legibility.
 - Controls are grouped by purpose: board manipulation, match actions, and live status. On phones, match actions live in a thumb-reachable bottom dock and never cover playable content.
 - The landing screen leads with a clear recommended action, while alternative modes explain their audience and consequence before selection.
+- Cross-site arrivals should feel handed off, not redirected: Decadence visitors receive a compact Sakura introduction with play choices still visible, while tutorials remain explicitly requested.
 - Phone gameplay is a compact dedicated surface: short header, horizontal movement cards, edge-dominant board, light panel framing, and a separate landscape composition.
 - Setup and utility overlays use dynamic viewport height, safe-area padding, centered short dialogs, internally scrolling long content, and full-width primary actions on phones.
 - Card-selection grids stay two columns on phones; selection order is visible, unavailable options are subdued, and every tile is a keyboard-focusable button.

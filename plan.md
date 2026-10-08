@@ -1,5 +1,19 @@
 # Upgrade plan
 
+## Decadence handoff (2026-10-08)
+
+**Goal:** Make the transition from decadenceinc.com into Sakura feel intentional and prevent first-time visitors from being dropped into the tutorial.
+
+**Scope:** Source/referrer detection, compact welcome content, tutorial launch behavior, and a feasibility assessment for shared login.
+
+**Approach:** Recognize an explicit `source=decadence` parameter with referrer fallback, reveal a dismissible home-page introduction, keep play choices immediately visible, and reserve How to Play for an explicit tap.
+
+**Risks:** Cross-origin referrers may be suppressed, so the homesite should use the explicit source parameter; authentication cannot safely share cookies or local storage across separate domains.
+
+**Verification:** Entry-state source audit, DOM contract, lint, client typecheck/build, full gameplay tests, and prescribed browser attempt.
+
+**Status:** Complete in Sakura. The homesite should update both Sakura links to include `?source=decadence`; shared login is feasible but requires an identity provider and authenticated persistence outside the current in-memory server.
+
 ## Navigation escape audit (2026-10-08)
 
 **Goal:** Ensure every page, modal, recovery screen, and tooltip has an obvious, understandable way in and out on phones and desktop.

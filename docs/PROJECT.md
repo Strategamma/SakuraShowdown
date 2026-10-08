@@ -25,7 +25,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
 - Same-Wi-Fi play uses `npm run host:lan`: the authoritative server serves the production client on one LAN origin, and private room codes/share links join the second device. Hosted HTTPS pages cannot directly use insecure LAN websockets.
 - Local, Same Wi-Fi, and Internet have separate entry panels. Wi-Fi avoids public-lobby requests, uses a compact phone-first pairing lobby, and orients each online client from its assigned player side.
-- The landing layer is the non-dismissible app home for website and PWA launches. It leads with Solo, Same Wi-Fi, and Pass & Play; focused setup panels sit behind Home/Wi-Fi/Internet navigation, and a persistent phone install action hides in standalone mode.
+- The landing layer is the non-dismissible app home for website and PWA launches. Decadence arrivals get a compact introduction and opt-in tutorial; Solo, Same Wi-Fi, Pass & Play, focused setup navigation, and phone install remain immediate.
 
 ## Current major state
 

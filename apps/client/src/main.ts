@@ -113,6 +113,7 @@ const MOBILE_NAME_KEY = "mobileName";
 const MOBILE_SERVER_KEY = "mobileServer";
 const JOIN_CODE_KEY = "join";
 const LAUNCH_MODE_KEY = "play";
+const LAUNCH_SOURCE_KEY = "source";
 
 type EmbeddedLaunchMode = "local" | "online" | undefined;
 
@@ -200,6 +201,8 @@ const draftStartBtn = document.getElementById("draft-start") as HTMLButtonElemen
 const draftCloseBtn = document.getElementById("draft-close") as HTMLButtonElement;
 const draftBackBtn = document.getElementById("draft-back") as HTMLButtonElement;
 const landingOverlay = document.getElementById("landing-overlay") as HTMLElement;
+const decadenceIntro = document.getElementById("decadence-intro") as HTMLElement;
+const decadenceIntroDismiss = document.getElementById("decadence-intro-dismiss") as HTMLButtonElement;
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingAiBtn = document.getElementById("landing-ai") as HTMLButtonElement;
 const landingWifiQuickBtn = document.getElementById("landing-wifi-quick") as HTMLButtonElement;
@@ -299,14 +302,30 @@ const embeddedLaunchMode: EmbeddedLaunchMode =
 const embeddedDisplayName = queryParams?.get(MOBILE_NAME_KEY)?.trim() ?? "";
 const embeddedServerUrl = queryParams?.get(MOBILE_SERVER_KEY)?.trim() ?? "";
 const launchMode = queryParams?.get(LAUNCH_MODE_KEY)?.trim().toLowerCase();
+const launchSource = queryParams?.get(LAUNCH_SOURCE_KEY)?.trim().toLowerCase();
 const launchJoinCode = queryParams?.get(JOIN_CODE_KEY)?.trim().toLowerCase() ?? "";
 const launchDisplayName = queryParams?.get("name")?.trim() ?? "";
+let referrerHost = "";
+try {
+  referrerHost = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : "";
+} catch {
+  referrerHost = "";
+}
+const arrivedFromDecadence =
+  launchSource === "decadence" ||
+  referrerHost === "decadenceinc.com" ||
+  referrerHost === "www.decadenceinc.com";
 const isStandalone =
   window.matchMedia("(display-mode: standalone)").matches ||
   ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
 const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
 document.body.dataset.embed = isEmbeddedMobileClient ? "mobile" : "web";
 document.body.dataset.devCardEditor = enableDevCardEditor ? "1" : "0";
+document.body.dataset.source = arrivedFromDecadence
+  ? "decadence"
+  : launchSource === "pwa"
+    ? "pwa"
+    : "direct";
 
 type MobileBridgeEvent = {
   type: string;
@@ -2714,6 +2733,12 @@ window.addEventListener("beforeunload", (event) => {
 
 applyCardEditorVisibility();
 
+decadenceIntro.classList.toggle("hidden", !arrivedFromDecadence);
+decadenceIntroDismiss.addEventListener("click", () => {
+  decadenceIntro.classList.add("hidden");
+  landingAiBtn.focus();
+});
+
 landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabWifi?.addEventListener("click", () => setLandingTab("wifi"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
@@ -3136,7 +3161,12 @@ void (async () => {
   if (launchJoinCode && launchDisplayName && !isEmbeddedMobileClient) {
     await privateJoinBtn?.click();
   }
-  if (!embeddedLaunchMode && !openTogether && localStorage.getItem(TUTORIAL_COMPLETE_KEY) !== "1") {
+  if (
+    !arrivedFromDecadence &&
+    !embeddedLaunchMode &&
+    !openTogether &&
+    localStorage.getItem(TUTORIAL_COMPLETE_KEY) !== "1"
+  ) {
     window.setTimeout(openTutorial, 250);
   }
 })();

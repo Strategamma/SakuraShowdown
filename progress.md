@@ -273,3 +273,8 @@ Original prompt: Target all UI issues on the gameplay page and landing page, add
   - Standardized safe Escape/backdrop behavior and accessible dialog/close labels, while keeping match-leave confirmation intact.
   - Removed four stale bindings to retired controls. Lint, 16 tests, typechecks, server health, production build/budgets, service-worker syntax, and the 170-ID navigation contract pass.
   - Prescribed Chromium navigation playback remains blocked by macOS Mach-port policy, so final phone visual validation is still required.
+- 2026-10-08 Decadence handoff:
+  - Added explicit `source=decadence` recognition with `decadenceinc.com` referrer fallback and a compact, dismissible Sakura introduction above the immediate play choices.
+  - Decadence arrivals no longer auto-open the first-run How to Play tutorial; it remains available by choice.
+  - The Decadence static checkout is outside this workspace and still uses the bare game URL; both homesite links should add `?source=decadence` for reliable cross-origin detection.
+  - Lint, client build/budgets, all 16 tests, typechecks, server health, 173 unique DOM IDs, and binding checks pass. Chromium visual playback remains blocked by macOS Mach policy.
