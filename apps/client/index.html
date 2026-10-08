@@ -359,6 +359,11 @@
                 <span class="play-option-copy"><strong>Same Wi-Fi</strong><small>Two phones, mirrored boards</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
+              <button id="landing-online-quick" class="play-option online-option ghost-button">
+                <span class="play-option-icon" aria-hidden="true">◎</span>
+                <span class="play-option-copy"><strong>Play Online</strong><small>Create or join an Internet room</small></span>
+                <span class="play-option-arrow" aria-hidden="true">→</span>
+              </button>
               <button id="landing-local" class="play-option ghost-button">
                 <span class="play-option-icon" aria-hidden="true">対</span>
                 <span class="play-option-copy"><strong>Pass &amp; Play</strong><small>Share this screen with a friend</small></span>
@@ -386,6 +391,20 @@
             <div class="same-wifi-intro">
               <span class="play-option-icon" aria-hidden="true">対</span>
               <div><strong>Two phones. One board.</strong><p>Each player sees their own pieces from their side.</p></div>
+            </div>
+            <div id="wifi-resume-card" class="wifi-resume-card hidden">
+              <div><strong>Game in progress</strong><p>Return to your saved seat in the private lobby.</p></div>
+              <button id="wifi-resume" class="ghost-button">Resume Game</button>
+            </div>
+            <div id="lan-lobby" class="landing-lobby lan-lobby hidden">
+              <div class="landing-lobby-header">
+                <div>
+                  <div class="label">Games on this Wi-Fi</div>
+                  <div class="room-info">Enter your name above, then tap Join Lobby.</div>
+                </div>
+                <button id="lan-lobby-refresh" class="ghost-button">Refresh</button>
+              </div>
+              <div id="lan-lobby-list" class="lobby-list"></div>
             </div>
             <div class="landing-private same-wifi-card">
               <div class="landing-private-header">

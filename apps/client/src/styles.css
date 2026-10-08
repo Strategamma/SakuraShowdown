@@ -1621,6 +1621,21 @@ button:disabled {
   gap: 12px;
 }
 
+.wifi-resume-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(118, 211, 177, 0.38);
+  border-radius: 16px;
+  background: rgba(37, 91, 72, 0.22);
+}
+
+.wifi-resume-card p { margin: 3px 0 0; color: var(--text-muted); font-size: 0.72rem; }
+.wifi-resume-card button { flex: 0 0 auto; }
+.lan-lobby { min-height: 0; }
+
 .landing-actions .play-option {
   width: 100%;
   min-height: 94px;
@@ -3802,7 +3817,7 @@ body.reduce-motion *::after {
 .landing-tabs-row .rules-button { margin-left: auto; }
 
 .landing-panel-local .landing-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .landing-actions .play-option {

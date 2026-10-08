@@ -172,6 +172,7 @@ export class OnlineSession {
       if (this.room.reconnectionToken) {
         this.handlers.onReconnectToken?.(this.room.reconnectionToken);
       }
+      this.room.send("request_snapshot");
     } catch (error) {
       this.handlers.onError("Failed to reconnect.");
       throw error;

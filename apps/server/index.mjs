@@ -79,6 +79,24 @@ class GameRoom extends Room {
   isSandbox = false;
   rulePack;
 
+  sendSnapshot(client, assigned) {
+    client.send("player", { playerId: assigned, spectator: !assigned });
+    const showCode = !this.isPrivate || assigned === this.ownerId;
+    client.send("room_info", {
+      roomId: this.roomId,
+      code: showCode ? this.roomCode : undefined,
+      private: this.isPrivate,
+      started: this.gameStarted
+    });
+    client.send("rule_pack", this.rulePack);
+    client.send("config", this.config);
+    client.send("state", this.stateData);
+    client.send("ready_state", {
+      ready: Array.from(this.readyByPlayer),
+      started: this.gameStarted
+    });
+  }
+
   updateMetadata() {
     const active = new Set();
     for (const client of this.clients) {
@@ -96,7 +114,8 @@ class GameRoom extends Room {
       public: !this.isPrivate,
       code: this.isPrivate ? undefined : this.roomCode,
       sandbox: this.isSandbox || undefined,
-      sandboxName: this.sandboxName
+      sandboxName: this.sandboxName,
+      hostName: this.config?.players.find((player) => player.id === this.ownerId)?.name
     });
   }
 
@@ -153,6 +172,11 @@ class GameRoom extends Room {
       if (this.stateData.activePlayerId !== playerId) return;
       const moves = listLegalMoves(this.stateData, this.config);
       client.send("legal_moves", moves);
+    });
+
+    this.onMessage("request_snapshot", (client) => {
+      const playerId = this.playerByClient.get(client.sessionId);
+      this.sendSnapshot(client, playerId);
     });
 
     this.onMessage("set_name", (client, payload) => {
@@ -331,21 +355,7 @@ class GameRoom extends Room {
       }
     }
 
-    client.send("player", { playerId: assigned, spectator: !assigned });
-    const showCode = !this.isPrivate || assigned === this.ownerId;
-    client.send("room_info", {
-      roomId: this.roomId,
-      code: showCode ? this.roomCode : undefined,
-      private: this.isPrivate,
-      started: this.gameStarted
-    });
-    client.send("rule_pack", this.rulePack);
-    client.send("config", this.config);
-    client.send("state", this.stateData);
-    client.send("ready_state", {
-      ready: Array.from(this.readyByPlayer),
-      started: this.gameStarted
-    });
+    this.sendSnapshot(client, assigned);
     this.updateMetadata();
 
     if (assigned && !isReconnect) {
@@ -639,6 +649,45 @@ app.get("/lobby", async (_req, res) => {
     });
   } catch {
     res.status(500).json({ error: "Failed to fetch lobby." });
+  }
+});
+
+function isLanRequest(req) {
+  if (!fs.existsSync(path.join(CLIENT_DIST, "index.html"))) return false;
+  const hostname = String(req.hostname ?? "").toLowerCase();
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.startsWith("10.") ||
+    hostname.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+  );
+}
+
+app.get("/lan-lobby", async (req, res) => {
+  if (!isLanRequest(req)) {
+    res.status(404).json({ error: "LAN lobby discovery is only available on a local host." });
+    return;
+  }
+  try {
+    const rooms = await matchMaker.query({ name: "onitama" });
+    const joinable = rooms.filter(
+      (room) =>
+        room.metadata?.public === false &&
+        room.metadata?.started !== true &&
+        room.metadata?.open !== false
+    );
+    res.json({
+      rooms: joinable.map((room) => ({
+        roomId: room.roomId,
+        players: room.metadata?.players ?? 0,
+        maxPlayers: room.metadata?.maxPlayers ?? 2,
+        hostName: room.metadata?.hostName ?? "Host"
+      }))
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch LAN lobbies." });
   }
 });
 

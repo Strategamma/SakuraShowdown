@@ -21,10 +21,11 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Preserve local play when multiplayer is unavailable.
 - Production hides card editing by default; enable via development mode or `?devCardEditor=1`.
 - UI uses accessible DOM controls around a Three.js board and exposes `window.render_game_to_text` plus `window.advanceTime` for QA.
-- The Three.js renderer is typechecked with version-matched official types, pauses while hidden, and owns explicit GPU/resource cleanup.
+- The Three.js renderer pauses while hidden and owns explicit GPU/resource cleanup.
 - Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
-- Same-Wi-Fi play uses `npm run host:lan`: the authoritative server serves the production client on one LAN origin, and private room codes/share links join the second device. Hosted HTTPS pages cannot directly use insecure LAN websockets.
-- Local, Same Wi-Fi, and Internet have separate entry panels. Wi-Fi avoids public-lobby requests, uses a compact phone-first pairing lobby, and orients each online client from its assigned player side.
+- `npm run host:lan` serves the client and server on one LAN origin, with name-based discovery and invite codes. Render never lists private LAN rooms.
+- Multiplayer reconnect credentials and private-room context persist locally so a refreshed player can reclaim the same seat within the server's reconnection window.
+- Local, Same Wi-Fi, and Internet have separate entry panels. Online boards orient from the assigned player's side.
 - The landing layer is the non-dismissible app home for website and PWA launches. Decadence arrivals get a compact introduction and opt-in tutorial; Solo, Same Wi-Fi, Pass & Play, focused setup navigation, and phone install remain immediate.
 
 ## Current major state

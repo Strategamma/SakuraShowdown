@@ -95,6 +95,11 @@ function getPrivateUrl() {
   const httpBase = toHttpUrl(getServerUrl());
   return `${httpBase.replace(/\/$/, "")}/private`;
 }
+
+function getLanLobbyUrl() {
+  const httpBase = toHttpUrl(getServerUrl());
+  return `${httpBase.replace(/\/$/, "")}/lan-lobby`;
+}
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
@@ -102,6 +107,7 @@ const LOCAL_START_KEY = "sakura.localStartingPlayer";
 const VIEW_MODE_KEY = "sakura.viewMode";
 const ONLINE_NAME_KEY = "sakura.onlineName";
 const RECONNECT_KEY = "sakura.reconnectToken";
+const RECONNECT_CONTEXT_KEY = "sakura.reconnectContext";
 const DEV_CARD_EDITOR_KEY = "sakura.devCardEditor";
 const TUTORIAL_COMPLETE_KEY = "sakura.tutorialComplete";
 const AI_DIFFICULTY_KEY = "sakura.aiDifficulty";
@@ -206,6 +212,7 @@ const decadenceIntroDismiss = document.getElementById("decadence-intro-dismiss")
 const landingLocalBtn = document.getElementById("landing-local") as HTMLButtonElement;
 const landingAiBtn = document.getElementById("landing-ai") as HTMLButtonElement;
 const landingWifiQuickBtn = document.getElementById("landing-wifi-quick") as HTMLButtonElement;
+const landingOnlineQuickBtn = document.getElementById("landing-online-quick") as HTMLButtonElement | null;
 const landingTutorialBtn = document.getElementById("landing-tutorial") as HTMLButtonElement;
 const aiDifficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
 const landingCustomizeBtn = document.getElementById("landing-customize") as HTMLButtonElement;
@@ -248,6 +255,11 @@ const lobbyCreateBtn = document.getElementById("lobby-create") as HTMLButtonElem
 const privateKeyInput = document.getElementById("private-key") as HTMLInputElement | null;
 const privateJoinBtn = document.getElementById("private-join") as HTMLButtonElement | null;
 const privateCreateBtn = document.getElementById("private-create") as HTMLButtonElement | null;
+const wifiResumeCard = document.getElementById("wifi-resume-card") as HTMLElement | null;
+const wifiResumeBtn = document.getElementById("wifi-resume") as HTMLButtonElement | null;
+const lanLobbyEl = document.getElementById("lan-lobby") as HTMLElement | null;
+const lanLobbyListEl = document.getElementById("lan-lobby-list") as HTMLElement | null;
+const lanLobbyRefreshBtn = document.getElementById("lan-lobby-refresh") as HTMLButtonElement | null;
 const onlineStatusEl = document.getElementById("online-status") as HTMLElement | null;
 const tutorialOverlay = document.getElementById("tutorial-overlay") as HTMLElement;
 const tutorialCloseBtn = document.getElementById("tutorial-close") as HTMLButtonElement;
@@ -439,6 +451,13 @@ type InstallPromptEvent = Event & {
 let installPrompt: InstallPromptEvent | undefined;
 let onlineName = localStorage.getItem(ONLINE_NAME_KEY) ?? "";
 let reconnectToken = localStorage.getItem(RECONNECT_KEY) ?? "";
+type ReconnectContext = { roomId: string; private: boolean; code?: string; name?: string };
+let reconnectContext: ReconnectContext | undefined;
+try {
+  reconnectContext = JSON.parse(localStorage.getItem(RECONNECT_CONTEXT_KEY) ?? "null") ?? undefined;
+} catch {
+  localStorage.removeItem(RECONNECT_CONTEXT_KEY);
+}
 let currentMode: "local" | "online" = "local";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
@@ -730,6 +749,9 @@ const controller = new GameController({
     }
     updateRoomCode();
     updateLobbyOverlay();
+    if (info.private && reconnectToken) {
+      saveReconnectContext({ private: true, code: info.code, name: getOnlineName(), roomId: info.roomId });
+    }
   },
   onPlayer: (playerId) => {
     if (!playerId) {
@@ -792,7 +814,14 @@ const controller = new GameController({
     showLanding(networkEntry);
   },
   onReconnectToken: (token) => {
-    if (token) setReconnectToken(token);
+    if (token) {
+      setReconnectToken(token);
+      saveReconnectContext({
+        private: currentRoomPrivate || networkEntry === "wifi",
+        code: currentRoomCode ?? (privateKeyInput?.value.trim().toLowerCase() || undefined),
+        name: getOnlineName()
+      });
+    }
   },
   onReadyState: (payload) => {
     onlineReadyIds = new Set(payload.ready);
@@ -1262,6 +1291,7 @@ function setLandingTab(tab: LandingTab) {
     sound.startAmbience();
   } else if (tab === "wifi") {
     setOnlineStatus();
+    void refreshLanLobby();
     sound.startAmbience();
   } else {
     sound.stopAmbience();
@@ -1295,6 +1325,8 @@ function updateResumeButton() {
   if (landingActionsOnline) {
     landingActionsOnline.classList.add("hidden");
   }
+  const canResumePrivate = Boolean(reconnectToken && reconnectContext?.private);
+  wifiResumeCard?.classList.toggle("hidden", !canResumePrivate);
 }
 
 function setReconnectToken(token?: string) {
@@ -1303,8 +1335,41 @@ function setReconnectToken(token?: string) {
     localStorage.setItem(RECONNECT_KEY, reconnectToken);
   } else {
     localStorage.removeItem(RECONNECT_KEY);
+    reconnectContext = undefined;
+    localStorage.removeItem(RECONNECT_CONTEXT_KEY);
   }
   updateResumeButton();
+}
+
+function saveReconnectContext(context: Omit<ReconnectContext, "roomId"> & { roomId?: string }) {
+  const roomId = context.roomId ?? getReconnectRoomId(reconnectToken);
+  if (!reconnectToken || !roomId) return;
+  reconnectContext = { ...context, roomId };
+  localStorage.setItem(RECONNECT_CONTEXT_KEY, JSON.stringify(reconnectContext));
+  updateResumeButton();
+}
+
+async function resumePrivateGame() {
+  if (!reconnectToken || !reconnectContext?.private || lobbyBusy) return false;
+  setMode("online");
+  networkEntry = "wifi";
+  setLobbyBusy(true);
+  const ok = await controller.reconnectOnline(
+    getServerUrl(),
+    normalizeReconnectToken(reconnectToken),
+    ensureOnlineName() || reconnectContext.name
+  );
+  setLobbyBusy(false);
+  if (ok) {
+    setSpectatorMode(false);
+    hideLanding();
+    updateLobbyOverlay();
+    setOnlineStatus();
+    return true;
+  }
+  setReconnectToken("");
+  setOnlineStatus("That saved seat has expired. Join the lobby again.", "error");
+  return false;
 }
 
 function setSpectatorMode(enabled: boolean) {
@@ -1490,6 +1555,8 @@ function setLobbyBusy(busy: boolean) {
   }
   setButtonDisabled(privateJoinBtn, busy, tooltip);
   setButtonDisabled(privateCreateBtn, busy, tooltip);
+  setButtonDisabled(wifiResumeBtn, busy, tooltip);
+  setButtonDisabled(lanLobbyRefreshBtn, busy, tooltip);
   if (privateKeyInput) privateKeyInput.disabled = busy;
   if (busy) {
     lobbyCreateBtn.textContent = "Creating...";
@@ -1795,6 +1862,71 @@ async function lookupPrivateRoom(code: string) {
   const payload = (await response.json()) as { roomId?: string };
   if (!payload.roomId) throw new Error("failed");
   return payload.roomId;
+}
+
+async function refreshLanLobby() {
+  if (!lanLobbyEl || !lanLobbyListEl || !lanLobbyRefreshBtn || lobbyBusy) return;
+  lanLobbyRefreshBtn.classList.add("loading");
+  try {
+    const response = await fetch(getLanLobbyUrl(), { cache: "no-store" });
+    if (!response.ok) {
+      lanLobbyEl.classList.add("hidden");
+      return;
+    }
+    const payload = (await response.json()) as {
+      rooms?: { roomId: string; players: number; maxPlayers: number; hostName?: string }[];
+    };
+    lanLobbyEl.classList.remove("hidden");
+    lanLobbyListEl.innerHTML = "";
+    const rooms = payload.rooms ?? [];
+    if (!rooms.length) {
+      const empty = document.createElement("div");
+      empty.className = "lobby-empty";
+      empty.textContent = "No nearby lobby yet. One player can host below.";
+      lanLobbyListEl.appendChild(empty);
+      return;
+    }
+    for (const room of rooms) {
+      const row = document.createElement("div");
+      row.className = "lobby-item";
+      const meta = document.createElement("div");
+      meta.className = "room-meta";
+      const title = document.createElement("div");
+      title.className = "room-id";
+      title.textContent = `${room.hostName || "Host"}'s lobby`;
+      const count = document.createElement("div");
+      count.className = "room-count";
+      count.textContent = `${room.players}/${room.maxPlayers} players · Waiting`;
+      meta.append(title, count);
+      const join = document.createElement("button");
+      join.className = "ghost-button";
+      join.textContent = "Join Lobby";
+      join.addEventListener("click", async () => {
+        const name = ensureOnlineName();
+        if (!name || lobbyBusy) return;
+        networkEntry = "wifi";
+        setMode("online");
+        setLobbyBusy(true);
+        const ok = await controller.connectOnline(getServerUrl(), room.roomId, name);
+        setLobbyBusy(false);
+        if (ok) {
+          saveReconnectContext({ private: true, name, roomId: room.roomId });
+          setSpectatorMode(false);
+          hideLanding();
+          updateLobbyOverlay();
+          return;
+        }
+        setOnlineStatus("That lobby is no longer available. Refresh and try again.", "error");
+        void refreshLanLobby();
+      });
+      row.append(meta, join);
+      lanLobbyListEl.appendChild(row);
+    }
+  } catch {
+    lanLobbyEl.classList.add("hidden");
+  } finally {
+    lanLobbyRefreshBtn.classList.remove("loading");
+  }
 }
 
 function setMode(mode: "local" | "online") {
@@ -2743,6 +2875,7 @@ landingTabLocal?.addEventListener("click", () => setLandingTab("local"));
 landingTabWifi?.addEventListener("click", () => setLandingTab("wifi"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingWifiQuickBtn.addEventListener("click", () => setLandingTab("wifi"));
+landingOnlineQuickBtn?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
 landingLocalBtn.addEventListener("click", () => {
   localGameType = "pass-and-play";
@@ -2827,6 +2960,7 @@ privateCreateBtn?.addEventListener("click", async () => {
   });
   setLobbyBusy(false);
   if (ok) {
+    saveReconnectContext({ private: true, code: currentRoomCode, name });
     setSpectatorMode(false);
     hideLanding();
     updateLobbyOverlay();
@@ -2853,9 +2987,19 @@ privateJoinBtn?.addEventListener("click", async () => {
   setMode("online");
   setLobbyBusy(true);
   try {
+    if (
+      reconnectToken &&
+      reconnectContext?.private &&
+      reconnectContext.code?.toLowerCase() === code
+    ) {
+      setLobbyBusy(false);
+      if (await resumePrivateGame()) return;
+      setLobbyBusy(true);
+    }
     const roomId = await lookupPrivateRoom(code);
     const ok = await controller.connectOnline(getServerUrl(), roomId, name);
     if (ok) {
+      saveReconnectContext({ private: true, code, name, roomId });
       setSpectatorMode(false);
       hideLanding();
       setOnlineStatus();
@@ -2879,6 +3023,8 @@ privateJoinBtn?.addEventListener("click", async () => {
     setLobbyBusy(false);
   }
 });
+wifiResumeBtn?.addEventListener("click", () => void resumePrivateGame());
+lanLobbyRefreshBtn?.addEventListener("click", () => void refreshLanLobby());
 lobbyCopyLinkBtn?.addEventListener("click", async () => {
   const invite = lobbyShareLink?.value;
   if (!invite) return;
