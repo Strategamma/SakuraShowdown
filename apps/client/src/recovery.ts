@@ -13,6 +13,8 @@ const reloadButton = document.getElementById("fatal-error-reload") as HTMLButton
 const copyButton = document.getElementById("fatal-error-copy") as HTMLButtonElement | null;
 const homeButton = document.getElementById("fatal-error-home") as HTMLButtonElement | null;
 const connectionNotice = document.getElementById("connection-notice");
+const internetCapability = document.getElementById("internet-capability");
+const internetCapabilityCopy = document.getElementById("internet-capability-copy");
 let lastDiagnostic: Diagnostic | undefined;
 let errorShown = false;
 
@@ -41,8 +43,15 @@ function showFatalError(reason: unknown) {
 }
 
 function updateConnectionNotice() {
-  connectionNotice?.classList.toggle("hidden", navigator.onLine);
-  document.body.dataset.connection = navigator.onLine ? "online" : "offline";
+  const online = navigator.onLine;
+  connectionNotice?.classList.toggle("hidden", online);
+  document.body.dataset.connection = online ? "online" : "offline";
+  internetCapability?.classList.toggle("unavailable", !online);
+  if (internetCapabilityCopy) {
+    internetCapabilityCopy.textContent = online
+      ? "Public rooms are available when you are online."
+      : "Unavailable now; offline and same-Wi-Fi play still work.";
+  }
 }
 
 window.addEventListener("error", (event) => showFatalError(event.error ?? event.message));

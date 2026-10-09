@@ -27,6 +27,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Multiplayer reconnect credentials and private-room context persist locally so a refreshed player can reclaim the same seat within the server's reconnection window.
 - Local, Same Wi-Fi, and Internet have separate entry panels. Online boards orient from the assigned player's side.
 - The landing layer is the non-dismissible app home for website and PWA launches. Decadence arrivals get a compact introduction and opt-in tutorial; Solo, Same Wi-Fi, Pass & Play, focused setup navigation, and phone install remain immediate.
+- Product hierarchy is mobile-first and local-first: offline Solo/Pass & Play and private same-Wi-Fi matches lead; public Internet rooms are optional and must never gate local play.
 
 ## Current major state
 
@@ -34,7 +35,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Consumer entry includes a branded app home, first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
-- The installable PWA uses generated 192/512 PNG icons, native install prompts plus iOS guidance, Solo/Together shortcuts, and versioned offline caches that bypass HTTP caches for fresh releases.
+- The PWA provides install guidance, Solo/Together shortcuts, and versioned full-shell precaching discovered from built HTML; installs fail safely if a required offline asset is unavailable.
 - Procedural pieces distinguish Masters and Students.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
 - Production internet multiplayer uses `wss://sakurashowdown.onrender.com`; `/health` and `/lobby` were live on 2026-10-08. Keep the service single-instance while room state remains in memory.

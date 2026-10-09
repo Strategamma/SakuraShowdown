@@ -27,3 +27,9 @@
 - Hints present up to two numbered, directly playable destinations; matching card badges explain the required movement card and the strongest move is preselected.
 - Phone match chrome uses one compact status header and a dedicated three-part board toolbar; zoom remains visibly adjustable rather than being hidden behind gestures alone.
 - Phone gameplay uses icon-sized match actions beside status, 68px horizontal movement cards, a contained two-column pool row, restrained framing, and low-noise surfaces so the board—not chrome—owns the screen.
+- Product hierarchy is offline and LAN first: the home screen leads with Solo, Pass & Play, and private same-Wi-Fi play; public Internet rooms remain available but are visually and verbally optional.
+- Connectivity messaging must reassure rather than block: losing Internet disables no local mode, and same-Wi-Fi play is described as private, account-free, and independent of the public room service.
+- Offline claims stay precise: Solo and Pass & Play work after the PWA shell is installed or cached; the UI never implies that an uncached first visit can load without a connection.
+- Decadence Arcade language follows the supplied parent screens: near-black grid fields, cream heavy sans headlines, amber CTAs with coral-red depth, translucent brown/red game cards, bright green live-state dots, thin warm borders, and soft colored glow fields. Sakura adds restrained blossom, paper, lacquer, and cloth materials without becoming a separate visual product.
+- All setup, utility, lobby, recovery, and result surfaces inherit the same component system; no page should revert to generic glass panels, pill-heavy SaaS styling, or unrelated corner radii.
+- Decadence referrals receive an explicit card-to-game handoff before choosing a mode. Help teaches two win conditions, the three actions in a turn, card orientation, card exchange, captures, and device-specific board behavior before offering guided practice.

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#160c0a" />
+    <meta name="theme-color" content="#0d0c0c" />
     <meta name="description" content="A focused tactical board duel for one or two players." />
     <link rel="icon" href="./sakura-icon.svg" />
     <link rel="apple-touch-icon" sizes="192x192" href="./sakura-icon-192.png" />
@@ -307,7 +307,7 @@
           <div class="landing-heading">
             <div class="landing-eyebrow">Decadence Inc. presents</div>
             <div class="overlay-title">Sakura Showdown</div>
-            <div class="overlay-subtitle">A five-minute duel of patterns, pressure, and perfect timing.</div>
+            <div class="overlay-subtitle">A five-minute tactical duel, made for one screen or one Wi-Fi.</div>
           </div>
           <div class="overlay-header-actions">
             <button id="install-app" class="install-home-button hidden" aria-label="Install Sakura Showdown">
@@ -323,22 +323,39 @@
           <div class="landing-tabs-row">
             <div class="landing-tabs">
               <button id="landing-tab-local" class="ghost-button tab-button active">
-                Home
+                This Device
               </button>
               <button id="landing-tab-wifi" class="ghost-button tab-button">Same Wi-Fi</button>
-              <button id="landing-tab-online" class="ghost-button tab-button">Internet</button>
+              <button id="landing-tab-online" class="ghost-button tab-button">Internet <span class="tab-optional">Optional</span></button>
             </div>
             <button id="landing-rules" class="ghost-button rules-button">Rules</button>
           </div>
           <div id="landing-panel-local" class="landing-panel">
             <section id="decadence-intro" class="decadence-intro hidden" aria-labelledby="decadence-intro-title">
-              <div class="decadence-intro-mark" aria-hidden="true">桜</div>
-              <div class="decadence-intro-copy">
-                <span class="landing-eyebrow">Welcome from Decadence Inc.</span>
-                <h2 id="decadence-intro-title">A tactical duel you can start in seconds.</h2>
-                <p>Outthink Kitsune solo, share one screen, or face a friend on another phone.</p>
+              <div class="decadence-intro-mark" aria-hidden="true">
+                <span class="decadence-d">D</span>
+                <span class="decadence-flower">✿</span>
               </div>
-              <button id="decadence-intro-dismiss" class="ghost-button">Choose a Mode</button>
+              <div class="decadence-intro-copy">
+                <span class="arcade-live"><i aria-hidden="true"></i> Live now · Duel</span>
+                <h2 id="decadence-intro-title">You picked Sakura Showdown</h2>
+                <p>Five pieces. Five cards. One perfect move. Choose how you want to enter the duel.</p>
+              </div>
+              <button id="decadence-intro-dismiss" class="arcade-primary">Choose your match <span aria-hidden="true">↓</span></button>
+            </section>
+            <section class="play-anywhere" aria-label="Ways Sakura works">
+              <div class="play-capability offline-capability">
+                <span class="capability-mark" aria-hidden="true">↓</span>
+                <span><strong>Offline ready</strong><small>Solo and Pass &amp; Play work without Internet after install.</small></span>
+              </div>
+              <div class="play-capability lan-capability">
+                <span class="capability-mark" aria-hidden="true">⌁</span>
+                <span><strong>LAN first</strong><small>Play privately across two phones on the same Wi-Fi.</small></span>
+              </div>
+              <div class="play-capability internet-capability" id="internet-capability">
+                <span class="capability-mark" aria-hidden="true">◎</span>
+                <span><strong>Internet optional</strong><small id="internet-capability-copy">Public rooms are available when you are online.</small></span>
+              </div>
             </section>
             <div class="mode-intro">
               <span>How do you want to play?</span>
@@ -351,17 +368,17 @@
             <div class="landing-actions">
               <button id="landing-ai" class="play-option featured">
                 <span class="play-option-icon" aria-hidden="true">✦</span>
-                <span class="play-option-copy"><strong>Solo Duel</strong><small>Play instantly against Kitsune</small></span>
+                <span class="play-option-copy"><strong>Solo Duel</strong><small>Instant play, even without Internet</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
               <button id="landing-wifi-quick" class="play-option wifi-option">
                 <span class="play-option-icon" aria-hidden="true">⌁</span>
-                <span class="play-option-copy"><strong>Same Wi-Fi</strong><small>Two phones, mirrored boards</small></span>
+                <span class="play-option-copy"><strong>Same Wi-Fi</strong><small>Private two-phone play, no cloud room</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
               <button id="landing-online-quick" class="play-option online-option ghost-button">
                 <span class="play-option-icon" aria-hidden="true">◎</span>
-                <span class="play-option-copy"><strong>Play Online</strong><small>Create or join an Internet room</small></span>
+                <span class="play-option-copy"><strong>Internet Room</strong><small>Optional play beyond your local network</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
               <button id="landing-local" class="play-option ghost-button">
@@ -390,7 +407,7 @@
           <div id="landing-panel-wifi" class="landing-panel landing-panel-wifi hidden">
             <div class="same-wifi-intro">
               <span class="play-option-icon" aria-hidden="true">対</span>
-              <div><strong>Two phones. One board.</strong><p>Each player sees their own pieces from their side.</p></div>
+              <div><strong>Two phones. One Wi-Fi.</strong><p>Private by default, with each player viewing the board from their side.</p></div>
             </div>
             <div id="wifi-resume-card" class="wifi-resume-card hidden">
               <div><strong>Game in progress</strong><p>Return to your saved seat in the private lobby.</p></div>
@@ -431,7 +448,7 @@
                 <div class="landing-lobby-header">
                   <div>
                     <div class="label">Internet Rooms</div>
-                    <div class="room-info">Optional public matches hosted by Sakura.</div>
+                    <div class="room-info">Optional public matches for when your opponent is not nearby.</div>
                   </div>
                   <button id="lobby-refresh" class="ghost-button">
                     <span class="button-label">Refresh</span>
@@ -446,17 +463,41 @@
           </div>
           <div id="landing-panel-rules" class="landing-panel hidden">
             <div class="rules-card">
-              <div class="overlay-title">Rules of Sakura Showdown</div>
-              <ul class="rules-list">
-                <li>Each player has a Master and four Students on a 5x5 board.</li>
-                <li>Win by capturing the opposing Master or by moving your Master onto their temple.</li>
-                <li>You hold two move cards; a fifth card sits in the pool.</li>
-                <li>On your turn, choose a piece and move using one of your cards.</li>
-                <li>Moves are measured from your piece using the card’s 5x5 grid.</li>
-                <li>After moving, the used card swaps with the pool card.</li>
-                <li>Captures happen by landing on an opposing piece.</li>
-                <li>Local mode is pass-and-play with a board flip each turn.</li>
-              </ul>
+              <header class="rules-hero">
+                <span class="rules-kicker">Help / Learn in 60 seconds</span>
+                <div class="overlay-title">Outthink the other Master</div>
+                <p>Each player commands one Master and four Students on a 5×5 board. You only need to learn one turn.</p>
+              </header>
+              <section class="rules-win" aria-labelledby="rules-win-title">
+                <h3 id="rules-win-title">Two ways to win</h3>
+                <div class="win-paths">
+                  <div><span class="rule-number">A</span><strong>Capture the Master</strong><small>Land any piece on the opposing Master.</small></div>
+                  <div><span class="rule-number">B</span><strong>Reach the temple</strong><small>Move your Master onto the marked square across the board.</small></div>
+                </div>
+              </section>
+              <section class="rules-turn" aria-labelledby="rules-turn-title">
+                <h3 id="rules-turn-title">Every turn is three taps</h3>
+                <div class="turn-steps">
+                  <div><span class="rule-number">1</span><strong>Pick a piece</strong><small>Your Master or any Student.</small></div>
+                  <div><span class="rule-number">2</span><strong>Pick a card</strong><small>Choose either card in your hand.</small></div>
+                  <div><span class="rule-number">3</span><strong>Pick a glowing square</strong><small>Land on an enemy to capture it.</small></div>
+                </div>
+              </section>
+              <section class="rules-card-explainer" aria-labelledby="rules-card-title">
+                <div class="move-card-demo" aria-hidden="true">
+                  <span class="demo-origin"></span><span class="demo-move one"></span><span class="demo-move two"></span><span class="demo-move three"></span>
+                </div>
+                <div>
+                  <h3 id="rules-card-title">How to read a movement card</h3>
+                  <p>The center dot is your piece. The colored squares are the places it may move, viewed from your side of the board.</p>
+                  <p><strong>After you move:</strong> your used card goes into the pool, and the pool card comes to your hand. That shared exchange is the heart of the strategy.</p>
+                </div>
+              </section>
+              <div class="rules-note"><strong>Playing together?</strong><span>Pass &amp; Play flips the board after each turn. On two phones, each player always sees their own side at the bottom.</span></div>
+              <div class="rules-actions">
+                <button id="rules-practice" class="arcade-primary">Try a guided practice</button>
+                <button id="rules-home" class="ghost-button">Back to modes</button>
+              </div>
             </div>
           </div>
         </div>
@@ -542,7 +583,7 @@
         <div class="overlay-header">
           <div>
             <div id="tutorial-title" class="overlay-title">Your First Duel</div>
-            <div id="tutorial-progress" class="overlay-subtitle">Step 1 of 4</div>
+            <div id="tutorial-progress" class="overlay-subtitle">Step 1 of 5</div>
           </div>
           <button id="tutorial-close" class="ghost-button close-button" aria-label="Close tutorial">X</button>
         </div>
@@ -551,7 +592,7 @@
           <h2 id="tutorial-step-title">Choose a warrior</h2>
           <p id="tutorial-step-copy">Select your Master or one of your four Students. Glowing squares show where it can move.</p>
           <div class="tutorial-dots" aria-hidden="true">
-            <span class="active"></span><span></span><span></span><span></span>
+            <span class="active"></span><span></span><span></span><span></span><span></span>
           </div>
         </div>
         <div class="overlay-footer tutorial-actions">

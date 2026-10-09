@@ -1,15 +1,15 @@
 {
   "name": "Sakura Showdown",
   "short_name": "Sakura",
-  "description": "A focused tactical board duel for one or two players.",
+  "description": "A mobile-first tactical duel for offline, pass-and-play, and private same-Wi-Fi matches.",
   "id": "./",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
-  "background_color": "#160c0a",
-  "theme_color": "#160c0a",
+  "background_color": "#0d0c0c",
+  "theme_color": "#0d0c0c",
   "categories": ["games", "entertainment"],
   "icons": [
     { "src": "./sakura-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

@@ -19,20 +19,20 @@ type TeamPalette = {
 // Keep palettes in an array so adding extra team colors later is just an append.
 const TEAM_PALETTES: TeamPalette[] = [
   {
-    cloth: 0xb5404c,
-    trim: 0xf1dcc5,
-    weaponWood: 0x7a5638,
-    weaponMetal: 0xc8a97d,
-    skin: 0xf6e2cd,
-    hair: 0x3d2d27
+    cloth: 0x7e2635,
+    trim: 0xd8b66d,
+    weaponWood: 0x4b3024,
+    weaponMetal: 0xc6a15a,
+    skin: 0xe8cfb5,
+    hair: 0x1d1716
   },
   {
-    cloth: 0x2f63c8,
-    trim: 0xdce8ff,
-    weaponWood: 0x6d543e,
-    weaponMetal: 0xb6c5e6,
-    skin: 0xf2ddc6,
-    hair: 0x342a24
+    cloth: 0x263f63,
+    trim: 0xc9d4d8,
+    weaponWood: 0x49362b,
+    weaponMetal: 0x9fb5bd,
+    skin: 0xe4cbb0,
+    hair: 0x19191a
   }
 ];
 
@@ -412,9 +412,9 @@ export class GameRenderer {
     const base = new THREE.Mesh(
       new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
       new THREE.MeshStandardMaterial({
-        color: 0xd8d0c4,
-        roughness: 0.9,
-        metalness: 0.02
+        color: 0x251716,
+        roughness: 0.62,
+        metalness: 0.08
       })
     );
     base.position.y = -0.28;
@@ -423,12 +423,14 @@ export class GameRenderer {
 
 
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0xf3efe8,
-      roughness: 0.75
+      color: 0xd9cfba,
+      roughness: 0.88,
+      metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0xc9c0b2,
-      roughness: 0.8
+      color: 0xa99d88,
+      roughness: 0.9,
+      metalness: 0.01
     });
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
@@ -478,14 +480,15 @@ export class GameRenderer {
     const baseGeom = new THREE.CylinderGeometry(0.48, 0.52, 0.08, 48);
 
     this.config.players.forEach((player, index) => {
-      const color = index === 0 ? 0xc23a49 : 0x1f6feb;
+      const color = index === 0 ? 0x8f2f3e : 0x345b82;
       const ring = new THREE.Mesh(
         ringGeom,
         new THREE.MeshStandardMaterial({
           color,
           emissive: color,
           emissiveIntensity: 0.6,
-          roughness: 0.35
+          roughness: 0.42,
+          metalness: 0.28
         })
       );
       ring.rotation.x = Math.PI / 2;
@@ -495,9 +498,9 @@ export class GameRenderer {
       const base = new THREE.Mesh(
         baseGeom,
         new THREE.MeshStandardMaterial({
-          color: 0xf1e2cb,
-          roughness: 0.8,
-          metalness: 0.05
+          color: 0xc9b788,
+          roughness: 0.72,
+          metalness: 0.12
         })
       );
       base.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.04));
@@ -1112,8 +1115,8 @@ export class GameRenderer {
     const clothMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
       color: palette.cloth,
-      roughness: 0.35,
-      metalness: 0.18
+      roughness: 0.58,
+      metalness: 0.08
     });
     const skinMat = new THREE.MeshStandardMaterial({
       color: palette.skin,

@@ -1,25 +1,22 @@
 # Goal
-Make multiplayer entry and recovery reliable: a refreshed private-room guest can resume, Internet play is obvious, and LAN-hosted games appear as name-based joinable lobbies.
+Create a seamless Decadence Arcade-to-Sakura handoff and make Help teach the full game at a glance.
 
 # Scope
-- Persist and expose private-session recovery in the client.
-- Reuse reconnect credentials before requesting a new private-room seat.
-- Add a visible Internet entry from app home.
-- Add same-network lobby discovery when the app is served by a LAN host.
-- Keep private code joining and existing public rooms intact.
+- Match the supplied Decadence Arcade grid, typography, amber/coral actions, translucent cards, and live-state accents.
+- Replace the generic referral notice with a purposeful game-card handoff.
+- Replace the prose rules list with a visual goal/turn/card-exchange/win guide and practice entry.
 
 # Approach
-- Track reconnect context (token, room type/code/name) locally and add a Resume action.
-- Add a LAN-only lobby endpoint backed by existing Colyseus room metadata.
-- Render nearby waiting rooms with explicit Join buttons using the entered player name.
-- Add focused server/client tests plus responsive browser QA.
+- Treat the Sakura home as the next screen in Decadence Arcade rather than a separate product.
+- Teach one turn as three numbered actions and explain the movement-card diagram visually.
+- Keep detailed guided practice optional and one tap away.
 
 # Risks
-- Reconnect windows remain bounded by server memory and timeouts.
-- LAN discovery must not expose private rooms from the public Render gateway.
-- Colyseus metadata must stay current through disconnect/reconnect transitions.
+- Help must stay scannable on phones without hiding essential rules.
+- The handoff appears only for Decadence referral/source launches and cannot block mode selection.
+- Browser screenshot verification remains dependent on the unavailable Chromium runtime.
 
 # Verification
-- Automated reconnect integration test reproducing guest refresh.
-- Endpoint tests proving LAN-only room visibility.
-- Typecheck, gameplay tests, production build, and phone/desktop UI screenshots.
+- Exercise referral home, Help, guided tutorial, and practice launch.
+- Run the required Playwright client and inspect screenshots when launch succeeds.
+- Run rules tests, typechecks, production build, and bundle budgets.

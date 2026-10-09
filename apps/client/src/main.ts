@@ -244,6 +244,8 @@ const landingTabLocal = document.getElementById("landing-tab-local") as HTMLButt
 const landingTabWifi = document.getElementById("landing-tab-wifi") as HTMLButtonElement | null;
 const landingTabOnline = document.getElementById("landing-tab-online") as HTMLButtonElement | null;
 const landingRulesBtn = document.getElementById("landing-rules") as HTMLButtonElement | null;
+const rulesPracticeBtn = document.getElementById("rules-practice") as HTMLButtonElement | null;
+const rulesHomeBtn = document.getElementById("rules-home") as HTMLButtonElement | null;
 const landingPanelLocal = document.getElementById("landing-panel-local") as HTMLElement | null;
 const landingPanelWifi = document.getElementById("landing-panel-wifi") as HTMLElement | null;
 const landingPanelOnline = document.getElementById("landing-panel-online") as HTMLElement | null;
@@ -495,10 +497,11 @@ let aiDifficulty = (localStorage.getItem(AI_DIFFICULTY_KEY) as AiDifficulty | nu
 let tutorialStep = 0;
 
 const tutorialSteps = [
-  { symbol: "一", title: "Choose a warrior", copy: "Select your Master or one of your four Students. Glowing squares show where it can move." },
-  { symbol: "二", title: "Choose a movement card", copy: "Each card contains a movement pattern. You can select the card first or select your warrior first." },
-  { symbol: "三", title: "Move and exchange", copy: "Move to a glowing square. The card you use enters the pool and the old pool card joins your hand." },
-  { symbol: "勝", title: "Claim victory", copy: "Capture the opposing Master, or guide your Master onto the opponent's temple square." }
+  { symbol: "勝", title: "Know your goal", copy: "Capture the opposing Master, or move your Master onto the marked temple at the far side of the board." },
+  { symbol: "一", title: "Pick a piece", copy: "Choose your Master or one of four Students. Every piece can use either card in your hand." },
+  { symbol: "二", title: "Read a movement card", copy: "The center dot is your piece. Colored squares show where it can move from your side of the board." },
+  { symbol: "三", title: "Move, capture, exchange", copy: "Tap a glowing destination. Landing on an enemy captures it; your used card then swaps with the pool card." },
+  { symbol: "対", title: "Now try one turn", copy: "Choose a piece, choose a card, then tap a glowing square. Use Hint if you want a strong move highlighted." }
 ];
 
 function applyPreferences() {
@@ -2877,6 +2880,12 @@ landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingWifiQuickBtn.addEventListener("click", () => setLandingTab("wifi"));
 landingOnlineQuickBtn?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
+rulesPracticeBtn?.addEventListener("click", openTutorial);
+rulesHomeBtn?.addEventListener("click", () => {
+  rulesVisible = false;
+  applyLandingView();
+  landingRulesBtn?.focus();
+});
 landingLocalBtn.addEventListener("click", () => {
   localGameType = "pass-and-play";
   controller.setLocalHumanPlayer(undefined);
