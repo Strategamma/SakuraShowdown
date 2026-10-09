@@ -380,10 +380,10 @@ export class GameRenderer {
   }
 
   private setupLights() {
-    const hemi = new THREE.HemisphereLight(0xfaf4e6, 0x3a3a3a, 0.8);
+    const hemi = new THREE.HemisphereLight(0xfff2df, 0x201418, 0.82);
     this.scene.add(hemi);
 
-    const key = new THREE.DirectionalLight(0xffffff, 0.95);
+    const key = new THREE.DirectionalLight(0xffead2, 1.02);
     key.position.set(5, 10, 6);
     key.castShadow = true;
     key.shadow.mapSize.width = 2048;
@@ -396,9 +396,13 @@ export class GameRenderer {
     key.shadow.camera.bottom = -10;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xfff5e6, 0.35, 30);
+    const fill = new THREE.PointLight(0xffb746, 0.38, 30);
     fill.position.set(-6, 4, -6);
     this.scene.add(fill);
+
+    const rim = new THREE.PointLight(0xff4051, 0.2, 24);
+    rim.position.set(6, 2.5, 5);
+    this.scene.add(rim);
   }
 
   private buildBoard() {
@@ -410,32 +414,34 @@ export class GameRenderer {
     const height = this.boardSize.height * this.cellSize;
 
     const base = new THREE.Mesh(
-      new THREE.BoxGeometry(width + 0.6, 0.45, height + 0.6),
+      new THREE.BoxGeometry(width + 0.72, 0.38, height + 0.72),
       new THREE.MeshStandardMaterial({
-        color: 0x251716,
-        roughness: 0.62,
-        metalness: 0.08
+        map: this.woodTexture,
+        color: 0x160f0f,
+        roughness: 0.48,
+        metalness: 0.12
       })
     );
-    base.position.y = -0.28;
+    base.position.y = -0.25;
     base.receiveShadow = true;
     this.boardGroup.add(base);
 
-
     const lightMat = new THREE.MeshStandardMaterial({
-      color: 0xd9cfba,
-      roughness: 0.88,
+      map: this.fabricTexture,
+      color: 0x5d5045,
+      roughness: 0.92,
       metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
-      color: 0xa99d88,
-      roughness: 0.9,
+      map: this.fabricTexture,
+      color: 0x493b35,
+      roughness: 0.94,
       metalness: 0.01
     });
 
     for (let y = 0; y < this.boardSize.height; y += 1) {
       for (let x = 0; x < this.boardSize.width; x += 1) {
-        const geom = new THREE.BoxGeometry(this.cellSize * 0.94, 0.12, this.cellSize * 0.94);
+        const geom = new THREE.BoxGeometry(this.cellSize * 0.955, 0.105, this.cellSize * 0.955);
         const mat = (x + y) % 2 === 0 ? lightMat : darkMat;
         const cell = new THREE.Mesh(geom, mat);
         cell.position.copy(this.gridToWorld(x, y, 0.06));
@@ -446,6 +452,56 @@ export class GameRenderer {
         this.cells.push(cell);
       }
     }
+
+    const railMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2b1b1b,
+      roughness: 0.42,
+      metalness: 0.16
+    });
+    const inlayMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd99a3d,
+      emissive: 0x6e351b,
+      emissiveIntensity: 0.16,
+      roughness: 0.38,
+      metalness: 0.32
+    });
+    const railThickness = 0.11;
+    const railHeight = 0.12;
+    const longRail = new THREE.BoxGeometry(width + 0.42, railHeight, railThickness);
+    const shortRail = new THREE.BoxGeometry(railThickness, railHeight, height + 0.42);
+    const railOffsetX = width / 2 + 0.16;
+    const railOffsetZ = height / 2 + 0.16;
+    const rails = [
+      new THREE.Mesh(longRail, railMaterial),
+      new THREE.Mesh(longRail, railMaterial),
+      new THREE.Mesh(shortRail, railMaterial),
+      new THREE.Mesh(shortRail, railMaterial)
+    ];
+    rails[0].position.set(0, 0.095, -railOffsetZ);
+    rails[1].position.set(0, 0.095, railOffsetZ);
+    rails[2].position.set(-railOffsetX, 0.095, 0);
+    rails[3].position.set(railOffsetX, 0.095, 0);
+    rails.forEach((rail) => {
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      this.boardGroup.add(rail);
+    });
+
+    // Four bright registration bars echo the parent brand's offset print details.
+    const inlayLength = this.cellSize * 0.72;
+    const horizontalInlay = new THREE.BoxGeometry(inlayLength, 0.025, 0.035);
+    const verticalInlay = new THREE.BoxGeometry(0.035, 0.025, inlayLength);
+    const inlays = [
+      new THREE.Mesh(horizontalInlay, inlayMaterial),
+      new THREE.Mesh(horizontalInlay, inlayMaterial),
+      new THREE.Mesh(verticalInlay, inlayMaterial),
+      new THREE.Mesh(verticalInlay, inlayMaterial)
+    ];
+    inlays[0].position.set(-width * 0.31, 0.168, -railOffsetZ);
+    inlays[1].position.set(width * 0.31, 0.168, railOffsetZ);
+    inlays[2].position.set(-railOffsetX, 0.168, height * 0.31);
+    inlays[3].position.set(railOffsetX, 0.168, -height * 0.31);
+    inlays.forEach((inlay) => this.boardGroup.add(inlay));
 
     const shadowCatcher = new THREE.Mesh(
       new THREE.PlaneGeometry(width + 6, height + 6),
@@ -476,8 +532,8 @@ export class GameRenderer {
     this.templeGroup.clear();
     if (!this.config) return;
 
-    const ringGeom = new THREE.TorusGeometry(0.42, 0.05, 16, 48);
-    const baseGeom = new THREE.CylinderGeometry(0.48, 0.52, 0.08, 48);
+    const ringGeom = new THREE.TorusGeometry(0.39, 0.045, 8, 4);
+    const baseGeom = new THREE.CylinderGeometry(0.45, 0.5, 0.075, 8);
 
     this.config.players.forEach((player, index) => {
       const color = index === 0 ? 0x8f2f3e : 0x345b82;
@@ -486,9 +542,9 @@ export class GameRenderer {
         new THREE.MeshStandardMaterial({
           color,
           emissive: color,
-          emissiveIntensity: 0.6,
-          roughness: 0.42,
-          metalness: 0.28
+          emissiveIntensity: 0.38,
+          roughness: 0.36,
+          metalness: 0.34
         })
       );
       ring.rotation.x = Math.PI / 2;
@@ -498,9 +554,10 @@ export class GameRenderer {
       const base = new THREE.Mesh(
         baseGeom,
         new THREE.MeshStandardMaterial({
-          color: 0xc9b788,
-          roughness: 0.72,
-          metalness: 0.12
+          map: this.accentTexture,
+          color: 0xd4b36b,
+          roughness: 0.6,
+          metalness: 0.18
         })
       );
       base.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.04));
@@ -1095,18 +1152,18 @@ export class GameRenderer {
     const isMaster = this.masterTypeIds.has(typeId) || typeId === "master";
     const palette = this.getTeamPalette(teamIndex);
 
-    // Masters are intentionally scaled up so they read as commanders at a glance.
-    const scale = isMaster ? 1.16 : 0.9;
-    const height = isMaster ? 0.96 : 0.66;
-    const baseRadius = isMaster ? 0.34 : 0.24;
+    // Rank is communicated by silhouette first: grounded Master, nimble Disciple.
+    const scale = isMaster ? 1.2 : 0.88;
+    const height = isMaster ? 1.02 : 0.7;
+    const baseRadius = isMaster ? 0.35 : 0.235;
 
     const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 1.05, baseRadius * 1.2, 0.12, 48),
+      new THREE.CylinderGeometry(baseRadius * 1.02, baseRadius * 1.18, 0.12, 8),
       new THREE.MeshStandardMaterial({
         map: this.accentTexture,
         color: palette.trim,
-        roughness: 0.4,
-        metalness: 0.2
+        roughness: 0.42,
+        metalness: 0.26
       })
     );
     base.castShadow = true;
@@ -1160,14 +1217,31 @@ export class GameRenderer {
 
     const torsoHeight = height * 0.55;
     const torso = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.55, baseRadius * 0.7, torsoHeight, 32),
+      new THREE.CylinderGeometry(
+        baseRadius * (isMaster ? 0.66 : 0.5),
+        baseRadius * (isMaster ? 0.82 : 0.64),
+        torsoHeight,
+        isMaster ? 8 : 12
+      ),
       clothMat
     );
     torso.position.y = 0.12 + legHeight + torsoHeight / 2;
     torso.castShadow = true;
 
+    const crest = new THREE.Mesh(
+      new THREE.CircleGeometry(isMaster ? baseRadius * 0.2 : baseRadius * 0.13, isMaster ? 4 : 16),
+      new THREE.MeshStandardMaterial({
+        color: palette.trim,
+        roughness: 0.35,
+        metalness: isMaster ? 0.5 : 0.18
+      })
+    );
+    crest.position.set(0, torso.position.y + torsoHeight * 0.08, baseRadius * 0.695);
+    crest.rotation.z = isMaster ? Math.PI / 4 : 0;
+    crest.castShadow = true;
+
     const shoulders = new THREE.Mesh(
-      new THREE.SphereGeometry(baseRadius * 0.55, 24, 18),
+      new THREE.SphereGeometry(baseRadius * (isMaster ? 0.64 : 0.5), 20, 14),
       clothMat
     );
     shoulders.position.y = torso.position.y + torsoHeight / 2 - 0.02;
@@ -1208,13 +1282,20 @@ export class GameRenderer {
     sleeveRight.position.set(baseRadius * 0.52, shoulders.position.y - 0.18, 0.04);
     sleeveRight.rotation.z = -Math.PI / 6;
 
-    const cloak = new THREE.Mesh(
-      new THREE.ConeGeometry(baseRadius * 0.95, height * 0.75, 32, 1, true),
+    const robe = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        baseRadius * (isMaster ? 0.76 : 0.58),
+        baseRadius * (isMaster ? 1.08 : 0.82),
+        height * (isMaster ? 0.56 : 0.38),
+        isMaster ? 8 : 12,
+        1,
+        false
+      ),
       clothMat
     );
-    cloak.position.y = 0.12 + legHeight + torsoHeight * 0.35;
-    cloak.rotation.y = Math.PI / 4;
-    cloak.castShadow = true;
+    robe.position.y = 0.12 + legHeight + torsoHeight * (isMaster ? 0.22 : 0.12);
+    robe.rotation.y = Math.PI / 8;
+    robe.castShadow = true;
 
     const ring = this.createSelectionRing();
 
@@ -1225,21 +1306,44 @@ export class GameRenderer {
       footLeft,
       footRight,
       torso,
+      crest,
       shoulders,
       head,
       leftArm,
       rightArm,
       sleeveLeft,
       sleeveRight,
-      cloak,
+      robe,
       ring
     );
 
     const body = torso;
 
     if (isMaster) {
+      const lapelMaterial = new THREE.MeshStandardMaterial({
+        color: palette.trim,
+        roughness: 0.5,
+        metalness: 0.12
+      });
+      const lapelGeometry = new THREE.BoxGeometry(0.055, torsoHeight * 0.72, 0.025);
+      const leftLapel = new THREE.Mesh(lapelGeometry, lapelMaterial);
+      leftLapel.position.set(-baseRadius * 0.13, torso.position.y + 0.015, baseRadius * 0.72);
+      leftLapel.rotation.z = -0.42;
+      const rightLapel = leftLapel.clone();
+      rightLapel.position.x = baseRadius * 0.13;
+      rightLapel.rotation.z = 0.42;
+
+      const shoulderGuardGeometry = new THREE.BoxGeometry(baseRadius * 0.48, 0.08, baseRadius * 0.54);
+      const leftGuard = new THREE.Mesh(shoulderGuardGeometry, lapelMaterial);
+      leftGuard.position.set(-baseRadius * 0.58, shoulders.position.y - 0.01, 0);
+      leftGuard.rotation.z = 0.12;
+      leftGuard.castShadow = true;
+      const rightGuard = leftGuard.clone();
+      rightGuard.position.x = baseRadius * 0.58;
+      rightGuard.rotation.z = -0.12;
+
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.34, 0.5, 24),
+        new THREE.ConeGeometry(baseRadius * 0.3, 0.42, 16),
         new THREE.MeshStandardMaterial({
           color: 0xf2ebe3,
           roughness: 0.6
@@ -1248,11 +1352,12 @@ export class GameRenderer {
       beard.position.set(0, head.position.y - 0.08, baseRadius * 0.14);
       beard.rotation.x = Math.PI;
 
-      const crest = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.18, 0.28, 18),
+      const topknot = new THREE.Mesh(
+        new THREE.SphereGeometry(baseRadius * 0.17, 14, 10),
         hairMat
       );
-      crest.position.set(0, head.position.y + 0.24, 0.01);
+      topknot.scale.set(0.85, 1.25, 0.85);
+      topknot.position.set(0, head.position.y + baseRadius * 0.38, -baseRadius * 0.05);
 
       // Sword rig: a sheathed blade and handle fixed diagonally on the master's back.
       const swordRig = new THREE.Group();
@@ -1298,7 +1403,7 @@ export class GameRenderer {
       strap.castShadow = true;
 
       swordRig.add(scabbard, swordGuard, swordHandle, swordPommel);
-      group.add(beard, crest, strap, swordRig);
+      group.add(leftLapel, rightLapel, leftGuard, rightGuard, beard, topknot, strap, swordRig);
     } else {
       const hair = new THREE.Mesh(
         new THREE.SphereGeometry(baseRadius * 0.34, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
@@ -1306,20 +1411,38 @@ export class GameRenderer {
       );
       hair.position.set(0, head.position.y + 0.12, 0);
 
-      // Students carry a simple wooden training stick.
+      const headband = new THREE.Mesh(
+        new THREE.TorusGeometry(baseRadius * 0.35, 0.022, 8, 24),
+        new THREE.MeshStandardMaterial({
+          color: palette.trim,
+          roughness: 0.52,
+          metalness: 0.08
+        })
+      );
+      headband.position.set(0, head.position.y + baseRadius * 0.03, 0);
+      headband.rotation.x = Math.PI / 2;
+
+      const headbandTail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.035, 0.2, 0.025),
+        new THREE.MeshStandardMaterial({ color: palette.trim, roughness: 0.62 })
+      );
+      headbandTail.position.set(-baseRadius * 0.29, head.position.y - 0.02, -baseRadius * 0.18);
+      headbandTail.rotation.z = 0.34;
+
+      // Disciples carry a simple wooden training staff.
       const trainingStick = new THREE.Mesh(
         new THREE.CylinderGeometry(0.022, 0.024, 0.82, 14),
         weaponWoodMat
       );
-      trainingStick.position.set(baseRadius * 0.62, 0.48, baseRadius * 0.08);
-      trainingStick.rotation.z = Math.PI / 11;
+      trainingStick.position.set(baseRadius * 0.62, 0.48, -baseRadius * 0.16);
+      trainingStick.rotation.z = Math.PI / 9;
       trainingStick.castShadow = true;
 
       const stickCap = new THREE.Mesh(
         new THREE.SphereGeometry(0.04, 12, 10),
         weaponMetalMat
       );
-      stickCap.position.set(baseRadius * 0.62, 0.88, baseRadius * 0.08);
+      stickCap.position.set(baseRadius * 0.48, 0.865, -baseRadius * 0.16);
       stickCap.castShadow = true;
 
       const belt = new THREE.Mesh(
@@ -1332,7 +1455,13 @@ export class GameRenderer {
       belt.position.y = 0.36;
       belt.rotation.x = Math.PI / 2;
 
-      group.add(hair, trainingStick, stickCap, belt);
+      const tunicPanel = new THREE.Mesh(
+        new THREE.BoxGeometry(baseRadius * 0.5, torsoHeight * 0.48, 0.025),
+        new THREE.MeshStandardMaterial({ color: palette.trim, roughness: 0.56 })
+      );
+      tunicPanel.position.set(0, torso.position.y - torsoHeight * 0.12, baseRadius * 0.665);
+
+      group.add(hair, headband, headbandTail, trainingStick, stickCap, belt, tunicPanel);
     }
 
     return { group, body, ring };

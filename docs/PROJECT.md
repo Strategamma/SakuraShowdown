@@ -23,7 +23,7 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - UI uses accessible DOM controls around a Three.js board and exposes `window.render_game_to_text` plus `window.advanceTime` for QA.
 - The Three.js renderer pauses while hidden and owns explicit GPU/resource cleanup.
 - Multiplayer networking is lazy-loaded and production builds enforce gzip budgets for entry, networking, and Three.js chunks.
-- `npm run host:lan` serves the client and server on one LAN origin, with name-based discovery and invite codes. Render never lists private LAN rooms.
+- `npm run host:lan` serves one LAN origin with expiring presence, direct challenges, and invite codes. Render never exposes LAN presence or private rooms.
 - Multiplayer reconnect credentials and private-room context persist locally so a refreshed player can reclaim the same seat within the server's reconnection window.
 - Local, Same Wi-Fi, and Internet have separate entry panels. Online boards orient from the assigned player's side.
 - The landing layer is the non-dismissible app home for website and PWA launches. Decadence arrivals get a compact introduction and opt-in tutorial; Solo, Same Wi-Fi, Pass & Play, focused setup navigation, and phone install remain immediate.
@@ -36,6 +36,6 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
 - The PWA provides install guidance, Solo/Together shortcuts, and versioned full-shell precaching discovered from built HTML; installs fail safely if a required offline asset is unavailable.
-- Procedural pieces distinguish Masters and Students.
+- Procedural figures distinguish robed Dojo Masters and staff-carrying Disciples.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
 - Production internet multiplayer uses `wss://sakurashowdown.onrender.com`; `/health` and `/lobby` were live on 2026-10-08. Keep the service single-instance while room state remains in memory.

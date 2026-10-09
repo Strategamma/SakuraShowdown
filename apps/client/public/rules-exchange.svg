@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Exchange the used movement card</title>
+  <desc id="desc">After moving, the used Tiger card goes to the shared pool and the pool's Crane card enters the player's hand.</desc>
+  <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#f4ecdf" stroke-opacity=".045"/></pattern><filter id="shadow"><feDropShadow dx="7" dy="8" stdDeviation="4" flood-opacity=".4"/></filter></defs>
+  <rect width="720" height="420" fill="#0b0a0a"/><rect width="720" height="420" fill="url(#grid)"/>
+  <text x="28" y="37" fill="#ffb746" font-family="Arial,sans-serif" font-size="14" font-weight="800" letter-spacing="2">THE CARD EXCHANGE ENDS YOUR TURN</text>
+  <g transform="translate(48 96)"><text y="-18" fill="#f4ecdf" font-family="Arial" font-size="13" font-weight="800">YOUR HAND</text>
+    <g filter="url(#shadow)"><rect width="166" height="116" rx="5" fill="#e6dbc5" stroke="#f13d47" stroke-width="4"/><text x="15" y="28" fill="#30251e" font-family="Arial" font-size="16" font-weight="900">TIGER · USED</text><circle cx="83" cy="68" r="7" fill="#d84055"/><rect x="77" y="42" width="12" height="12" fill="#70402e"/><rect x="77" y="84" width="12" height="12" fill="#70402e"/></g>
+    <rect y="140" width="166" height="86" rx="5" fill="#c9bba1"/><text x="15" y="169" fill="#30251e" font-family="Arial" font-size="15" font-weight="900">CRAB · KEEP</text>
+  </g>
+  <g transform="translate(503 125)"><text y="-18" fill="#f4ecdf" font-family="Arial" font-size="13" font-weight="800">SHARED POOL</text><g filter="url(#shadow)"><rect width="166" height="116" rx="5" fill="#e6dbc5" stroke="#75f6af" stroke-width="4"/><text x="15" y="28" fill="#30251e" font-family="Arial" font-size="16" font-weight="900">CRANE</text><circle cx="83" cy="68" r="7" fill="#d84055"/><rect x="53" y="42" width="12" height="12" fill="#70402e"/><rect x="101" y="42" width="12" height="12" fill="#70402e"/></g></g>
+  <path d="M220 140C302 70 415 74 486 138" fill="none" stroke="#f13d47" stroke-width="5" stroke-dasharray="10 8"/><path d="M473 124l16 16-21 6" fill="none" stroke="#f13d47" stroke-width="5"/>
+  <path d="M493 218C407 300 298 304 214 224" fill="none" stroke="#75f6af" stroke-width="5" stroke-dasharray="10 8"/><path d="M228 239l-17-18 22-5" fill="none" stroke="#75f6af" stroke-width="5"/>
+  <circle cx="359" cy="194" r="34" fill="#ffb746"/><text x="359" y="187" text-anchor="middle" fill="#17120d" font-family="Arial" font-size="13" font-weight="900">SWAP</text><text x="359" y="205" text-anchor="middle" fill="#17120d" font-family="Arial" font-size="11" font-weight="800">AUTOMATIC</text>
+  <text x="360" y="354" text-anchor="middle" fill="#f4ecdf" font-family="Arial" font-size="18" font-weight="800">Plan for the card you are giving your opponent next.</text>
+  <text x="360" y="382" text-anchor="middle" fill="#bdb3a5" font-family="Arial" font-size="14">The pool card becomes available to the next player.</text>
+</svg>

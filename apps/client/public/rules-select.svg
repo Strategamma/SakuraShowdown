@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Select a piece and movement card</title>
+  <desc id="desc">A disciple is selected on the five by five board and the Tiger movement card is selected in the player's hand.</desc>
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#f4ecdf" stroke-opacity=".045"/></pattern>
+    <filter id="shadow"><feDropShadow dx="7" dy="8" stdDeviation="4" flood-opacity=".4"/></filter>
+  </defs>
+  <rect width="720" height="420" fill="#0b0a0a"/><rect width="720" height="420" fill="url(#grid)"/>
+  <text x="28" y="37" fill="#ffb746" font-family="Arial,sans-serif" font-size="14" font-weight="800" letter-spacing="2">YOUR TURN · CHOOSE TWO THINGS</text>
+  <g transform="translate(194 58)" filter="url(#shadow)">
+    <rect x="-12" y="-12" width="292" height="292" rx="6" fill="#211617" stroke="#d69a45" stroke-width="2"/>
+    <g fill="#5c5045" stroke="#241c1a" stroke-width="4">
+      <rect width="52" height="52"/><rect x="54" width="52" height="52" fill="#493b35"/><rect x="108" width="52" height="52"/><rect x="162" width="52" height="52" fill="#493b35"/><rect x="216" width="52" height="52"/>
+      <rect y="54" width="52" height="52" fill="#493b35"/><rect x="54" y="54" width="52" height="52"/><rect x="108" y="54" width="52" height="52" fill="#493b35"/><rect x="162" y="54" width="52" height="52"/><rect x="216" y="54" width="52" height="52" fill="#493b35"/>
+      <rect y="108" width="52" height="52"/><rect x="54" y="108" width="52" height="52" fill="#493b35"/><rect x="108" y="108" width="52" height="52"/><rect x="162" y="108" width="52" height="52" fill="#493b35"/><rect x="216" y="108" width="52" height="52"/>
+      <rect y="162" width="52" height="52" fill="#493b35"/><rect x="54" y="162" width="52" height="52"/><rect x="108" y="162" width="52" height="52" fill="#493b35"/><rect x="162" y="162" width="52" height="52"/><rect x="216" y="162" width="52" height="52" fill="#493b35"/>
+      <rect y="216" width="52" height="52"/><rect x="54" y="216" width="52" height="52" fill="#493b35"/><rect x="108" y="216" width="52" height="52"/><rect x="162" y="216" width="52" height="52" fill="#493b35"/><rect x="216" y="216" width="52" height="52"/>
+    </g>
+    <g fill="#315a82"><circle cx="26" cy="26" r="13"/><circle cx="80" cy="26" r="13"/><path d="M134 8l15 27h-30z"/><circle cx="188" cy="26" r="13"/><circle cx="242" cy="26" r="13"/></g>
+    <g fill="#8f2f3e"><circle cx="26" cy="242" r="13"/><circle cx="80" cy="242" r="13"/><path d="M134 223l15 27h-30z"/><circle cx="188" cy="242" r="13"/><circle cx="242" cy="242" r="13"/></g>
+    <circle cx="80" cy="242" r="21" fill="none" stroke="#ffb746" stroke-width="5"/>
+  </g>
+  <path d="M169 314C112 324 93 344 83 365" fill="none" stroke="#ffb746" stroke-width="3"/>
+  <circle cx="77" cy="370" r="17" fill="#ffb746"/><text x="77" y="376" text-anchor="middle" fill="#17120d" font-family="Arial" font-size="18" font-weight="900">1</text>
+  <text x="106" y="374" fill="#f4ecdf" font-family="Arial" font-size="16" font-weight="700">Tap one of your pieces</text>
+  <g transform="translate(500 83)">
+    <text y="-15" fill="#f4ecdf" font-family="Arial" font-size="12" font-weight="800" letter-spacing="2">YOUR HAND</text>
+    <rect width="176" height="112" rx="5" fill="#e6dbc5" stroke="#ffb746" stroke-width="5" filter="url(#shadow)"/>
+    <text x="14" y="25" fill="#30251e" font-family="Arial" font-size="15" font-weight="900">TIGER</text>
+    <g transform="translate(76 34)" fill="#70402e"><rect x="20" width="12" height="12"/><rect x="20" y="40" width="12" height="12"/></g><circle cx="102" cy="60" r="6" fill="#d84055"/>
+    <rect y="132" width="176" height="84" rx="5" fill="#c9bba1" opacity=".7"/><text x="14" y="159" fill="#30251e" font-family="Arial" font-size="14" font-weight="800">CRAB</text>
+  </g>
+  <circle cx="528" cy="326" r="17" fill="#ffb746"/><text x="528" y="332" text-anchor="middle" fill="#17120d" font-family="Arial" font-size="18" font-weight="900">2</text>
+  <text x="557" y="331" fill="#f4ecdf" font-family="Arial" font-size="16" font-weight="700">Tap either card</text>
+</svg>

@@ -100,6 +100,11 @@ function getLanLobbyUrl() {
   const httpBase = toHttpUrl(getServerUrl());
   return `${httpBase.replace(/\/$/, "")}/lan-lobby`;
 }
+
+function getLanPresenceUrl() {
+  const httpBase = toHttpUrl(getServerUrl());
+  return `${httpBase.replace(/\/$/, "")}/lan-presence`;
+}
 const STORAGE_KEY = "sakura.customConfig";
 const LOCAL_NAME_KEY = "sakura.localName";
 const LOCAL_OPPONENT_NAME_KEY = "sakura.localOpponentName";
@@ -113,6 +118,7 @@ const TUTORIAL_COMPLETE_KEY = "sakura.tutorialComplete";
 const AI_DIFFICULTY_KEY = "sakura.aiDifficulty";
 const ACCESSIBILITY_KEY = "sakura.preferences";
 const STATS_KEY = "sakura.stats";
+const LAN_PRESENCE_ID_KEY = "sakura.lanPresenceId";
 const MOBILE_EMBED_KEY = "mobileEmbed";
 const MOBILE_MODE_KEY = "mobileMode";
 const MOBILE_NAME_KEY = "mobileName";
@@ -124,6 +130,17 @@ const LAUNCH_SOURCE_KEY = "source";
 type EmbeddedLaunchMode = "local" | "online" | undefined;
 
 type CardConfig = GameConfig["cards"][number];
+
+const CARD_EMBLEMS: Record<string, string> = {
+  tiger: "虎", dragon: "龍", frog: "蛙", rabbit: "兎", crab: "蟹", elephant: "象",
+  goose: "雁", rooster: "鶏", monkey: "猿", mantis: "蟷", horse: "馬", ox: "牛",
+  crane: "鶴", boar: "猪", eel: "鰻", cobra: "蛇", fox: "狐", wolf: "狼",
+  heron: "鷺", stag: "鹿", lynx: "山"
+};
+
+function getCardEmblem(card: CardConfig) {
+  return CARD_EMBLEMS[card.id.toLowerCase()] ?? (card.name || card.id).trim().slice(0, 1).toUpperCase();
+}
 
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
@@ -262,6 +279,12 @@ const wifiResumeBtn = document.getElementById("wifi-resume") as HTMLButtonElemen
 const lanLobbyEl = document.getElementById("lan-lobby") as HTMLElement | null;
 const lanLobbyListEl = document.getElementById("lan-lobby-list") as HTMLElement | null;
 const lanLobbyRefreshBtn = document.getElementById("lan-lobby-refresh") as HTMLButtonElement | null;
+const nearbyPlayersEl = document.getElementById("nearby-players") as HTMLElement | null;
+const nearbyPlayerListEl = document.getElementById("nearby-player-list") as HTMLElement | null;
+const nearbyCountEl = document.getElementById("nearby-count") as HTMLElement | null;
+const nearbyInviteEl = document.getElementById("nearby-invite") as HTMLElement | null;
+const landingHomePassBtn = document.getElementById("landing-home-pass") as HTMLButtonElement | null;
+const landingHomeOnlineBtn = document.getElementById("landing-home-online") as HTMLButtonElement | null;
 const onlineStatusEl = document.getElementById("online-status") as HTMLElement | null;
 const tutorialOverlay = document.getElementById("tutorial-overlay") as HTMLElement;
 const tutorialCloseBtn = document.getElementById("tutorial-close") as HTMLButtonElement;
@@ -417,6 +440,7 @@ let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let customizeMode: "edit" | "new" = "edit";
 let currentRoomCode: string | undefined;
+let currentRoomId: string | undefined;
 let currentRoomPrivate = false;
 let baseConfig: GameConfig | undefined;
 let localName = localStorage.getItem(LOCAL_NAME_KEY) ?? "";
@@ -469,6 +493,18 @@ let pendingMove:
 let startChoiceResolved = false;
 let namesEditing = false;
 let lobbyTimer: number | undefined;
+let lanPresenceTimer: number | undefined;
+let lanPresenceBusy = false;
+let lastLanInviteRoomId: string | undefined;
+const lanPresenceId = (() => {
+  const stored = sessionStorage.getItem(LAN_PRESENCE_ID_KEY);
+  if (stored) return stored;
+  const generated = typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `device-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  sessionStorage.setItem(LAN_PRESENCE_ID_KEY, generated);
+  return generated;
+})();
 let returnToLandingOnCustomizeClose = false;
 let noticeTimeout: number | undefined;
 let isSpectator = false;
@@ -498,7 +534,7 @@ let tutorialStep = 0;
 
 const tutorialSteps = [
   { symbol: "勝", title: "Know your goal", copy: "Capture the opposing Master, or move your Master onto the marked temple at the far side of the board." },
-  { symbol: "一", title: "Pick a piece", copy: "Choose your Master or one of four Students. Every piece can use either card in your hand." },
+  { symbol: "一", title: "Pick a piece", copy: "Choose your Dojo Master or one of four Disciples. Every piece can use either card in your hand." },
   { symbol: "二", title: "Read a movement card", copy: "The center dot is your piece. Colored squares show where it can move from your side of the board." },
   { symbol: "三", title: "Move, capture, exchange", copy: "Tap a glowing destination. Landing on an enemy captures it; your used card then swaps with the pool card." },
   { symbol: "対", title: "Now try one turn", copy: "Choose a piece, choose a card, then tap a glowing square. Use Hint if you want a strong move highlighted." }
@@ -735,6 +771,7 @@ const controller = new GameController({
     statusEl.textContent = message;
   },
   onRoom: (roomId) => {
+    currentRoomId = roomId;
     statusEl.textContent = `Online match ready · Room ${roomId}`;
     updateRoomCode();
   },
@@ -790,6 +827,7 @@ const controller = new GameController({
     setReconnectToken("");
     setSpectatorMode(false);
     currentRoomCode = undefined;
+    currentRoomId = undefined;
     currentRoomPrivate = false;
     onlineReadyIds = new Set();
     onlineGameStarted = true;
@@ -810,6 +848,7 @@ const controller = new GameController({
     }
     setSpectatorMode(false);
     currentRoomCode = undefined;
+    currentRoomId = undefined;
     currentRoomPrivate = false;
     onlineReadyIds = new Set();
     onlineGameStarted = true;
@@ -1273,7 +1312,7 @@ function applyLandingView() {
   landingPanelLocal.classList.toggle("hidden", rulesVisible || landingTab !== "local");
   landingPanelWifi.classList.toggle("hidden", rulesVisible || landingTab !== "wifi");
   landingPanelOnline.classList.toggle("hidden", rulesVisible || landingTab !== "online");
-  landingNetworkName?.classList.toggle("hidden", rulesVisible || landingTab === "local");
+  landingNetworkName?.classList.toggle("hidden", rulesVisible);
   if (landingPanelRules) {
     landingPanelRules.classList.toggle("hidden", !rulesVisible);
   }
@@ -1483,6 +1522,7 @@ function leaveOnlineLobby() {
   setReconnectToken("");
   setSpectatorMode(false);
   currentRoomCode = undefined;
+  currentRoomId = undefined;
   currentRoomPrivate = false;
   onlineReadyIds = new Set();
   onlineGameStarted = true;
@@ -1637,6 +1677,7 @@ function showLanding(tab: LandingTab = "wifi") {
   else sound.startAmbience();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = tab === "online" ? window.setInterval(refreshLobby, 8000) : undefined;
+  startLanPresence();
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     statusEl.textContent = "You appear to be offline.";
   }
@@ -1648,6 +1689,7 @@ function hideLanding() {
   sound.stopAmbience();
   if (lobbyTimer) window.clearInterval(lobbyTimer);
   lobbyTimer = undefined;
+  stopLanPresence();
 }
 
 function applyEmbeddedLaunchMode() {
@@ -1930,6 +1972,165 @@ async function refreshLanLobby() {
   } finally {
     lanLobbyRefreshBtn.classList.remove("loading");
   }
+}
+
+type LanPresencePlayer = { id: string; name: string };
+type LanPresenceInvite = { fromId: string; fromName: string; roomId: string };
+
+function getLanPresenceName() {
+  return onlineName.trim() || localName.trim() || `Player ${lanPresenceId.slice(-4).toUpperCase()}`;
+}
+
+async function postLanPresence(path = "", body: Record<string, unknown> = {}) {
+  const response = await fetch(`${getLanPresenceUrl()}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error(String(response.status));
+  return response;
+}
+
+async function joinLanInvitation(invite: LanPresenceInvite) {
+  if (lobbyBusy) return;
+  const name = ensureOnlineName();
+  if (!name) return;
+  networkEntry = "wifi";
+  setMode("online");
+  setLobbyBusy(true);
+  const ok = await controller.connectOnline(getServerUrl(), invite.roomId, name);
+  setLobbyBusy(false);
+  if (!ok) {
+    setOnlineStatus("That invitation expired. Ask them to challenge you again.", "error");
+    void refreshLanPresence();
+    return;
+  }
+  saveReconnectContext({ private: true, name, roomId: invite.roomId });
+  setSpectatorMode(false);
+  hideLanding();
+  updateLobbyOverlay();
+  sound.play("door");
+}
+
+async function challengeLanPlayer(player: LanPresencePlayer) {
+  if (lobbyBusy) return;
+  const name = ensureOnlineName();
+  if (!name) return;
+  networkEntry = "wifi";
+  setMode("online");
+  currentRoomId = undefined;
+  setLobbyBusy(true);
+  const ok = await controller.createOnline(getServerUrl(), name, { private: true });
+  if (!ok || !currentRoomId) {
+    setLobbyBusy(false);
+    setMode("local");
+    setOnlineStatus("Could not open a private LAN room.", "error");
+    return;
+  }
+  try {
+    await postLanPresence("/invite", {
+      fromId: lanPresenceId,
+      toId: player.id,
+      roomId: currentRoomId
+    });
+  } catch {
+    setLobbyBusy(false);
+    controller.disconnectOnline();
+    setMode("local");
+    setOnlineStatus(`${player.name} is no longer available.`, "error");
+    void refreshLanPresence();
+    return;
+  }
+  setLobbyBusy(false);
+  saveReconnectContext({ private: true, code: currentRoomCode, name, roomId: currentRoomId });
+  setSpectatorMode(false);
+  hideLanding();
+  updateLobbyOverlay();
+  sound.play("door");
+  statusEl.textContent = `Invitation sent to ${player.name}.`;
+}
+
+function renderLanPresence(players: LanPresencePlayer[], invite?: LanPresenceInvite) {
+  if (!nearbyPlayersEl || !nearbyPlayerListEl || !nearbyCountEl || !nearbyInviteEl) return;
+  nearbyPlayersEl.classList.remove("hidden");
+  nearbyCountEl.textContent = players.length ? `${players.length} available` : "Only you so far";
+  nearbyPlayerListEl.innerHTML = "";
+
+  if (!players.length) {
+    const empty = document.createElement("p");
+    empty.className = "nearby-empty";
+    empty.textContent = "Open Sakura on another device connected to this Wi-Fi.";
+    nearbyPlayerListEl.appendChild(empty);
+  } else {
+    for (const player of players) {
+      const row = document.createElement("div");
+      row.className = "nearby-player";
+      const identity = document.createElement("div");
+      identity.className = "nearby-identity";
+      const dot = document.createElement("i");
+      dot.setAttribute("aria-hidden", "true");
+      const copy = document.createElement("span");
+      const strong = document.createElement("strong");
+      strong.textContent = player.name;
+      const small = document.createElement("small");
+      small.textContent = "Ready on this Wi-Fi";
+      copy.append(strong, small);
+      identity.append(dot, copy);
+      const challenge = document.createElement("button");
+      challenge.className = "nearby-challenge";
+      challenge.textContent = "Challenge";
+      challenge.addEventListener("click", () => void challengeLanPlayer(player));
+      row.append(identity, challenge);
+      nearbyPlayerListEl.appendChild(row);
+    }
+  }
+
+  nearbyInviteEl.innerHTML = "";
+  nearbyInviteEl.classList.toggle("hidden", !invite);
+  if (invite) {
+    const message = document.createElement("strong");
+    message.textContent = `${invite.fromName} challenged you`;
+    const join = document.createElement("button");
+    join.textContent = "Join Duel";
+    join.addEventListener("click", () => void joinLanInvitation(invite));
+    nearbyInviteEl.append(message, join);
+    if (lastLanInviteRoomId !== invite.roomId) {
+      lastLanInviteRoomId = invite.roomId;
+      sound.play("info");
+    }
+  }
+}
+
+async function refreshLanPresence() {
+  if (lanPresenceBusy || landingOverlay.classList.contains("hidden")) return;
+  lanPresenceBusy = true;
+  try {
+    const response = await postLanPresence("", {
+      id: lanPresenceId,
+      name: getLanPresenceName()
+    });
+    const payload = (await response.json()) as {
+      players?: LanPresencePlayer[];
+      invite?: LanPresenceInvite;
+    };
+    renderLanPresence(payload.players ?? [], payload.invite);
+  } catch {
+    nearbyPlayersEl?.classList.add("hidden");
+  } finally {
+    lanPresenceBusy = false;
+  }
+}
+
+function startLanPresence() {
+  if (lanPresenceTimer) window.clearInterval(lanPresenceTimer);
+  void refreshLanPresence();
+  lanPresenceTimer = window.setInterval(() => void refreshLanPresence(), 3_000);
+}
+
+function stopLanPresence() {
+  if (lanPresenceTimer) window.clearInterval(lanPresenceTimer);
+  lanPresenceTimer = undefined;
 }
 
 function setMode(mode: "local" | "online") {
@@ -2233,6 +2434,11 @@ function createCardElement(
   el.dataset.ownerId = ownerId;
   el.dataset.role = role;
 
+  const emblem = document.createElement("span");
+  emblem.className = "card-emblem";
+  emblem.textContent = getCardEmblem(card);
+  emblem.setAttribute("aria-hidden", "true");
+
   const ownerMeta =
     latestConfig?.players.find((player) => player.id === ownerId) ??
     latestConfig?.players.find((player) => player.id === viewPlayerId);
@@ -2247,6 +2453,7 @@ function createCardElement(
   title.className = "card-title";
   title.textContent = card.name || card.id;
   const pattern = drawCardPattern(card.moves, xMul, yMul, getCardPatternSize());
+  el.appendChild(emblem);
   el.appendChild(title);
   el.appendChild(pattern);
 
@@ -2274,15 +2481,15 @@ function cloneConfig<T>(value: T): T {
 function updateCustomizeHeader() {
   if (customizeTitle) {
     customizeTitle.textContent =
-      customizeMode === "new" ? "Create New Card" : "Customize Cards";
+      customizeMode === "new" ? "Build a movement card" : "Edit movement cards";
   }
   if (customizeSubtitle) {
     customizeSubtitle.textContent =
       customizeMode === "new"
-        ? "Design a new move card and add it to your deck."
-        : "Edit names and moves. Changes are local to this browser.";
+        ? "Name it, draw its movement pattern, then save it to this device."
+        : "Adjust names and movement patterns saved on this device.";
   }
-  cardsApplyBtn.textContent = customizeMode === "new" ? "Add to Deck" : "Apply Changes";
+  cardsApplyBtn.textContent = customizeMode === "new" ? "Add to deck" : "Save changes";
 }
 
 function openCustomize(scope: "local" | "lobby" = "local", mode: "edit" | "new" = "edit") {
@@ -2739,7 +2946,12 @@ function renderDraft() {
     const title = document.createElement("div");
     title.className = "card-title";
     title.textContent = card.name;
+    const emblem = document.createElement("span");
+    emblem.className = "card-emblem";
+    emblem.textContent = getCardEmblem(card);
+    emblem.setAttribute("aria-hidden", "true");
     const pattern = drawCardPattern(card.moves);
+    item.appendChild(emblem);
     item.appendChild(title);
     item.appendChild(pattern);
     item.addEventListener("click", () => {
@@ -2828,6 +3040,7 @@ function returnToMenu() {
   lobbyOverlay?.classList.add("hidden");
   setSpectatorMode(false);
   currentRoomCode = undefined;
+  currentRoomId = undefined;
   currentRoomPrivate = false;
   appEl.dataset.started = "false";
   lastActivePlayerId = undefined;
@@ -2879,6 +3092,8 @@ landingTabWifi?.addEventListener("click", () => setLandingTab("wifi"));
 landingTabOnline?.addEventListener("click", () => setLandingTab("online"));
 landingWifiQuickBtn.addEventListener("click", () => setLandingTab("wifi"));
 landingOnlineQuickBtn?.addEventListener("click", () => setLandingTab("online"));
+landingHomePassBtn?.addEventListener("click", () => landingLocalBtn.click());
+landingHomeOnlineBtn?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
 rulesPracticeBtn?.addEventListener("click", openTutorial);
 rulesHomeBtn?.addEventListener("click", () => {
@@ -3129,6 +3344,7 @@ if (onlineNameInput) {
     localStorage.setItem(ONLINE_NAME_KEY, onlineName);
     if (onlineName.trim().length >= 2) {
       setOnlineStatus();
+      void refreshLanPresence();
     }
   });
 }

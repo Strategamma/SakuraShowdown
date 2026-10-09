@@ -1,22 +1,24 @@
 # Goal
-Create a seamless Decadence Arcade-to-Sakura handoff and make Help teach the full game at a glance.
+Make LAN presence immediate and simplify Home into the fastest path to a preferred match.
 
 # Scope
-- Match the supplied Decadence Arcade grid, typography, amber/coral actions, translucent cards, and live-state accents.
-- Replace the generic referral notice with a purposeful game-card handoff.
-- Replace the prose rules list with a visual goal/turn/card-exchange/win guide and practice entry.
+- Show available players on Home when devices use the same local Sakura host.
+- Support direct player-to-player LAN challenges and invitation joining.
+- Reduce first-view choices to Solo, LAN party, and a few compact alternatives.
+- Preserve pass-and-play, invite-code, Internet, install, settings, and offline behavior.
 
 # Approach
-- Treat the Sakura home as the next screen in Decadence Arcade rather than a separate product.
-- Teach one turn as three numbered actions and explain the movement-card diagram visually.
-- Keep detailed guided practice optional and one tap away.
+- Add an in-memory, expiring presence registry to the LAN server only.
+- Heartbeat while Home is open, render nearby people as Decadence live cards, and create a private room when challenging someone.
+- Keep manual Host/Join inside the LAN detail screen as a fallback, not first-view clutter.
 
 # Risks
-- Help must stay scannable on phones without hiding essential rules.
-- The handoff appears only for Decadence referral/source launches and cannot block mode selection.
+- Presence must expire quickly, avoid public deployment exposure, and never require an account.
+- Invitations must target one local device and tolerate stale peers/rooms.
+- Polling must stop outside Home and avoid blocking offline play.
 - Browser screenshot verification remains dependent on the unavailable Chromium runtime.
 
 # Verification
-- Exercise referral home, Help, guided tutorial, and practice launch.
-- Run the required Playwright client and inspect screenshots when launch succeeds.
-- Run rules tests, typechecks, production build, and bundle budgets.
+- Test presence registration, peer expiry, targeted challenge payloads, and direct private-room joining.
+- Verify Home/LAN/Internet/Rules navigation and responsive layout.
+- Run the required Playwright flow when launch succeeds, plus tests, typechecks, server checks, and production build.

@@ -22,6 +22,9 @@ const SERVICE_VERSION = process.env.SAKURA_SERVER_VERSION ?? "0.1.0";
 const SERVICE_ENVIRONMENT = process.env.NODE_ENV ?? "development";
 const ACTIVE_CODES = new Set();
 const PRIVATE_CODES = new Map();
+const LAN_PRESENCE = new Map();
+const LAN_PRESENCE_TTL_MS = 12_000;
+const LAN_INVITE_TTL_MS = 20_000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -581,6 +584,7 @@ function normalizeCustomConfig(raw) {
 
 const app = express();
 app.use(cors());
+app.use(express.json({ limit: "16kb" }));
 
 app.get("/health", (_req, res) => {
   try {
@@ -664,6 +668,81 @@ function isLanRequest(req) {
     /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
   );
 }
+
+function pruneLanPresence(now = Date.now()) {
+  for (const [id, presence] of LAN_PRESENCE) {
+    if (now - presence.lastSeen > LAN_PRESENCE_TTL_MS) {
+      LAN_PRESENCE.delete(id);
+      continue;
+    }
+    if (presence.invite && now - presence.invite.createdAt > LAN_INVITE_TTL_MS) {
+      delete presence.invite;
+    }
+  }
+}
+
+app.post("/lan-presence", (req, res) => {
+  if (!isLanRequest(req)) {
+    res.status(404).json({ error: "LAN presence is only available on a local host." });
+    return;
+  }
+  const id = typeof req.body?.id === "string" ? req.body.id.trim().slice(0, 64) : "";
+  const name = typeof req.body?.name === "string" ? req.body.name.trim().slice(0, 30) : "";
+  if (!/^[a-zA-Z0-9-]{8,64}$/.test(id)) {
+    res.status(400).json({ error: "Invalid presence id." });
+    return;
+  }
+  const now = Date.now();
+  pruneLanPresence(now);
+  const existing = LAN_PRESENCE.get(id);
+  LAN_PRESENCE.set(id, {
+    id,
+    name: name || "Nearby player",
+    lastSeen: now,
+    invite: existing?.invite
+  });
+  const current = LAN_PRESENCE.get(id);
+  res.json({
+    players: Array.from(LAN_PRESENCE.values())
+      .filter((presence) => presence.id !== id)
+      .map((presence) => ({ id: presence.id, name: presence.name })),
+    invite: current?.invite
+      ? {
+          fromId: current.invite.fromId,
+          fromName: current.invite.fromName,
+          roomId: current.invite.roomId
+        }
+      : undefined
+  });
+});
+
+app.post("/lan-presence/invite", (req, res) => {
+  if (!isLanRequest(req)) {
+    res.status(404).json({ error: "LAN invitations are only available on a local host." });
+    return;
+  }
+  const fromId = typeof req.body?.fromId === "string" ? req.body.fromId.trim().slice(0, 64) : "";
+  const toId = typeof req.body?.toId === "string" ? req.body.toId.trim().slice(0, 64) : "";
+  const roomId = typeof req.body?.roomId === "string" ? req.body.roomId.trim().slice(0, 80) : "";
+  if (!fromId || !toId || !roomId || fromId === toId) {
+    res.status(400).json({ error: "Invalid LAN invitation." });
+    return;
+  }
+  pruneLanPresence();
+  const sender = LAN_PRESENCE.get(fromId);
+  const recipient = LAN_PRESENCE.get(toId);
+  if (!sender || !recipient) {
+    res.status(404).json({ error: "That nearby player is no longer available." });
+    return;
+  }
+  recipient.invite = {
+    fromId,
+    fromName: sender.name,
+    roomId,
+    createdAt: Date.now()
+  };
+  res.json({ ok: true });
+});
 
 app.get("/lan-lobby", async (req, res) => {
   if (!isLanRequest(req)) {
