@@ -1,22 +1,21 @@
 # Goal
-Make the five-card deck picker bright, legible, and inviting without breaking the Decadence × dojo language.
+Turn the board into a vibrant Decadence × Sakura centerpiece with unmistakably Japanese dojo pieces.
 
 # Scope
-- Separate the parchment card-selection surface from the dark application shell.
-- Strengthen card names, movement grids, selected order, disabled state, and the sticky action bar.
-- Preserve the existing selection behavior and phone grid.
+- Refresh the Three.js board, stage, lighting, temples, and procedural Master/Disciple models.
+- Preserve team ownership, legal-move contrast, camera behavior, performance, offline play, and rules.
+- Refine the surrounding board-stage treatment without adding gameplay chrome.
 
 # Approach
-- Treat the modal body as a lit dojo deck table with ivory cards and dark readable ink.
-- Keep the header/footer dark for Decadence continuity and use amber/coral depth on the primary action.
-- Use jade selection borders and numbered seals that remain obvious without animation.
+- Use a bright woven tatami field inside oxblood lacquer, with amber registration marks, coral blossoms, jade accents, and branded edge lighting.
+- Strengthen piece silhouettes with haori/hakama layers, obi, mon crests, hachimaki, training staffs, topknots, and katana details.
+- Keep red versus indigo as the primary gameplay signal and use pale material highlights for legibility.
 
 # Risks
-- Global button/card rules currently cascade into draft tiles and must be overridden only inside this modal.
-- Selected and unavailable cards must remain distinguishable in high-contrast and reduced-motion modes.
-- Browser screenshot verification remains dependent on the unavailable Chromium runtime.
+- Added geometry must remain lightweight enough for mobile GPUs.
+- Decorative marks must not resemble legal destinations or obscure hit targets.
+- Brighter materials must retain clear ownership and selection/capture feedback.
 
 # Verification
-- Verify card names, patterns, selection order, five-card cap, disabled Start state, and responsive grid.
-- Run the required Playwright draft flow when launch succeeds.
-- Run tests, typechecks, production build, bundle budgets, and diff checks.
+- Check both teams, Master/Disciple rank recognition, temples, selection rings, legal highlights, 2D/3D views, and mobile framing.
+- Run lint, tests, typechecks, build/bundle checks, and the prescribed browser game client.

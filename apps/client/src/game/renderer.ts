@@ -19,20 +19,20 @@ type TeamPalette = {
 // Keep palettes in an array so adding extra team colors later is just an append.
 const TEAM_PALETTES: TeamPalette[] = [
   {
-    cloth: 0xa63b49,
-    trim: 0xf0c86d,
-    weaponWood: 0x4b3024,
-    weaponMetal: 0xc6a15a,
-    skin: 0xf0d5b8,
-    hair: 0x1d1716
+    cloth: 0xd83f59,
+    trim: 0xffc34d,
+    weaponWood: 0x5b3026,
+    weaponMetal: 0xf3b847,
+    skin: 0xf5d7b8,
+    hair: 0x241617
   },
   {
-    cloth: 0x315d88,
-    trim: 0xe2eceb,
-    weaponWood: 0x49362b,
-    weaponMetal: 0x9fb5bd,
-    skin: 0xedd2b4,
-    hair: 0x19191a
+    cloth: 0x2867ad,
+    trim: 0xbdebd9,
+    weaponWood: 0x4a3429,
+    weaponMetal: 0xc7ece2,
+    skin: 0xf2d4b5,
+    hair: 0x171a20
   }
 ];
 
@@ -381,10 +381,10 @@ export class GameRenderer {
   }
 
   private setupLights() {
-    const hemi = new THREE.HemisphereLight(0xfff3df, 0x402a2c, 1.06);
+    const hemi = new THREE.HemisphereLight(0xfff4dc, 0x57323d, 1.34);
     this.scene.add(hemi);
 
-    const key = new THREE.DirectionalLight(0xffead2, 1.16);
+    const key = new THREE.DirectionalLight(0xffe7bd, 1.42);
     key.position.set(5, 10, 6);
     key.castShadow = true;
     key.shadow.mapSize.width = 2048;
@@ -397,11 +397,11 @@ export class GameRenderer {
     key.shadow.camera.bottom = -10;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xffc66b, 0.52, 30);
+    const fill = new THREE.PointLight(0xffb746, 0.78, 30);
     fill.position.set(-6, 4, -6);
     this.scene.add(fill);
 
-    const rim = new THREE.PointLight(0xff6070, 0.25, 24);
+    const rim = new THREE.PointLight(0xff4051, 0.5, 24);
     rim.position.set(6, 2.5, 5);
     this.scene.add(rim);
   }
@@ -418,9 +418,9 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.72, 0.38, height + 0.72),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x2b1a19,
-        roughness: 0.48,
-        metalness: 0.12
+        color: 0x5b1727,
+        roughness: 0.36,
+        metalness: 0.2
       })
     );
     base.position.y = -0.25;
@@ -429,14 +429,14 @@ export class GameRenderer {
 
     const lightMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0xa18d73,
-      roughness: 0.92,
+      color: 0xd8bd82,
+      roughness: 0.88,
       metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0x7d6b5c,
-      roughness: 0.94,
+      color: 0xb89a62,
+      roughness: 0.9,
       metalness: 0.01
     });
 
@@ -455,14 +455,14 @@ export class GameRenderer {
     }
 
     const railMaterial = new THREE.MeshStandardMaterial({
-      color: 0x4a2b27,
-      roughness: 0.42,
-      metalness: 0.16
+      color: 0x6f1d31,
+      roughness: 0.3,
+      metalness: 0.25
     });
     const inlayMaterial = new THREE.MeshStandardMaterial({
       color: 0xd99a3d,
-      emissive: 0x6e351b,
-      emissiveIntensity: 0.16,
+      emissive: 0xff7d29,
+      emissiveIntensity: 0.28,
       roughness: 0.38,
       metalness: 0.32
     });
@@ -504,6 +504,37 @@ export class GameRenderer {
     inlays[3].position.set(railOffsetX, 0.168, -height * 0.31);
     inlays.forEach((inlay) => this.boardGroup.add(inlay));
 
+    // A quiet sakura mon anchors the board without competing with legal-move markers.
+    const centerMon = new THREE.Mesh(
+      this.createBlossomGeometry(this.cellSize * 0.27, 5),
+      new THREE.MeshStandardMaterial({
+        color: 0xff8eaa,
+        emissive: 0x9b243f,
+        emissiveIntensity: 0.18,
+        transparent: true,
+        opacity: 0.62,
+        roughness: 0.58,
+        metalness: 0.08,
+        depthWrite: false
+      })
+    );
+    centerMon.position.set(0, 0.122, 0);
+    centerMon.rotation.y = Math.PI / 10;
+    this.boardGroup.add(centerMon);
+
+    const monHeart = new THREE.Mesh(
+      new THREE.CylinderGeometry(this.cellSize * 0.055, this.cellSize * 0.055, 0.018, 24),
+      new THREE.MeshStandardMaterial({
+        color: 0xffc34d,
+        emissive: 0x9a4a16,
+        emissiveIntensity: 0.2,
+        roughness: 0.4,
+        metalness: 0.24
+      })
+    );
+    monHeart.position.set(0, 0.128, 0);
+    this.boardGroup.add(monHeart);
+
     const shadowCatcher = new THREE.Mesh(
       new THREE.PlaneGeometry(width + 6, height + 6),
       new THREE.ShadowMaterial({ opacity: 0.2 })
@@ -533,17 +564,17 @@ export class GameRenderer {
     this.templeGroup.clear();
     if (!this.config) return;
 
-    const ringGeom = new THREE.TorusGeometry(0.39, 0.045, 8, 4);
+    const ringGeom = new THREE.TorusGeometry(0.38, 0.042, 8, 32);
     const baseGeom = new THREE.CylinderGeometry(0.45, 0.5, 0.075, 8);
 
     this.config.players.forEach((player, index) => {
-      const color = index === 0 ? 0x8f2f3e : 0x345b82;
+      const color = index === 0 ? 0xf0445e : 0x3b82cf;
       const ring = new THREE.Mesh(
         ringGeom,
         new THREE.MeshStandardMaterial({
           color,
           emissive: color,
-          emissiveIntensity: 0.38,
+          emissiveIntensity: 0.52,
           roughness: 0.36,
           metalness: 0.34
         })
@@ -564,7 +595,22 @@ export class GameRenderer {
       base.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.04));
       base.receiveShadow = true;
 
-      this.templeGroup.add(base, ring);
+      const blossom = new THREE.Mesh(
+        this.createBlossomGeometry(0.29, 5),
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.24,
+          transparent: true,
+          opacity: 0.76,
+          roughness: 0.5,
+          depthWrite: false
+        })
+      );
+      blossom.position.copy(this.gridToWorld(player.temple.x, player.temple.y, 0.145));
+      blossom.rotation.y = index === 0 ? Math.PI / 10 : -Math.PI / 10;
+
+      this.templeGroup.add(base, blossom, ring);
     });
   }
 
@@ -1322,6 +1368,35 @@ export class GameRenderer {
       ring
     );
 
+    const obiMaterial = new THREE.MeshStandardMaterial({
+      color: palette.trim,
+      emissive: palette.trim,
+      emissiveIntensity: 0.06,
+      roughness: 0.46,
+      metalness: 0.14
+    });
+    const obi = new THREE.Mesh(
+      new THREE.TorusGeometry(baseRadius * (isMaster ? 0.72 : 0.55), 0.045, 10, 32),
+      obiMaterial
+    );
+    obi.position.y = torso.position.y - torsoHeight * 0.22;
+    obi.rotation.x = Math.PI / 2;
+
+    const clanMon = new THREE.Mesh(
+      this.createBlossomGeometry(baseRadius * (isMaster ? 0.2 : 0.145), 5),
+      new THREE.MeshStandardMaterial({
+        color: palette.trim,
+        emissive: palette.trim,
+        emissiveIntensity: 0.08,
+        roughness: 0.42,
+        metalness: 0.16
+      })
+    );
+    clanMon.rotation.x = Math.PI / 2;
+    clanMon.position.set(0, torso.position.y + torsoHeight * 0.08, baseRadius * 0.79);
+
+    group.add(obi, clanMon);
+
     const body = torso;
 
     if (isMaster) {
@@ -1346,6 +1421,21 @@ export class GameRenderer {
       const rightGuard = leftGuard.clone();
       rightGuard.position.x = baseRadius * 0.58;
       rightGuard.rotation.z = -0.12;
+
+      const haoriPanelGeometry = new THREE.BoxGeometry(baseRadius * 0.28, torsoHeight * 0.8, 0.035);
+      const leftHaoriPanel = new THREE.Mesh(haoriPanelGeometry, lapelMaterial);
+      leftHaoriPanel.position.set(-baseRadius * 0.31, robe.position.y - 0.03, baseRadius * 0.79);
+      leftHaoriPanel.rotation.z = -0.07;
+      const rightHaoriPanel = leftHaoriPanel.clone();
+      rightHaoriPanel.position.x = baseRadius * 0.31;
+      rightHaoriPanel.rotation.z = 0.07;
+
+      const hakamaPleatGeometry = new THREE.BoxGeometry(0.025, height * 0.34, 0.025);
+      const hakamaPleats = [-0.16, 0, 0.16].map((offset) => {
+        const pleat = new THREE.Mesh(hakamaPleatGeometry, lapelMaterial);
+        pleat.position.set(baseRadius * offset, robe.position.y - height * 0.08, baseRadius * 1.055);
+        return pleat;
+      });
 
       const beard = new THREE.Mesh(
         new THREE.ConeGeometry(baseRadius * 0.3, 0.42, 16),
@@ -1408,7 +1498,19 @@ export class GameRenderer {
       strap.castShadow = true;
 
       swordRig.add(scabbard, swordGuard, swordHandle, swordPommel);
-      group.add(leftLapel, rightLapel, leftGuard, rightGuard, beard, topknot, strap, swordRig);
+      group.add(
+        leftLapel,
+        rightLapel,
+        leftGuard,
+        rightGuard,
+        leftHaoriPanel,
+        rightHaoriPanel,
+        ...hakamaPleats,
+        beard,
+        topknot,
+        strap,
+        swordRig
+      );
     } else {
       const hair = new THREE.Mesh(
         new THREE.SphereGeometry(baseRadius * 0.34, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
@@ -1467,7 +1569,36 @@ export class GameRenderer {
       );
       tunicPanel.position.set(0, torso.position.y - torsoHeight * 0.12, baseRadius * 0.665);
 
-      group.add(hair, headband, headbandTail, trainingStick, stickCap, belt, tunicPanel);
+      const wrapGeometry = new THREE.BoxGeometry(0.032, torsoHeight * 0.56, 0.026);
+      const leftWrap = new THREE.Mesh(wrapGeometry, obiMaterial);
+      leftWrap.position.set(-baseRadius * 0.1, torso.position.y + 0.01, baseRadius * 0.655);
+      leftWrap.rotation.z = -0.48;
+      const rightWrap = leftWrap.clone();
+      rightWrap.position.x = baseRadius * 0.1;
+      rightWrap.rotation.z = 0.48;
+
+      const wristWrapGeometry = new THREE.TorusGeometry(baseRadius * 0.115, 0.018, 8, 20);
+      const leftWristWrap = new THREE.Mesh(wristWrapGeometry, obiMaterial);
+      leftWristWrap.position.set(-baseRadius * 0.57, shoulders.position.y - 0.2, 0.04);
+      leftWristWrap.rotation.x = Math.PI / 2;
+      leftWristWrap.rotation.z = Math.PI / 6;
+      const rightWristWrap = leftWristWrap.clone();
+      rightWristWrap.position.x = baseRadius * 0.57;
+      rightWristWrap.rotation.z = -Math.PI / 6;
+
+      group.add(
+        hair,
+        headband,
+        headbandTail,
+        trainingStick,
+        stickCap,
+        belt,
+        tunicPanel,
+        leftWrap,
+        rightWrap,
+        leftWristWrap,
+        rightWristWrap
+      );
     }
 
     return { group, body, ring };

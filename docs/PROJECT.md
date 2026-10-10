@@ -36,6 +36,6 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
 - The PWA provides install guidance, Solo/Together shortcuts, and versioned full-shell precaching discovered from built HTML; installs fail safely if a required offline asset is unavailable.
-- Procedural figures face rivals; robed Masters contrast varied staff-carrying Disciples.
+- Procedural rivals: katana Masters and staff-carrying Disciples on golden tatami.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
 - Production internet multiplayer uses `wss://sakurashowdown.onrender.com`; `/health` and `/lobby` were live on 2026-10-08. Keep the service single-instance while room state remains in memory.
