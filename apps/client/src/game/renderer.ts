@@ -19,19 +19,19 @@ type TeamPalette = {
 // Keep palettes in an array so adding extra team colors later is just an append.
 const TEAM_PALETTES: TeamPalette[] = [
   {
-    cloth: 0x7e2635,
-    trim: 0xd8b66d,
+    cloth: 0xa63b49,
+    trim: 0xf0c86d,
     weaponWood: 0x4b3024,
     weaponMetal: 0xc6a15a,
-    skin: 0xe8cfb5,
+    skin: 0xf0d5b8,
     hair: 0x1d1716
   },
   {
-    cloth: 0x263f63,
-    trim: 0xc9d4d8,
+    cloth: 0x315d88,
+    trim: 0xe2eceb,
     weaponWood: 0x49362b,
     weaponMetal: 0x9fb5bd,
-    skin: 0xe4cbb0,
+    skin: 0xedd2b4,
     hair: 0x19191a
   }
 ];
@@ -66,6 +66,7 @@ type PieceVisual = {
   moveStartTime?: number;
   moveDuration?: number;
   captureStartTime?: number;
+  facingYaw: number;
 };
 
 type CardVisual = {
@@ -380,10 +381,10 @@ export class GameRenderer {
   }
 
   private setupLights() {
-    const hemi = new THREE.HemisphereLight(0xfff2df, 0x201418, 0.82);
+    const hemi = new THREE.HemisphereLight(0xfff3df, 0x402a2c, 1.06);
     this.scene.add(hemi);
 
-    const key = new THREE.DirectionalLight(0xffead2, 1.02);
+    const key = new THREE.DirectionalLight(0xffead2, 1.16);
     key.position.set(5, 10, 6);
     key.castShadow = true;
     key.shadow.mapSize.width = 2048;
@@ -396,11 +397,11 @@ export class GameRenderer {
     key.shadow.camera.bottom = -10;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xffb746, 0.38, 30);
+    const fill = new THREE.PointLight(0xffc66b, 0.52, 30);
     fill.position.set(-6, 4, -6);
     this.scene.add(fill);
 
-    const rim = new THREE.PointLight(0xff4051, 0.2, 24);
+    const rim = new THREE.PointLight(0xff6070, 0.25, 24);
     rim.position.set(6, 2.5, 5);
     this.scene.add(rim);
   }
@@ -417,7 +418,7 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.72, 0.38, height + 0.72),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x160f0f,
+        color: 0x2b1a19,
         roughness: 0.48,
         metalness: 0.12
       })
@@ -428,13 +429,13 @@ export class GameRenderer {
 
     const lightMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0x5d5045,
+      color: 0xa18d73,
       roughness: 0.92,
       metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0x493b35,
+      color: 0x7d6b5c,
       roughness: 0.94,
       metalness: 0.01
     });
@@ -454,7 +455,7 @@ export class GameRenderer {
     }
 
     const railMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2b1b1b,
+      color: 0x4a2b27,
       roughness: 0.42,
       metalness: 0.16
     });
@@ -1124,7 +1125,7 @@ export class GameRenderer {
       ring = this.createSelectionRing();
       group.add(ring);
     } else {
-      ({ group, body, ring } = this.createProceduralPiece(typeId, teamIndex));
+      ({ group, body, ring } = this.createProceduralPiece(pieceId, typeId, teamIndex));
     }
 
     group.userData = { type: "piece", pieceId };
@@ -1140,25 +1141,29 @@ export class GameRenderer {
       target: new THREE.Vector3(),
       start: new THREE.Vector3(),
       startTime: 0,
-      duration: 0
+      duration: 0,
+      facingYaw:
+        (teamIndex === 0 ? Math.PI : 0) +
+        (this.masterTypeIds.has(typeId) || typeId === "master" ? 0 : this.getPieceStance(pieceId))
     };
 
     this.pieces.set(pieceId, visual);
     return visual;
   }
 
-  private createProceduralPiece(typeId: string, teamIndex: number) {
+  private createProceduralPiece(pieceId: string, typeId: string, teamIndex: number) {
     const group = new THREE.Group();
     const isMaster = this.masterTypeIds.has(typeId) || typeId === "master";
     const palette = this.getTeamPalette(teamIndex);
 
     // Rank is communicated by silhouette first: grounded Master, nimble Disciple.
-    const scale = isMaster ? 1.2 : 0.88;
-    const height = isMaster ? 1.02 : 0.7;
-    const baseRadius = isMaster ? 0.35 : 0.235;
+    const scale = isMaster ? 1.12 : 0.88;
+    const height = isMaster ? 0.94 : 0.68;
+    const baseRadius = isMaster ? 0.32 : 0.23;
+    const stance = this.getPieceStance(pieceId);
 
     const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 1.02, baseRadius * 1.18, 0.12, 8),
+      new THREE.CylinderGeometry(baseRadius * 1.02, baseRadius * 1.16, 0.12, 20),
       new THREE.MeshStandardMaterial({
         map: this.accentTexture,
         color: palette.trim,
@@ -1221,7 +1226,7 @@ export class GameRenderer {
         baseRadius * (isMaster ? 0.66 : 0.5),
         baseRadius * (isMaster ? 0.82 : 0.64),
         torsoHeight,
-        isMaster ? 8 : 12
+        isMaster ? 18 : 16
       ),
       clothMat
     );
@@ -1287,7 +1292,7 @@ export class GameRenderer {
         baseRadius * (isMaster ? 0.76 : 0.58),
         baseRadius * (isMaster ? 1.08 : 0.82),
         height * (isMaster ? 0.56 : 0.38),
-        isMaster ? 8 : 12,
+        isMaster ? 18 : 16,
         1,
         false
       ),
@@ -1434,15 +1439,16 @@ export class GameRenderer {
         new THREE.CylinderGeometry(0.022, 0.024, 0.82, 14),
         weaponWoodMat
       );
-      trainingStick.position.set(baseRadius * 0.62, 0.48, -baseRadius * 0.16);
-      trainingStick.rotation.z = Math.PI / 9;
+      const staffSide = stance < 0 ? -1 : 1;
+      trainingStick.position.set(baseRadius * 0.62 * staffSide, 0.48, -baseRadius * 0.16);
+      trainingStick.rotation.z = (Math.PI / 9) * staffSide;
       trainingStick.castShadow = true;
 
       const stickCap = new THREE.Mesh(
         new THREE.SphereGeometry(0.04, 12, 10),
         weaponMetalMat
       );
-      stickCap.position.set(baseRadius * 0.48, 0.865, -baseRadius * 0.16);
+      stickCap.position.set(baseRadius * 0.48 * staffSide, 0.865, -baseRadius * 0.16);
       stickCap.castShadow = true;
 
       const belt = new THREE.Mesh(
@@ -1476,6 +1482,14 @@ export class GameRenderer {
     ring.position.y = 0.08;
     ring.visible = false;
     return ring;
+  }
+
+  private getPieceStance(pieceId: string) {
+    let hash = 0;
+    for (let index = 0; index < pieceId.length; index += 1) {
+      hash = (hash * 31 + pieceId.charCodeAt(index)) | 0;
+    }
+    return ((Math.abs(hash) % 5) - 2) * 0.045;
   }
 
 
@@ -1805,7 +1819,7 @@ export class GameRenderer {
         const scale = Math.max(0, 1 - this.easeInOutCubic(captureT));
         visual.group.scale.setScalar(scale);
         visual.group.position.y = visual.target.y + Math.sin(captureT * Math.PI) * 0.22;
-        visual.group.rotation.y = captureT * Math.PI * 0.7;
+        visual.group.rotation.y = visual.facingYaw + captureT * Math.PI * 0.7;
         if (captureT >= 1) {
           visual.group.visible = false;
           visual.captureStartTime = undefined;
@@ -1868,7 +1882,7 @@ export class GameRenderer {
       basePosition.x += extraX;
       basePosition.z += extraZ;
       visual.group.position.copy(basePosition);
-      visual.group.rotation.y = spinY;
+      visual.group.rotation.y = visual.facingYaw + spinY;
       visual.group.rotation.z = tiltZ;
       visual.group.rotation.x = rollX;
 

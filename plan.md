@@ -1,24 +1,24 @@
 # Goal
-Make LAN presence immediate and simplify Home into the fastest path to a preferred match.
+Restore board readability and character appeal while making overlapping-card moves self-explanatory.
 
 # Scope
-- Show available players on Home when devices use the same local Sakura host.
-- Support direct player-to-player LAN challenges and invitation joining.
-- Reduce first-view choices to Solo, LAN party, and a few compact alternatives.
-- Preserve pass-and-play, invite-code, Internet, install, settings, and offline behavior.
+- Brighten the board and figure materials without losing the Decadence twilight mood.
+- Orient teams toward each other and add subtle pose variation among Disciples.
+- Make the two-valid-cards state explicitly ask which card moves to the Pool.
+- Preserve team recognition, picking, movement animation, and mobile performance.
 
 # Approach
-- Add an in-memory, expiring presence registry to the LAN server only.
-- Heartbeat while Home is open, render nearby people as Decadence live cards, and create a private room when challenging someone.
-- Keep manual Host/Join inside the LAN detail screen as a fallback, not first-view clutter.
+- Raise woven-tile midtones, warm the lacquer frame, and rebalance ambient/key lighting.
+- Store a stable base facing angle per figure and layer movement spins over it.
+- Add a persistent choice banner plus an on-card “Discard to Pool” badge for overlap decisions.
 
 # Risks
-- Presence must expire quickly, avoid public deployment exposure, and never require an account.
-- Invitations must target one local device and tolerate stale peers/rooms.
-- Polling must stop outside Home and avoid blocking offline play.
+- Piece facing must remain correct after board flip, rotation, capture, and animated moves.
+- Brighter materials must retain red/blue contrast and readable highlights.
+- Choice guidance must not imply that both cards are lost or change rules behavior.
 - Browser screenshot verification remains dependent on the unavailable Chromium runtime.
 
 # Verification
-- Test presence registration, peer expiry, targeted challenge payloads, and direct private-room joining.
-- Verify Home/LAN/Internet/Rules navigation and responsive layout.
-- Run the required Playwright flow when launch succeeds, plus tests, typechecks, server checks, and production build.
+- Verify initial facing, movement/capture rotation, selection/check rings, and overlap-card accessibility labels.
+- Run the required Playwright gameplay flow when launch succeeds.
+- Run tests, typechecks, production build, bundle budgets, and diff checks.

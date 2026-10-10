@@ -938,7 +938,7 @@ function handleCellTap(x: number, y: number) {
         to: { x, y },
         cardIds: Array.from(new Set(movesForCell.map((move) => move.cardId)))
       };
-      statusEl.textContent = "Choose a card to play this move.";
+      statusEl.textContent = "This move works with both cards. Choose one to discard to the Pool.";
       renderAll();
       return;
     }
@@ -969,7 +969,7 @@ function handleCellTap(x: number, y: number) {
     to: { x, y },
     cardIds: filteredMoves.map((move) => move.cardId)
   };
-  statusEl.textContent = "Choose a card to play this move.";
+  statusEl.textContent = "This move works with both cards. Choose one to discard to the Pool.";
   renderAll();
 }
 
@@ -1155,6 +1155,7 @@ function renderAll() {
           ? "card"
           : "none"
   );
+  if (gameConsole) gameConsole.dataset.cardChoice = pendingMove ? "true" : "false";
   const moves = filterMoves(latestMoves, selection.selectedCardId, selection.selectedPieceId);
   hintMoveBtn.disabled = !controller.canAct() || latestMoves.length === 0;
   const checkOwners = computeCheckOwners(state, config);
@@ -1194,7 +1195,7 @@ function renderAll() {
       state.activePlayerId;
     const isChecked = checkOwners.includes(state.activePlayerId);
     const actionHint = pendingMove
-      ? "Choose a highlighted card"
+      ? "Choose which highlighted card to discard to the Pool"
       : selection.selectedPieceId && selection.selectedCardId
         ? "Choose a glowing square"
         : selection.selectedPieceId
@@ -2231,6 +2232,7 @@ function renderCards() {
   if (cardChoiceHint) {
     const hideLegacy = document.body.dataset.cards === "canvas";
     cardChoiceHint.classList.toggle("hidden", hideLegacy || !showHint);
+    cardChoiceHint.textContent = "Same move, two cards — discard one to the Pool";
   }
   if (cardHintOverlay) {
     cardHintOverlay.classList.toggle("hidden", true);
@@ -2266,6 +2268,14 @@ function renderCards() {
       }
       if (pendingCardIds.includes(cardId)) {
         el.classList.add("choice");
+        el.setAttribute(
+          "aria-label",
+          `Discard ${card.name || card.id} to the Pool and complete this move`
+        );
+        const badge = document.createElement("span");
+        badge.className = "card-choice-badge";
+        badge.textContent = "Discard to Pool";
+        el.appendChild(badge);
       }
       if (!controller.canAct()) {
         el.classList.add("disabled");

@@ -5311,3 +5311,68 @@ button.arcade-primary:hover {
   .home-quick-actions { grid-template-columns: 1fr; }
   .nearby-player { align-items: stretch; }
 }
+
+/* Gameplay legibility and explicit overlapping-card decision. */
+#board-stage {
+  background:
+    radial-gradient(circle at 46% 46%, rgba(255,205,128,0.16), transparent 38%),
+    radial-gradient(circle at 76% 64%, rgba(255,64,81,0.08), transparent 38%),
+    linear-gradient(rgba(244,236,223,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244,236,223,0.035) 1px, transparent 1px),
+    #13100f;
+  background-size: auto, auto, 36px 36px, 36px 36px, auto;
+}
+
+.card-hint {
+  max-width: 210px;
+  padding: 7px 9px;
+  border-left: 3px solid #ffb746;
+  background: rgba(255,183,70,0.1);
+  color: #ffe0a3;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.game-console[data-card-choice="true"] .player-rail {
+  border-color: rgba(255,183,70,0.62);
+  background:
+    linear-gradient(145deg, rgba(74,43,29,0.52), rgba(20,15,15,0.84));
+  box-shadow: inset 0 0 0 1px rgba(255,183,70,0.11);
+}
+
+.card.choice {
+  padding-bottom: 30px;
+  border-color: #ffb746;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.58),
+    0 0 0 3px rgba(255,183,70,0.28),
+    0 14px 28px rgba(0,0,0,0.34);
+}
+
+.card-choice-badge {
+  position: absolute;
+  z-index: 4;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  min-height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 3px 5px;
+  background: #ffb746;
+  color: #17120d;
+  box-shadow: 3px 3px 0 #f13d47;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@media (max-width: 520px) {
+  .card-hint { max-width: none; width: 100%; }
+  .card.choice { padding-bottom: 27px; }
+  .card-choice-badge { min-height: 18px; font-size: 0.46rem; }
+}
