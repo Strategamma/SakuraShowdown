@@ -5376,3 +5376,174 @@ button.arcade-primary:hover {
   .card.choice { padding-bottom: 27px; }
   .card-choice-badge { min-height: 18px; font-size: 0.46rem; }
 }
+
+/* Lit dojo deck table: keep the shell nocturnal, make the cards readable. */
+#draft-overlay { background-color: rgba(7,6,6,0.72); }
+
+.draft-card {
+  border-color: rgba(255,200,112,0.62);
+  background:
+    linear-gradient(rgba(67,49,34,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(67,49,34,0.055) 1px, transparent 1px),
+    linear-gradient(145deg, #e7dbc5, #cdbc9f);
+  background-size: 42px 42px, 42px 42px, auto;
+  box-shadow: 8px 10px 0 rgba(241,61,71,0.66), 0 34px 90px rgba(0,0,0,0.52);
+}
+
+.draft-card > .overlay-header {
+  margin: -1px -1px 0;
+  padding: 18px 22px 16px;
+  border-color: rgba(255,183,70,0.34);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(255,64,81,0.11), transparent 34%),
+    #181414;
+}
+
+.draft-card > .overlay-header .overlay-title { color: #fff5e8; }
+.draft-card > .overlay-header .overlay-subtitle { color: rgba(255,245,232,0.72); }
+.draft-card > .overlay-header .close-button { color: #fff5e8; background: #241b1b; }
+
+.draft-card .draft-body {
+  padding: 18px 20px 14px;
+  background: rgba(255,249,237,0.18);
+}
+
+.draft-grid {
+  padding: 4px 8px 20px 4px;
+  scrollbar-color: rgba(102,70,47,0.5) rgba(255,255,255,0.22);
+}
+
+.draft-item {
+  color: #2c211a;
+  border: 1px solid rgba(88,55,39,0.36);
+  background:
+    linear-gradient(120deg, rgba(255,255,255,0.68), transparent 38%),
+    repeating-linear-gradient(0deg, rgba(81,58,38,0.025) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #fff7e8, #e4d5bd);
+  box-shadow: 4px 5px 0 rgba(126,38,53,0.26), 0 12px 24px rgba(45,27,18,0.16);
+}
+
+.draft-item .card-title {
+  color: #35251c;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.draft-item .card-pattern {
+  border: 1px solid rgba(75,52,39,0.16);
+  background: rgba(255,255,255,0.26);
+}
+
+.draft-item .card-emblem { color: rgba(75,45,28,0.09); }
+
+@media (hover: hover) and (pointer: fine) {
+  .draft-item:hover:not(.unavailable) {
+    color: #211711;
+    border-color: #cf7b42;
+    background:
+      linear-gradient(120deg, rgba(255,255,255,0.82), transparent 40%),
+      linear-gradient(180deg, #fffaf0, #eddabd);
+    box-shadow: 7px 8px 0 rgba(241,61,71,0.48), 0 18px 30px rgba(45,27,18,0.22);
+    transform: translate(-2px, -3px);
+  }
+}
+
+.draft-item.selected,
+.draft-item.selected:hover {
+  color: #152019;
+  border-color: #27785c;
+  background:
+    linear-gradient(120deg, rgba(255,255,255,0.7), transparent 42%),
+    linear-gradient(180deg, #dcf3e5, #afd8c5);
+  box-shadow: 6px 7px 0 #27785c, 0 15px 28px rgba(29,72,56,0.24);
+}
+
+.draft-item.selected::after {
+  color: #fff9ee;
+  border-radius: 3px;
+  background: #23694f;
+  box-shadow: 3px 4px 0 #ffb746;
+}
+
+.draft-item.unavailable {
+  opacity: 0.5;
+  filter: grayscale(0.35) saturate(0.6);
+}
+
+.draft-item:focus-visible {
+  outline: 3px solid #7e2635;
+  outline-offset: 3px;
+}
+
+.draft-footer {
+  margin: 0 -1px -1px;
+  padding: 13px 20px;
+  border-color: rgba(255,183,70,0.3);
+  background:
+    radial-gradient(circle at 72% 130%, rgba(255,64,81,0.13), transparent 42%),
+    #181414;
+}
+
+.draft-count {
+  border-color: rgba(117,246,175,0.48);
+  border-radius: 4px;
+  color: #dffff0;
+  background: rgba(43,112,85,0.3);
+}
+
+.draft-footer #draft-start:not(:disabled) {
+  border-color: #ffb746;
+  background: #ffb746;
+  color: #17120d;
+  box-shadow: 5px 6px 0 #f13d47;
+  font-weight: 900;
+}
+
+.draft-footer #draft-start:disabled {
+  color: rgba(244,236,223,0.48);
+  border-color: rgba(244,236,223,0.16);
+  background: rgba(255,255,255,0.04);
+}
+
+@media (max-width: 520px) {
+  .draft-card .draft-body { padding: 12px 10px 8px; }
+  .draft-card > .overlay-header { padding: 14px 14px 12px; }
+  .draft-footer { padding: 9px 10px; }
+}
+
+/* Home scroll contract: the full page scrolls, never a clipped panel inside it. */
+.landing-overlay {
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 20px;
+}
+
+.landing-card {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.landing-body,
+.landing-panel,
+.landing-panel-wifi,
+.landing-panel-online {
+  min-height: 0;
+  overflow: visible;
+}
+
+@media (max-width: 720px) {
+  .landing-overlay { padding: 0; }
+
+  .landing-card {
+    min-height: 100dvh;
+    max-height: none;
+  }
+
+  .landing-body { overflow: visible; }
+}
