@@ -19,18 +19,18 @@ type TeamPalette = {
 // Keep palettes in an array so adding extra team colors later is just an append.
 const TEAM_PALETTES: TeamPalette[] = [
   {
-    cloth: 0xd83f59,
-    trim: 0xffc34d,
-    weaponWood: 0x5b3026,
-    weaponMetal: 0xf3b847,
+    cloth: 0xa9364b,
+    trim: 0xf0d8ae,
+    weaponWood: 0x51352b,
+    weaponMetal: 0xc59b52,
     skin: 0xf5d7b8,
     hair: 0x241617
   },
   {
-    cloth: 0x2867ad,
-    trim: 0xbdebd9,
+    cloth: 0x294f73,
+    trim: 0xd6e5df,
     weaponWood: 0x4a3429,
-    weaponMetal: 0xc7ece2,
+    weaponMetal: 0xa9c8c1,
     skin: 0xf2d4b5,
     hair: 0x171a20
   }
@@ -381,10 +381,10 @@ export class GameRenderer {
   }
 
   private setupLights() {
-    const hemi = new THREE.HemisphereLight(0xfff4dc, 0x57323d, 1.34);
+    const hemi = new THREE.HemisphereLight(0xfff8e9, 0x29333a, 1.24);
     this.scene.add(hemi);
 
-    const key = new THREE.DirectionalLight(0xffe7bd, 1.42);
+    const key = new THREE.DirectionalLight(0xfff0d2, 1.34);
     key.position.set(5, 10, 6);
     key.castShadow = true;
     key.shadow.mapSize.width = 2048;
@@ -397,11 +397,11 @@ export class GameRenderer {
     key.shadow.camera.bottom = -10;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xffb746, 0.78, 30);
+    const fill = new THREE.PointLight(0xe8b86a, 0.46, 30);
     fill.position.set(-6, 4, -6);
     this.scene.add(fill);
 
-    const rim = new THREE.PointLight(0xff4051, 0.5, 24);
+    const rim = new THREE.PointLight(0xd85b73, 0.3, 24);
     rim.position.set(6, 2.5, 5);
     this.scene.add(rim);
   }
@@ -418,9 +418,9 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.72, 0.38, height + 0.72),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x5b1727,
-        roughness: 0.36,
-        metalness: 0.2
+        color: 0x2b2021,
+        roughness: 0.32,
+        metalness: 0.16
       })
     );
     base.position.y = -0.25;
@@ -429,14 +429,14 @@ export class GameRenderer {
 
     const lightMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0xd8bd82,
-      roughness: 0.88,
+      color: 0xd8cfbd,
+      roughness: 0.9,
       metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0xb89a62,
-      roughness: 0.9,
+      color: 0xb8ad9b,
+      roughness: 0.92,
       metalness: 0.01
     });
 
@@ -455,14 +455,14 @@ export class GameRenderer {
     }
 
     const railMaterial = new THREE.MeshStandardMaterial({
-      color: 0x6f1d31,
-      roughness: 0.3,
-      metalness: 0.25
+      color: 0x35262a,
+      roughness: 0.28,
+      metalness: 0.2
     });
     const inlayMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd99a3d,
-      emissive: 0xff7d29,
-      emissiveIntensity: 0.28,
+      color: 0xc69a55,
+      emissive: 0x6b4822,
+      emissiveIntensity: 0.12,
       roughness: 0.38,
       metalness: 0.32
     });
@@ -508,11 +508,11 @@ export class GameRenderer {
     const centerMon = new THREE.Mesh(
       this.createBlossomGeometry(this.cellSize * 0.27, 5),
       new THREE.MeshStandardMaterial({
-        color: 0xff8eaa,
-        emissive: 0x9b243f,
-        emissiveIntensity: 0.18,
+        color: 0xd98294,
+        emissive: 0x6e2938,
+        emissiveIntensity: 0.1,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.46,
         roughness: 0.58,
         metalness: 0.08,
         depthWrite: false
@@ -525,9 +525,9 @@ export class GameRenderer {
     const monHeart = new THREE.Mesh(
       new THREE.CylinderGeometry(this.cellSize * 0.055, this.cellSize * 0.055, 0.018, 24),
       new THREE.MeshStandardMaterial({
-        color: 0xffc34d,
-        emissive: 0x9a4a16,
-        emissiveIntensity: 0.2,
+        color: 0xc59b52,
+        emissive: 0x5c3b18,
+        emissiveIntensity: 0.1,
         roughness: 0.4,
         metalness: 0.24
       })
@@ -568,13 +568,13 @@ export class GameRenderer {
     const baseGeom = new THREE.CylinderGeometry(0.45, 0.5, 0.075, 8);
 
     this.config.players.forEach((player, index) => {
-      const color = index === 0 ? 0xf0445e : 0x3b82cf;
+      const color = index === 0 ? 0xb63f56 : 0x3c668d;
       const ring = new THREE.Mesh(
         ringGeom,
         new THREE.MeshStandardMaterial({
           color,
           emissive: color,
-          emissiveIntensity: 0.52,
+          emissiveIntensity: 0.3,
           roughness: 0.36,
           metalness: 0.34
         })
@@ -587,7 +587,7 @@ export class GameRenderer {
         baseGeom,
         new THREE.MeshStandardMaterial({
           map: this.accentTexture,
-          color: 0xd4b36b,
+          color: 0xc8b58f,
           roughness: 0.6,
           metalness: 0.18
         })
@@ -713,11 +713,11 @@ export class GameRenderer {
       if (!highlight) continue;
       const fillMat = highlight.fill.material as THREE.MeshBasicMaterial;
       const borderMat = highlight.border.material as THREE.LineBasicMaterial;
-      let baseColor = 0x5ab4ff;
-      if (move.playerId === primaryId) baseColor = 0xe85c6d;
-      if (move.playerId === secondaryId) baseColor = 0x5ab4ff;
-      const color = move.capture ? 0xf2c15f : baseColor;
-      const opacity = move.capture ? 0.7 : 0.5;
+      let baseColor = 0x4e789c;
+      if (move.playerId === primaryId) baseColor = 0xb94c60;
+      if (move.playerId === secondaryId) baseColor = 0x4e789c;
+      const color = move.capture ? 0xc69a55 : baseColor;
+      const opacity = move.capture ? 0.66 : 0.46;
       fillMat.color.set(color);
       borderMat.color.set(color);
       fillMat.opacity = opacity;
@@ -783,13 +783,13 @@ export class GameRenderer {
       if (visual.selected) {
         bodyMat.emissive.setHex(0xf4a261);
         bodyMat.emissiveIntensity = 0.5;
-        ringMat.color.setHex(0xf4a261);
+        ringMat.color.setHex(0xd0ad70);
         ringMat.opacity = 0.75;
         visual.ring.visible = true;
       } else if (inCheck) {
         bodyMat.emissive.setHex(0xf2c15f);
         bodyMat.emissiveIntensity = 0.3;
-        ringMat.color.setHex(0xf2c15f);
+        ringMat.color.setHex(0xc69a55);
         ringMat.opacity = 0.85;
         visual.ring.visible = true;
       } else {
@@ -1202,23 +1202,23 @@ export class GameRenderer {
     const isMaster = this.masterTypeIds.has(typeId) || typeId === "master";
     const palette = this.getTeamPalette(teamIndex);
 
-    // Rank is communicated by silhouette first: grounded Master, nimble Disciple.
-    const scale = isMaster ? 1.12 : 0.88;
-    const height = isMaster ? 0.94 : 0.68;
-    const baseRadius = isMaster ? 0.32 : 0.23;
+    // Human proportions communicate rank: an upright elder and four smaller boys.
+    const scale = isMaster ? 1.02 : 0.76;
+    const height = isMaster ? 0.9 : 0.62;
+    const baseRadius = isMaster ? 0.27 : 0.19;
     const stance = this.getPieceStance(pieceId);
 
     const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 1.02, baseRadius * 1.16, 0.12, 20),
+      new THREE.CylinderGeometry(baseRadius * 0.98, baseRadius * 1.08, 0.065, 32),
       new THREE.MeshStandardMaterial({
         map: this.accentTexture,
         color: palette.trim,
-        roughness: 0.42,
-        metalness: 0.26
+        roughness: 0.5,
+        metalness: 0.16
       })
     );
     base.castShadow = true;
-    base.position.y = 0.06;
+    base.position.y = 0.033;
 
     const clothMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
@@ -1246,37 +1246,38 @@ export class GameRenderer {
       metalness: 0.72
     });
 
-    const legHeight = 0.2 * scale;
-    const legRadius = 0.055 * scale;
-    const legOffset = 0.08 * scale;
+    const legHeight = (isMaster ? 0.24 : 0.22) * scale;
+    const legRadius = (isMaster ? 0.052 : 0.05) * scale;
+    const legOffset = (isMaster ? 0.085 : 0.075) * scale;
     const legLeft = new THREE.Mesh(
-      new THREE.CylinderGeometry(legRadius, legRadius * 1.1, legHeight, 16),
+      new THREE.CapsuleGeometry(legRadius, Math.max(0.04, legHeight - legRadius * 2), 6, 16),
       clothMat
     );
-    legLeft.position.set(-legOffset, legHeight / 2 + 0.12, 0);
+    legLeft.position.set(-legOffset, legHeight / 2 + 0.065, 0);
     legLeft.castShadow = true;
     const legRight = legLeft.clone();
     legRight.position.set(legOffset, legHeight / 2 + 0.12, 0);
 
     const footLeft = new THREE.Mesh(
-      new THREE.SphereGeometry(legRadius * 1.1, 14, 12),
-      clothMat
+      new THREE.CapsuleGeometry(legRadius * 0.82, legRadius * 1.15, 5, 14),
+      weaponWoodMat
     );
-    footLeft.position.set(-legOffset, 0.12 + legRadius * 0.8, legRadius * 0.6);
+    footLeft.position.set(-legOffset, 0.065 + legRadius * 0.7, legRadius * 0.95);
+    footLeft.rotation.x = Math.PI / 2;
     const footRight = footLeft.clone();
     footRight.position.set(legOffset, 0.12 + legRadius * 0.8, legRadius * 0.6);
 
-    const torsoHeight = height * 0.55;
+    const torsoHeight = height * (isMaster ? 0.46 : 0.42);
     const torso = new THREE.Mesh(
       new THREE.CylinderGeometry(
-        baseRadius * (isMaster ? 0.66 : 0.5),
-        baseRadius * (isMaster ? 0.82 : 0.64),
+        baseRadius * (isMaster ? 0.58 : 0.54),
+        baseRadius * (isMaster ? 0.7 : 0.66),
         torsoHeight,
-        isMaster ? 18 : 16
+        32
       ),
       clothMat
     );
-    torso.position.y = 0.12 + legHeight + torsoHeight / 2;
+    torso.position.y = 0.065 + legHeight + torsoHeight / 2;
     torso.castShadow = true;
 
     const crest = new THREE.Mesh(
@@ -1292,21 +1293,46 @@ export class GameRenderer {
     crest.castShadow = true;
 
     const shoulders = new THREE.Mesh(
-      new THREE.SphereGeometry(baseRadius * (isMaster ? 0.64 : 0.5), 20, 14),
+      new THREE.SphereGeometry(baseRadius * (isMaster ? 0.56 : 0.53), 28, 20),
       clothMat
     );
     shoulders.position.y = torso.position.y + torsoHeight / 2 - 0.02;
     shoulders.castShadow = true;
 
     const head = new THREE.Mesh(
-      new THREE.SphereGeometry(baseRadius * 0.33, 24, 18),
+      new THREE.SphereGeometry(baseRadius * (isMaster ? 0.36 : 0.43), 32, 24),
       skinMat
     );
-    head.position.y = shoulders.position.y + baseRadius * 0.4;
+    head.position.y = shoulders.position.y + baseRadius * (isMaster ? 0.43 : 0.5);
     head.castShadow = true;
 
+    const neck = new THREE.Mesh(
+      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.18, baseRadius * 0.24, 20),
+      skinMat
+    );
+    neck.position.y = head.position.y - baseRadius * 0.34;
+
+    const earGeometry = new THREE.SphereGeometry(baseRadius * 0.085, 16, 12);
+    const leftEar = new THREE.Mesh(earGeometry, skinMat);
+    leftEar.position.set(-baseRadius * (isMaster ? 0.35 : 0.42), head.position.y, 0);
+    const rightEar = leftEar.clone();
+    rightEar.position.x *= -1;
+
+    const nose = new THREE.Mesh(
+      new THREE.SphereGeometry(baseRadius * 0.075, 16, 12),
+      skinMat
+    );
+    nose.scale.set(0.8, 0.9, 1.25);
+    nose.position.set(0, head.position.y - baseRadius * 0.015, baseRadius * (isMaster ? 0.34 : 0.41));
+
+    const eyeGeometry = new THREE.SphereGeometry(baseRadius * 0.035, 12, 8);
+    const leftEye = new THREE.Mesh(eyeGeometry, hairMat);
+    leftEye.position.set(-baseRadius * 0.12, head.position.y + baseRadius * 0.07, baseRadius * (isMaster ? 0.335 : 0.405));
+    const rightEye = leftEye.clone();
+    rightEye.position.x *= -1;
+
     const leftArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
+      new THREE.CapsuleGeometry(baseRadius * 0.11, isMaster ? 0.16 : 0.12, 6, 18),
       clothMat
     );
     leftArm.position.set(-baseRadius * 0.5, shoulders.position.y - 0.12, 0.02);
@@ -1314,7 +1340,7 @@ export class GameRenderer {
     leftArm.castShadow = true;
 
     const rightArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(baseRadius * 0.12, baseRadius * 0.16, 0.32, 16),
+      new THREE.CapsuleGeometry(baseRadius * 0.11, isMaster ? 0.16 : 0.12, 6, 18),
       clothMat
     );
     rightArm.position.set(baseRadius * 0.5, shoulders.position.y - 0.12, 0.02);
@@ -1322,7 +1348,7 @@ export class GameRenderer {
     rightArm.castShadow = true;
 
     const sleeveLeft = new THREE.Mesh(
-      new THREE.ConeGeometry(baseRadius * 0.22, 0.22, 20),
+      new THREE.CylinderGeometry(baseRadius * 0.16, baseRadius * 0.2, isMaster ? 0.2 : 0.15, 24),
       clothMat
     );
     sleeveLeft.position.set(-baseRadius * 0.52, shoulders.position.y - 0.18, 0.04);
@@ -1333,18 +1359,24 @@ export class GameRenderer {
     sleeveRight.position.set(baseRadius * 0.52, shoulders.position.y - 0.18, 0.04);
     sleeveRight.rotation.z = -Math.PI / 6;
 
+    const handGeometry = new THREE.SphereGeometry(baseRadius * 0.115, 18, 14);
+    const leftHand = new THREE.Mesh(handGeometry, skinMat);
+    leftHand.position.set(-baseRadius * 0.61, shoulders.position.y - 0.29, 0.08);
+    const rightHand = leftHand.clone();
+    rightHand.position.x *= -1;
+
     const robe = new THREE.Mesh(
       new THREE.CylinderGeometry(
-        baseRadius * (isMaster ? 0.76 : 0.58),
-        baseRadius * (isMaster ? 1.08 : 0.82),
-        height * (isMaster ? 0.56 : 0.38),
-        isMaster ? 18 : 16,
+        baseRadius * (isMaster ? 0.66 : 0.55),
+        baseRadius * (isMaster ? 0.84 : 0.64),
+        height * (isMaster ? 0.4 : 0.2),
+        32,
         1,
         false
       ),
       clothMat
     );
-    robe.position.y = 0.12 + legHeight + torsoHeight * (isMaster ? 0.22 : 0.12);
+    robe.position.y = 0.065 + legHeight + torsoHeight * (isMaster ? 0.14 : 0.08);
     robe.rotation.y = Math.PI / 8;
     robe.castShadow = true;
 
@@ -1359,11 +1391,19 @@ export class GameRenderer {
       torso,
       crest,
       shoulders,
+      neck,
       head,
+      leftEar,
+      rightEar,
+      nose,
+      leftEye,
+      rightEye,
       leftArm,
       rightArm,
       sleeveLeft,
       sleeveRight,
+      leftHand,
+      rightHand,
       robe,
       ring
     );
@@ -1438,13 +1478,13 @@ export class GameRenderer {
       });
 
       const beard = new THREE.Mesh(
-        new THREE.ConeGeometry(baseRadius * 0.3, 0.42, 16),
+        new THREE.ConeGeometry(baseRadius * 0.26, 0.22, 24),
         new THREE.MeshStandardMaterial({
           color: 0xf2ebe3,
           roughness: 0.6
         })
       );
-      beard.position.set(0, head.position.y - 0.08, baseRadius * 0.14);
+      beard.position.set(0, head.position.y - baseRadius * 0.3, baseRadius * 0.2);
       beard.rotation.x = Math.PI;
 
       const topknot = new THREE.Mesh(
@@ -1607,7 +1647,7 @@ export class GameRenderer {
   private createSelectionRing() {
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(0.38, 0.04, 10, 48),
-      new THREE.MeshBasicMaterial({ color: 0xf4a261, transparent: true, opacity: 0.7 })
+      new THREE.MeshBasicMaterial({ color: 0xd0ad70, transparent: true, opacity: 0.7 })
     );
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.08;

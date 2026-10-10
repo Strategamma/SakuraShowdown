@@ -1,21 +1,21 @@
 # Goal
-Turn the board into a vibrant Decadence × Sakura centerpiece with unmistakably Japanese dojo pieces.
+Replace the loud gold/maroon board with a sleek Sakura dojo and make every piece read immediately as a human.
 
 # Scope
-- Refresh the Three.js board, stage, lighting, temples, and procedural Master/Disciple models.
-- Preserve team ownership, legal-move contrast, camera behavior, performance, offline play, and rules.
-- Refine the surrounding board-stage treatment without adding gameplay chrome.
+- Retune the board, frame, stage, lighting, temples, and team materials.
+- Refine procedural proportions and visible anatomy for small dojo boys and an older Master.
+- Preserve rules, hit targets, ownership, animations, performance, and offline support.
 
 # Approach
-- Use a bright woven tatami field inside oxblood lacquer, with amber registration marks, coral blossoms, jade accents, and branded edge lighting.
-- Strengthen piece silhouettes with haori/hakama layers, obi, mon crests, hachimaki, training staffs, topknots, and katana details.
-- Keep red versus indigo as the primary gameplay signal and use pale material highlights for legibility.
+- Use ink, warm ivory, smoked cedar, muted sakura, and indigo with brass reserved for small accents.
+- Reduce cone-token mass; expose legs, feet, necks, hands, ears, and faces with smoother geometry.
+- Make boys shorter and lighter, while the Master remains taller through posture and layered clothing rather than bulk.
 
 # Risks
-- Added geometry must remain lightweight enough for mobile GPUs.
-- Decorative marks must not resemble legal destinations or obscure hit targets.
-- Brighter materials must retain clear ownership and selection/capture feedback.
+- Small features must remain readable at phone scale.
+- Softer colors must not weaken red/blue ownership or legal-move feedback.
+- Added geometry must stay lightweight on mobile GPUs.
 
 # Verification
-- Check both teams, Master/Disciple rank recognition, temples, selection rings, legal highlights, 2D/3D views, and mobile framing.
-- Run lint, tests, typechecks, build/bundle checks, and the prescribed browser game client.
+- Check both orientations, ranks, team ownership, temples, selection/legal highlights, 2D/3D views, and mobile framing.
+- Run lint, tests, typechecks, production build/budgets, and the prescribed browser client.
