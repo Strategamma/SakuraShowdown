@@ -31,11 +31,11 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 
 ## Current major state
 
-- Local pass-and-play, online public/private rooms, spectator/rematch flows, custom card creation, 2D/3D views, rotate and zoom controls exist.
-- Consumer entry includes a branded app home, first-run onboarding, solo AI, hints, persistent preferences and solo records, protected match exit, install/update UX, and PWA/offline-shell metadata.
+- Local pass-and-play, public/private rooms, spectators, custom cards, and 2D/3D display controls exist. Online rematches require both players' consent and preserve room-scoped session wins.
+- Branded Home includes onboarding, solo AI, Expert hints, preferences/records, protected exit, install UX, and offline PWA metadata.
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
-- The PWA provides install guidance, Solo/Together shortcuts, and versioned full-shell precaching discovered from built HTML; installs fail safely if a required offline asset is unavailable.
-- Human dojo boys face a katana Master on ivory tatami.
+- PWA install guidance, shortcuts, and full-shell precaching fail safely if an offline asset is unavailable.
+- Human dojo boys face a katana Master on pale tatami within neutral ink lacquer; a nonblocking phone prompt recommends landscape.
 - Solo AI has three tiers; Standard checks the opponent's reply, while Expert uses time-bounded iterative-deepening minimax with alpha-beta pruning and tactical/temple-aware evaluation.
 - Production internet multiplayer uses `wss://sakurashowdown.onrender.com`; `/health` and `/lobby` were live on 2026-10-08. Keep the service single-instance while room state remains in memory.

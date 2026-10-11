@@ -1,20 +1,18 @@
 # Goal
-Unify match dialogs and controls with the Decadence/Sakura style, and make LAN rivalry rewarding and reliable.
+Recommend landscape play on phones and give the board a cleaner, brighter Decadence × dojo finish.
 
 # Scope
-- Refresh result, exit, settings, lobby, and board controls.
-- Add per-room session wins, clear piece ownership, and a two-sided rematch invitation.
-- Use Expert move selection for hints and clarify the host/join entry point.
+- Add a portrait-only, dismissible landscape suggestion without blocking the game.
+- Retune board surface, frame, lighting, stage, and team contrast without changing gameplay or controls.
 
 # Approach
-- Reuse the menu's amber/coral physical-button language in the match UI.
-- Keep score on the room server and broadcast it to both players after each win.
-- Keep both players in the result state until a rematch is accepted or they leave.
+- Keep the recommendation in normal layout flow so it never covers pieces or buttons.
+- Use light washi/tatami tiles, neutral ink lacquer, subtle amber registration, and focused coral/indigo team colours.
 
 # Risks
-- Win and rematch events may arrive in quick succession; score and prompts must remain synchronized.
-- Live parent-site logo cannot be assumed if the site certificate cannot be verified.
+- A phone banner must not steal touch space or obstruct portrait play.
+- Tile and team colours must remain distinct in both angled and flat board views.
 
 # Verification
-- Check two-client rematch invitation, decline, acceptance, and score persistence.
-- Run lint, tests, typechecks, production build, and responsive browser checks where available.
+- Check phone portrait/landscape CSS, dismissal, and board contrast.
+- Run lint, tests, typechecks, build, and browser screenshot loop where available.

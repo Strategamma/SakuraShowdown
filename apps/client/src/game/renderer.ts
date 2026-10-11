@@ -19,7 +19,7 @@ type TeamPalette = {
 // Keep palettes in an array so adding extra team colors later is just an append.
 const TEAM_PALETTES: TeamPalette[] = [
   {
-    cloth: 0xa9364b,
+    cloth: 0xb63c50,
     trim: 0xf0d8ae,
     weaponWood: 0x51352b,
     weaponMetal: 0xc59b52,
@@ -27,7 +27,7 @@ const TEAM_PALETTES: TeamPalette[] = [
     hair: 0x241617
   },
   {
-    cloth: 0x294f73,
+    cloth: 0x2d6289,
     trim: 0xd6e5df,
     weaponWood: 0x4a3429,
     weaponMetal: 0xa9c8c1,
@@ -397,11 +397,11 @@ export class GameRenderer {
     key.shadow.camera.bottom = -10;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xe8b86a, 0.46, 30);
+    const fill = new THREE.PointLight(0xffd39a, 0.52, 30);
     fill.position.set(-6, 4, -6);
     this.scene.add(fill);
 
-    const rim = new THREE.PointLight(0xd85b73, 0.3, 24);
+    const rim = new THREE.PointLight(0xe66a7f, 0.24, 24);
     rim.position.set(6, 2.5, 5);
     this.scene.add(rim);
   }
@@ -418,9 +418,9 @@ export class GameRenderer {
       new THREE.BoxGeometry(width + 0.72, 0.38, height + 0.72),
       new THREE.MeshStandardMaterial({
         map: this.woodTexture,
-        color: 0x2b2021,
-        roughness: 0.32,
-        metalness: 0.16
+        color: 0x34383c,
+        roughness: 0.42,
+        metalness: 0.1
       })
     );
     base.position.y = -0.25;
@@ -429,13 +429,13 @@ export class GameRenderer {
 
     const lightMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0xd8cfbd,
+      color: 0xe8dfce,
       roughness: 0.9,
       metalness: 0.01
     });
     const darkMat = new THREE.MeshStandardMaterial({
       map: this.fabricTexture,
-      color: 0xb8ad9b,
+      color: 0xded2be,
       roughness: 0.92,
       metalness: 0.01
     });
@@ -455,12 +455,12 @@ export class GameRenderer {
     }
 
     const railMaterial = new THREE.MeshStandardMaterial({
-      color: 0x35262a,
-      roughness: 0.28,
-      metalness: 0.2
+      color: 0x303338,
+      roughness: 0.39,
+      metalness: 0.13
     });
     const inlayMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc69a55,
+      color: 0xf0b84c,
       emissive: 0x6b4822,
       emissiveIntensity: 0.12,
       roughness: 0.38,
@@ -508,7 +508,7 @@ export class GameRenderer {
     const centerMon = new THREE.Mesh(
       this.createBlossomGeometry(this.cellSize * 0.27, 5),
       new THREE.MeshStandardMaterial({
-        color: 0xd98294,
+        color: 0xd36b82,
         emissive: 0x6e2938,
         emissiveIntensity: 0.1,
         transparent: true,
@@ -2173,12 +2173,12 @@ export class GameRenderer {
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#7a6572";
+      ctx.fillStyle = "#827e79";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < 120; i += 1) {
         const y = Math.random() * canvas.height;
         const alpha = 0.05 + Math.random() * 0.1;
-        ctx.strokeStyle = `rgba(245, 200, 220, ${alpha})`;
+        ctx.strokeStyle = `rgba(224, 225, 220, ${alpha})`;
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.bezierCurveTo(80, y + Math.random() * 6, 160, y - Math.random() * 6, 256, y);
@@ -2199,7 +2199,7 @@ export class GameRenderer {
     canvas.height = 128;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#d9d2c5";
+      ctx.fillStyle = "#e8e0d1";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < 600; i += 1) {
         const x = Math.random() * canvas.width;

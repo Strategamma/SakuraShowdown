@@ -145,6 +145,9 @@ function getCardEmblem(card: CardConfig) {
 const statusEl = document.getElementById("status") as HTMLElement;
 const appEl = document.getElementById("app") as HTMLElement;
 const gameArea = document.getElementById("game-area") as HTMLElement | null;
+const landscapeTip = document.getElementById("landscape-tip") as HTMLElement | null;
+const landscapeTipDismiss = document.getElementById("landscape-tip-dismiss") as HTMLButtonElement | null;
+landscapeTipDismiss?.addEventListener("click", () => landscapeTip?.classList.add("dismissed"));
 if (gameArea) {
   gameArea.dataset.layout = "console";
 }

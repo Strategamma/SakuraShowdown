@@ -5697,7 +5697,7 @@ button.arcade-primary:hover {
 
 .victory-seal { width: 68px; height: 68px; display: grid; place-items: center; color: #ffe6ec; background: #b84362; border-radius: 5px; box-shadow: 5px 6px 0 #f4b94d; font-size: 3rem; }
 .victory-card { max-width: 760px; }
-.victory-body { gap: 18px; padding: 24px 5px 8px; }
+.victory-body { min-height: 0; gap: 18px; padding: 24px 5px 8px; overflow-y: auto; overscroll-behavior: contain; }
 .victory-summary,
 .victory-session-score { padding: 14px 18px; border: 1px solid rgba(220,188,134,.34); border-radius: 4px; color: #f4e8d4; background: rgba(220,188,134,.08); font-size: 1rem; font-weight: 750; }
 .victory-session-score { color: #c6edda; background: rgba(81,160,124,.13); border-color: rgba(133,214,174,.35); }
@@ -5742,3 +5742,38 @@ button.arcade-primary:hover {
   .victory-invite-actions { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { #victory-overlay[data-outcome="win"] .victory-card { animation: none; } }
+
+/* A recommendation, never a gate: portrait remains fully playable. */
+.landscape-tip { display: none; }
+@media (max-width: 700px) and (orientation: portrait) {
+  .landscape-tip:not(.dismissed) {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 5px 8px 0;
+    padding: 9px 10px;
+    border: 1px solid rgba(245, 191, 96, .52);
+    border-left: 4px solid #f4b94d;
+    border-radius: 4px;
+    color: #f8eddf;
+    background: #242021;
+  }
+  .landscape-tip svg { width: 31px; min-width: 31px; fill: none; stroke: #f4b94d; stroke-width: 2; }
+  .landscape-tip span { display: grid; gap: 1px; min-width: 0; }
+  .landscape-tip strong { font-size: .83rem; line-height: 1.2; }
+  .landscape-tip small { color: #d7c8b4; font-size: .7rem; line-height: 1.2; }
+  .landscape-tip button { margin-left: auto; min-width: 38px; min-height: 38px; border: 0; color: #f8eddf; background: transparent; font-size: 1.4rem; cursor: pointer; }
+  .landscape-tip button:focus-visible { outline: 2px solid #f4b94d; outline-offset: 2px; }
+}
+
+#board-stage {
+  border-color: rgba(243, 223, 188, .26);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(242, 226, 198, .13), transparent 42%),
+    radial-gradient(circle at 14% 72%, rgba(213, 82, 104, .08), transparent 35%),
+    linear-gradient(rgba(249, 234, 207, .038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 234, 207, .038) 1px, transparent 1px),
+    linear-gradient(135deg, #22272a, #131719 68%, #252124);
+  background-size: auto, auto, 42px 42px, 42px 42px, auto;
+}
+#canvas-container { filter: saturate(1.03) contrast(1.03); }
