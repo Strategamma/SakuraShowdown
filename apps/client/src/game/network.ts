@@ -12,7 +12,7 @@ export type OnlineHandlers = {
   onState: (state: GameState) => void;
   onConfig: (config: GameConfig) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; started?: boolean }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; ownerId?: string; started?: boolean }) => void;
   onPlayer: (playerId: string | undefined) => void;
   onError: (message: string) => void;
   onRulePack?: (rulePack: RulePackMetadata) => void;
@@ -21,7 +21,7 @@ export type OnlineHandlers = {
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
   onRematchRequest?: (payload: { playerId: string; name: string }) => void;
-  onSessionScore?: (wins: Record<string, number>) => void;
+  onSessionScore?: (score: { wins: Record<string, number>; target: number; championId?: string }) => void;
   onLeave?: (code?: number) => void;
   onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
   onGameStart?: () => void;
@@ -62,7 +62,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; ownerId?: string; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: ServerErrorPayload) =>
@@ -80,8 +80,8 @@ export class OnlineSession {
       this.room.onMessage("rematch_pending", (payload: { playerId: string; name: string }) =>
         this.handlers.onRematchRequest?.(payload)
       );
-      this.room.onMessage("session_score", (payload: { wins: Record<string, number> }) =>
-        this.handlers.onSessionScore?.(payload.wins)
+      this.room.onMessage("session_score", (payload: { wins: Record<string, number>; target: number; championId?: string }) =>
+        this.handlers.onSessionScore?.(payload)
       );
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
@@ -126,7 +126,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; ownerId?: string; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: ServerErrorPayload) =>
@@ -144,8 +144,8 @@ export class OnlineSession {
       this.room.onMessage("rematch_pending", (payload: { playerId: string; name: string }) =>
         this.handlers.onRematchRequest?.(payload)
       );
-      this.room.onMessage("session_score", (payload: { wins: Record<string, number> }) =>
-        this.handlers.onSessionScore?.(payload.wins)
+      this.room.onMessage("session_score", (payload: { wins: Record<string, number>; target: number; championId?: string }) =>
+        this.handlers.onSessionScore?.(payload)
       );
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
@@ -206,7 +206,7 @@ export class OnlineSession {
       );
       this.room.onMessage(
         "room_info",
-        (payload: { roomId: string; code?: string; private?: boolean; started?: boolean }) =>
+        (payload: { roomId: string; code?: string; private?: boolean; ownerId?: string; started?: boolean }) =>
         this.handlers.onRoomInfo?.(payload)
       );
       this.room.onMessage("error", (payload: ServerErrorPayload) =>
@@ -224,8 +224,8 @@ export class OnlineSession {
       this.room.onMessage("rematch_pending", (payload: { playerId: string; name: string }) =>
         this.handlers.onRematchRequest?.(payload)
       );
-      this.room.onMessage("session_score", (payload: { wins: Record<string, number> }) =>
-        this.handlers.onSessionScore?.(payload.wins)
+      this.room.onMessage("session_score", (payload: { wins: Record<string, number>; target: number; championId?: string }) =>
+        this.handlers.onSessionScore?.(payload)
       );
       this.room.onMessage("player_joined", (payload: { name?: string }) => {
         if (payload?.name) {
@@ -281,6 +281,10 @@ export class OnlineSession {
 
   setReady(ready: boolean) {
     this.room?.send("ready", { ready });
+  }
+
+  setSeriesTarget(target: 0 | 3) {
+    this.room?.send("set_series_target", { target });
   }
 
   updateConfig(config: GameConfig, sandboxName?: string) {

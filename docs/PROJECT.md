@@ -31,8 +31,8 @@ Two players each control one Master and four Students on a 5×5 board. Two movem
 
 ## Current major state
 
-- Local pass-and-play, public/private rooms, spectators, custom cards, and 2D/3D display controls exist. Online rematches require both players' consent and preserve room-scoped session wins.
-- Branded Home includes onboarding, solo AI, Expert hints, preferences/records, protected exit, install UX, and offline PWA metadata.
+- Pass-and-play, public/private rooms, spectators, custom cards, and 2D/3D controls exist. Rematches require mutual consent; private rooms support optional first-to-three series with room-scoped wins.
+- Branded Home includes onboarding, first-turn Solo coaching, AI/Expert hints, preferences, protected exit, install UX, and offline PWA metadata.
 - Mobile uses a board-first portrait flow, visible compact zoom controls, safe-area action dock, two-column card selection, pinch zoom, and a dedicated short-landscape composition.
 - A pre-bootstrap recovery layer reports offline state without blocking local play and provides versioned, privacy-safe diagnostics for unexpected client failures.
 - PWA install guidance, shortcuts, and full-shell precaching fail safely if an offline asset is unavailable.

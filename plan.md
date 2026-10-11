@@ -1,18 +1,18 @@
 # Goal
-Recommend landscape play on phones and give the board a cleaner, brighter Decadence × dojo finish.
+Make a win feel memorable and give the winner a result worth sharing.
 
 # Scope
-- Add a portrait-only, dismissible landscape suggestion without blocking the game.
-- Retune board surface, frame, lighting, stage, and team contrast without changing gameplay or controls.
+- Give Master captures and temple wins distinct result headlines and visual treatment.
+- Add a winner-only share action, preserving the existing rematch and session score flow.
 
 # Approach
-- Keep the recommendation in normal layout flow so it never covers pieces or buttons.
-- Use light washi/tatami tiles, neutral ink lacquer, subtle amber registration, and focused coral/indigo team colours.
+- Derive the finish from the final board position and show winner identity beneath the headline.
+- Share a compact text result through native sharing or clipboard fallback.
 
 # Risks
-- A phone banner must not steal touch space or obstruct portrait play.
-- Tile and team colours must remain distinct in both angled and flat board views.
+- Do not celebrate an opponent's win from the loser's device or expose room codes in shared text.
+- Keep the result usable on small screens and with reduced motion.
 
 # Verification
-- Check phone portrait/landscape CSS, dismissal, and board contrast.
-- Run lint, tests, typechecks, build, and browser screenshot loop where available.
+- Check both win conditions, winner/loser/spectator copy, share fallback, and rematch state.
+- Run the prescribed game client, lint, tests, typecheck, build, and diff checks.

@@ -15,13 +15,13 @@ export type ControllerCallbacks = {
   onStatus: (message: string) => void;
   onPlayer: (playerId?: string) => void;
   onRoom?: (roomId: string) => void;
-  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; started?: boolean }) => void;
+  onRoomInfo?: (info: { roomId: string; code?: string; private?: boolean; ownerId?: string; started?: boolean }) => void;
   onReconnectToken?: (token?: string) => void;
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
   onRematchRequest?: (payload: { playerId: string; name: string }) => void;
-  onSessionScore?: (wins: Record<string, number>) => void;
+  onSessionScore?: (score: { wins: Record<string, number>; target: number; championId?: string }) => void;
   onLeave?: (code?: number) => void;
   onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
   onGameStart?: () => void;
@@ -150,7 +150,7 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
-      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
+      onSessionScore: (score) => this.callbacks.onSessionScore?.(score),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
@@ -216,7 +216,7 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
-      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
+      onSessionScore: (score) => this.callbacks.onSessionScore?.(score),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
@@ -282,7 +282,7 @@ export class GameController {
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
       onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
-      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
+      onSessionScore: (score) => this.callbacks.onSessionScore?.(score),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
@@ -325,6 +325,10 @@ export class GameController {
 
   setReady(ready: boolean) {
     this.online?.setReady(ready);
+  }
+
+  setSeriesTarget(target: 0 | 3) {
+    this.online?.setSeriesTarget(target);
   }
 
   updateOnlineConfig(config: GameConfig, sandboxName?: string) {

@@ -7,6 +7,9 @@ import type { AiDifficulty } from "./game/ai";
 import { GameRenderer } from "./game/renderer";
 import defaultConfig from "./game/defaultConfig";
 import { sound } from "./sound";
+import { initializeUiIcons } from "./ui-icons";
+
+initializeUiIcons();
 
 const BASE_URL = import.meta.env.BASE_URL || "/";
 const DEFAULT_CONFIG_URL = `${BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`}game.json`;
@@ -164,6 +167,7 @@ const opponentNameEl = document.getElementById("opponent-name") as HTMLElement;
 const playerSection = document.getElementById("player-section") as HTMLElement;
 const opponentSection = document.getElementById("opponent-section") as HTMLElement;
 const cardChoiceHint = document.getElementById("card-choice-hint") as HTMLElement;
+const firstTurnCoach = document.getElementById("first-turn-coach") as HTMLElement;
 const rotateBoardBtn = document.getElementById("rotate-board") as HTMLButtonElement | null;
 const zoomInBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
 const zoomOutBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
@@ -172,6 +176,7 @@ const zoomValue = document.getElementById("zoom-value") as HTMLElement | null;
 const exitOnlineBtn = document.getElementById("exit-online") as HTMLButtonElement | null;
 const toggleViewBtn = document.getElementById("toggle-view") as HTMLButtonElement;
 const hintMoveBtn = document.getElementById("hint-move") as HTMLButtonElement;
+const gameRulesBtn = document.getElementById("game-rules") as HTMLButtonElement;
 const openSettingsBtn = document.getElementById("open-settings") as HTMLButtonElement;
 const openCustomizeBtn = document.getElementById("open-customize") as HTMLButtonElement | null;
 const newGameBtn = document.getElementById("new-game") as HTMLButtonElement;
@@ -208,8 +213,13 @@ const customizeBackBtn = document.getElementById("customize-back") as HTMLButton
 const victoryOverlay = document.getElementById("victory-overlay") as HTMLElement;
 const victoryTitle = document.getElementById("victory-title") as HTMLElement;
 const victorySubtitle = document.getElementById("victory-subtitle") as HTMLElement;
+const victoryCallout = document.getElementById("victory-callout") as HTMLElement;
+const victoryFinish = document.getElementById("victory-finish") as HTMLElement;
+const victorySeal = document.getElementById("victory-seal") as HTMLElement;
 const victorySummary = document.getElementById("victory-summary") as HTMLElement;
+const victoryShareBtn = document.getElementById("victory-share") as HTMLButtonElement;
 const victorySessionScore = document.getElementById("victory-session-score") as HTMLElement;
+const victorySeriesProgress = document.getElementById("victory-series-progress") as HTMLElement;
 const matchSessionScore = document.getElementById("match-session-score") as HTMLElement;
 const victoryInvite = document.getElementById("victory-invite") as HTMLElement;
 const victoryInviteName = document.getElementById("victory-invite-name") as HTMLElement;
@@ -256,6 +266,8 @@ const lobbyShareLink = document.getElementById("lobby-share-link") as HTMLInputE
 const lobbyCopyLinkBtn = document.getElementById("lobby-copy-link") as HTMLButtonElement | null;
 const lobbyPlayersEl = document.getElementById("lobby-players") as HTMLElement | null;
 const lobbyReadyToggle = document.getElementById("lobby-ready") as HTMLInputElement | null;
+const lobbySeries = document.getElementById("lobby-series") as HTMLElement;
+const lobbySeriesToggle = document.getElementById("lobby-series-toggle") as HTMLInputElement;
 const lobbyBackBtn = document.getElementById("lobby-back") as HTMLButtonElement | null;
 const lobbyCloseBtn = document.getElementById("lobby-close") as HTMLButtonElement | null;
 const lobbySandboxEl = document.getElementById("lobby-sandbox") as HTMLElement | null;
@@ -272,6 +284,7 @@ const landingTabOnline = document.getElementById("landing-tab-online") as HTMLBu
 const landingRulesBtn = document.getElementById("landing-rules") as HTMLButtonElement | null;
 const rulesPracticeBtn = document.getElementById("rules-practice") as HTMLButtonElement | null;
 const rulesHomeBtn = document.getElementById("rules-home") as HTMLButtonElement | null;
+const gameRulesCloseBtn = document.getElementById("game-rules-close") as HTMLButtonElement;
 const landingPanelLocal = document.getElementById("landing-panel-local") as HTMLElement | null;
 const landingPanelWifi = document.getElementById("landing-panel-wifi") as HTMLElement | null;
 const landingPanelOnline = document.getElementById("landing-panel-online") as HTMLElement | null;
@@ -292,6 +305,10 @@ const nearbyPlayersEl = document.getElementById("nearby-players") as HTMLElement
 const nearbyPlayerListEl = document.getElementById("nearby-player-list") as HTMLElement | null;
 const nearbyCountEl = document.getElementById("nearby-count") as HTMLElement | null;
 const nearbyInviteEl = document.getElementById("nearby-invite") as HTMLElement | null;
+const wifiNearbyPlayersEl = document.getElementById("wifi-nearby-players") as HTMLElement;
+const wifiNearbyPlayerListEl = document.getElementById("wifi-nearby-player-list") as HTMLElement;
+const wifiNearbyCountEl = document.getElementById("wifi-nearby-count") as HTMLElement;
+const wifiNearbyInviteEl = document.getElementById("wifi-nearby-invite") as HTMLElement;
 const landingHomePassBtn = document.getElementById("landing-home-pass") as HTMLButtonElement | null;
 const landingHomeOnlineBtn = document.getElementById("landing-home-online") as HTMLButtonElement | null;
 const onlineStatusEl = document.getElementById("online-status") as HTMLElement | null;
@@ -446,6 +463,9 @@ let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
 let hintSuggestions: LegalMove[] = [];
 let sessionWins: Record<string, number> = {};
+let seriesTarget = 0;
+let seriesChampionId: string | undefined;
+let roomOwnerId: string | undefined;
 let rematchRequestedByOpponent = false;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
@@ -498,6 +518,7 @@ try {
 let currentMode: "local" | "online" = "local";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
+let victoryShareText = "";
 let pendingMove:
   | { pieceId: string; to: { x: number; y: number }; cardIds: string[] }
   | undefined;
@@ -525,6 +546,7 @@ type LandingTab = "local" | "wifi" | "online";
 let landingTab: LandingTab = "local";
 let networkEntry: "wifi" | "online" = "wifi";
 let rulesVisible = false;
+let gameRulesOpen = false;
 let onlineReadyIds = new Set<string>();
 let onlineGameStarted = false;
 let customizeScope: "local" | "lobby" = "local";
@@ -542,6 +564,10 @@ let aiMoveTimer: number | undefined;
 let localGameType: "pass-and-play" | "ai" = "pass-and-play";
 let aiDifficulty = (localStorage.getItem(AI_DIFFICULTY_KEY) as AiDifficulty | null) ?? "standard";
 let tutorialStep = 0;
+let guidedPracticeRequested = false;
+let firstTurnCoachActive = false;
+let firstTurnCoachComplete = false;
+let firstTurnCoachTimer: number | undefined;
 
 const tutorialSteps = [
   { symbol: "勝", title: "Know your goal", copy: "Capture the opposing Master, or move your Master onto the marked temple at the far side of the board." },
@@ -615,6 +641,32 @@ function renderTutorial() {
   tutorialOverlay.querySelectorAll(".tutorial-dots span").forEach((dot, index) => {
     dot.classList.toggle("active", index === tutorialStep);
   });
+}
+
+function renderFirstTurnCoach() {
+  const visible = (firstTurnCoachActive || firstTurnCoachComplete) && currentMode === "local" && localGameType === "ai";
+  firstTurnCoach.classList.toggle("hidden", !visible);
+  if (!visible) return;
+  if (firstTurnCoachComplete) {
+    firstTurnCoach.innerHTML = "<strong>Nice move.</strong><span>Your played card went to the Pool; the old Pool card is now in your hand.</span>";
+    return;
+  }
+  const selection = controller.getSelection();
+  const message = pendingMove
+    ? ["Finish the turn", "Both cards can make that move. Tap the card you want to send to the Pool."]
+    : selection.selectedPieceId && selection.selectedCardId
+      ? ["Choose a destination", "Tap a glowing square. Your played card will swap with the Pool card."]
+      : selection.selectedPieceId
+        ? ["Choose a movement card", "Tap either card in your hand to narrow the glowing squares to that card's moves."]
+        : selection.selectedCardId
+          ? ["Choose a piece", "Now tap one of your pieces. Glowing squares show its legal moves."]
+          : ["Choose a piece", "Tap your Master or a Disciple on the board to begin."];
+  firstTurnCoach.replaceChildren();
+  const title = document.createElement("strong");
+  title.textContent = message[0];
+  const detail = document.createElement("span");
+  detail.textContent = message[1];
+  firstTurnCoach.append(title, detail);
 }
 
 function openTutorial() {
@@ -698,6 +750,16 @@ function queueOnlineLeaveStatus(message: string) {
 const controller = new GameController({
   onState: (state) => {
     const previous = latestState;
+    if (firstTurnCoachActive && previous?.turn === 1 && state.turn > 1) {
+      firstTurnCoachActive = false;
+      firstTurnCoachComplete = true;
+      localStorage.setItem(TUTORIAL_COMPLETE_KEY, "1");
+      if (firstTurnCoachTimer) window.clearTimeout(firstTurnCoachTimer);
+      firstTurnCoachTimer = window.setTimeout(() => {
+        firstTurnCoachComplete = false;
+        renderFirstTurnCoach();
+      }, 5000);
+    }
     if (previous && state.turn !== previous.turn) hintSuggestions = [];
     latestState = state;
     latestMoves = controller.getLegalMoves();
@@ -760,6 +822,7 @@ const controller = new GameController({
   onRoomInfo: (info) => {
     currentRoomCode = info.code;
     currentRoomPrivate = Boolean(info.private);
+    roomOwnerId = info.ownerId;
     networkEntry = info.private ? "wifi" : "online";
     if (typeof info.started === "boolean") {
       onlineGameStarted = info.started;
@@ -823,9 +886,12 @@ const controller = new GameController({
     victoryAcceptBtn.focus();
     sound.play("ready");
   },
-  onSessionScore: (wins) => {
-    sessionWins = wins;
+  onSessionScore: (score) => {
+    sessionWins = score.wins;
+    seriesTarget = score.target;
+    seriesChampionId = score.championId;
     renderSessionScore();
+    renderLobbyOverlay();
   },
   onLeave: () => {
     if (currentMode !== "online") return;
@@ -844,6 +910,9 @@ const controller = new GameController({
     currentRoomId = undefined;
     currentRoomPrivate = false;
     sessionWins = {};
+    seriesTarget = 0;
+    seriesChampionId = undefined;
+    roomOwnerId = undefined;
     onlineReadyIds = new Set();
     onlineGameStarted = true;
     updateRoomCode();
@@ -1203,6 +1272,7 @@ function renderAll() {
   }
 
   updateStartedUI();
+  renderFirstTurnCoach();
 }
 
 window.addEventListener("keydown", (event) => {
@@ -1217,6 +1287,10 @@ window.addEventListener("keydown", (event) => {
   }
   if (!tutorialOverlay.classList.contains("hidden")) {
     closeTutorial();
+    return;
+  }
+  if (gameRulesOpen) {
+    closeGameRules();
     return;
   }
   if (!installOverlay.classList.contains("hidden")) {
@@ -1336,8 +1410,39 @@ function setLandingTab(tab: LandingTab) {
 }
 
 function toggleRules() {
+  if (gameRulesOpen) {
+    closeGameRules();
+    return;
+  }
   rulesVisible = !rulesVisible;
   applyLandingView();
+}
+
+function openGameRules() {
+  if (!landingOverlay.classList.contains("hidden")) return;
+  gameRulesOpen = true;
+  rulesVisible = true;
+  landingOverlay.dataset.matchRules = "true";
+  rulesHomeBtn!.textContent = "Back to Match";
+  gameRulesCloseBtn.classList.remove("hidden");
+  applyLandingView();
+  landingOverlay.classList.remove("hidden");
+  landingOverlay.scrollTop = 0;
+  gameRulesCloseBtn.focus();
+  sound.play("modalOpen");
+}
+
+function closeGameRules() {
+  if (!gameRulesOpen) return;
+  gameRulesOpen = false;
+  rulesVisible = false;
+  landingOverlay.dataset.matchRules = "false";
+  landingOverlay.classList.add("hidden");
+  rulesHomeBtn!.textContent = "Back to modes";
+  gameRulesCloseBtn.classList.add("hidden");
+  applyLandingView();
+  gameRulesBtn.focus();
+  sound.play("modalClose");
 }
 
 function syncOnlineNameInput() {
@@ -1426,6 +1531,9 @@ function shouldShowLobbyOverlay() {
 function renderLobbyOverlay() {
   if (!lobbyOverlay || !lobbyPlayersEl || !latestConfig) return;
   const playerId = controller.getPlayerId();
+  lobbySeries.classList.toggle("hidden", networkEntry !== "wifi" || !currentRoomPrivate);
+  lobbySeriesToggle.checked = seriesTarget === 3;
+  lobbySeriesToggle.disabled = onlineGameStarted || playerId !== roomOwnerId;
   const maxPlayers = latestConfig.players.length || 2;
   const readyCount = onlineReadyIds.size;
   const title = currentRoomPrivate ? "Same-Wi-Fi Lobby" : "Internet Lobby";
@@ -1467,7 +1575,7 @@ function renderLobbyOverlay() {
     lobbyReadyToggle.disabled = !canReady;
     lobbyReadyToggle.checked = playerId ? onlineReadyIds.has(playerId) : false;
     const readyLabel = document.getElementById("lobby-ready-label");
-    if (readyLabel) readyLabel.textContent = lobbyReadyToggle.checked ? "Ready to Duel ✓" : "I'm Ready";
+    if (readyLabel) readyLabel.textContent = lobbyReadyToggle.checked ? "Ready for the duel" : "I'm Ready";
   }
 
   const readyAll = maxPlayers > 0 && readyCount >= maxPlayers;
@@ -1521,6 +1629,10 @@ function leaveOnlineLobby() {
   currentRoomCode = undefined;
   currentRoomId = undefined;
   currentRoomPrivate = false;
+  roomOwnerId = undefined;
+  seriesTarget = 0;
+  seriesChampionId = undefined;
+  sessionWins = {};
   onlineReadyIds = new Set();
   onlineGameStarted = true;
   lastReadyAll = false;
@@ -1659,9 +1771,13 @@ function showNotice(message: string) {
 }
 
 function showLanding(tab: LandingTab = "wifi") {
+  gameRulesOpen = false;
   landingOverlay.classList.remove("hidden");
   landingOverlay.dataset.tab = tab;
   landingOverlay.dataset.rules = "false";
+  landingOverlay.dataset.matchRules = "false";
+  rulesHomeBtn!.textContent = "Back to modes";
+  gameRulesCloseBtn.classList.add("hidden");
   lobbyOverlay?.classList.add("hidden");
   setLandingTab(tab);
   syncOnlineNameInput();
@@ -1681,6 +1797,7 @@ function showLanding(tab: LandingTab = "wifi") {
 }
 
 function hideLanding() {
+  gameRulesOpen = false;
   landingOverlay.classList.add("hidden");
   sound.play("modalClose");
   sound.stopAmbience();
@@ -2050,16 +2167,20 @@ async function challengeLanPlayer(player: LanPresencePlayer) {
 
 function renderLanPresence(players: LanPresencePlayer[], invite?: LanPresenceInvite) {
   if (!nearbyPlayersEl || !nearbyPlayerListEl || !nearbyCountEl || !nearbyInviteEl) return;
-  nearbyPlayersEl.classList.remove("hidden");
-  nearbyCountEl.textContent = players.length ? `${players.length} available` : "Only you so far";
-  nearbyPlayerListEl.innerHTML = "";
-
-  if (!players.length) {
-    const empty = document.createElement("p");
-    empty.className = "nearby-empty";
-    empty.textContent = "Open Sakura on another device connected to this Wi-Fi.";
-    nearbyPlayerListEl.appendChild(empty);
-  } else {
+  const surfaces = [
+    [nearbyPlayersEl, nearbyPlayerListEl, nearbyCountEl, nearbyInviteEl],
+    [wifiNearbyPlayersEl, wifiNearbyPlayerListEl, wifiNearbyCountEl, wifiNearbyInviteEl]
+  ] as const;
+  for (const [section, list, count, inviteBox] of surfaces) {
+    section.classList.remove("hidden");
+    count.textContent = players.length ? `${players.length} available` : "Only you so far";
+    list.replaceChildren();
+    if (!players.length) {
+      const empty = document.createElement("p");
+      empty.className = "nearby-empty";
+      empty.textContent = "Open this Sakura address on another phone on the same Wi-Fi.";
+      list.append(empty);
+    }
     for (const player of players) {
       const row = document.createElement("div");
       row.className = "nearby-player";
@@ -2071,31 +2192,31 @@ function renderLanPresence(players: LanPresencePlayer[], invite?: LanPresenceInv
       const strong = document.createElement("strong");
       strong.textContent = player.name;
       const small = document.createElement("small");
-      small.textContent = "Ready on this Wi-Fi";
+      small.textContent = "Available for a LAN duel";
       copy.append(strong, small);
       identity.append(dot, copy);
       const challenge = document.createElement("button");
       challenge.className = "nearby-challenge";
-      challenge.textContent = "Challenge";
+      challenge.textContent = "Duel";
+      challenge.setAttribute("aria-label", `Challenge ${player.name} to a duel`);
       challenge.addEventListener("click", () => void challengeLanPlayer(player));
       row.append(identity, challenge);
-      nearbyPlayerListEl.appendChild(row);
+      list.append(row);
+    }
+    inviteBox.replaceChildren();
+    inviteBox.classList.toggle("hidden", !invite);
+    if (invite) {
+      const message = document.createElement("strong");
+      message.textContent = `${invite.fromName} challenged you`;
+      const join = document.createElement("button");
+      join.textContent = "Join Duel";
+      join.addEventListener("click", () => void joinLanInvitation(invite));
+      inviteBox.append(message, join);
     }
   }
-
-  nearbyInviteEl.innerHTML = "";
-  nearbyInviteEl.classList.toggle("hidden", !invite);
-  if (invite) {
-    const message = document.createElement("strong");
-    message.textContent = `${invite.fromName} challenged you`;
-    const join = document.createElement("button");
-    join.textContent = "Join Duel";
-    join.addEventListener("click", () => void joinLanInvitation(invite));
-    nearbyInviteEl.append(message, join);
-    if (lastLanInviteRoomId !== invite.roomId) {
-      lastLanInviteRoomId = invite.roomId;
-      sound.play("info");
-    }
+  if (invite && lastLanInviteRoomId !== invite.roomId) {
+    lastLanInviteRoomId = invite.roomId;
+    sound.play("info");
   }
 }
 
@@ -2114,6 +2235,13 @@ async function refreshLanPresence() {
     renderLanPresence(payload.players ?? [], payload.invite);
   } catch {
     nearbyPlayersEl?.classList.add("hidden");
+    wifiNearbyPlayersEl.classList.remove("hidden");
+    wifiNearbyCountEl.textContent = "LAN host needed";
+    wifiNearbyInviteEl.classList.add("hidden");
+    const note = document.createElement("p");
+    note.className = "nearby-empty";
+    note.textContent = "For instant player discovery, open the same local Sakura address on both phones. You can still join with a code below.";
+    wifiNearbyPlayerListEl.replaceChildren(note);
   } finally {
     lanPresenceBusy = false;
   }
@@ -2170,7 +2298,14 @@ function resolveStartingPlayer(config: GameConfig): string | undefined {
 
 function startLocalMatch() {
   if (!latestConfig) return;
-  const startingId = resolveStartingPlayer(latestConfig);
+  if (firstTurnCoachTimer) window.clearTimeout(firstTurnCoachTimer);
+  firstTurnCoachComplete = false;
+  firstTurnCoachActive = localGameType === "ai" &&
+    (guidedPracticeRequested || !localStorage.getItem(TUTORIAL_COMPLETE_KEY));
+  guidedPracticeRequested = false;
+  const startingId = firstTurnCoachActive
+    ? latestConfig.players[0]?.id
+    : resolveStartingPlayer(latestConfig);
   controller.setLocalHumanPlayer(localGameType === "ai" ? latestConfig.players[0]?.id : undefined);
   controller.startLocal({ startingPlayerId: startingId });
   renderAll();
@@ -2583,6 +2718,7 @@ function renderCardEditor() {
     row.textContent = `(${move.x}, ${move.y})`;
     const remove = document.createElement("button");
     remove.className = "ghost-button";
+    remove.dataset.uiIcon = "trash";
     remove.textContent = "Remove";
     remove.addEventListener("click", () => {
       card.moves.splice(index, 1);
@@ -2768,8 +2904,8 @@ function recordLocalResult() {
   renderLocalStats();
 }
 
-function describeVictory() {
-  if (!latestState || !latestConfig?.players.length) return "A masterful duel.";
+function victoryFinishType(): "master" | "temple" {
+  if (!latestState || !latestConfig?.players.length) return "master";
   const winnerId = latestState.winnerId;
   const winnerMaster = latestState.pieces.find(
     (piece) => piece.alive && piece.ownerId === winnerId &&
@@ -2777,9 +2913,9 @@ function describeVictory() {
   );
   const enemyTemple = latestConfig.players.find((player) => player.id !== winnerId)?.temple;
   if (winnerMaster && enemyTemple && winnerMaster.x === enemyTemple.x && winnerMaster.y === enemyTemple.y) {
-    return "Temple captured.";
+    return "temple";
   }
-  return "The opposing Master was captured.";
+  return "master";
 }
 
 function renderSessionScore() {
@@ -2787,24 +2923,64 @@ function renderSessionScore() {
   const visible = currentMode === "online" && players.length === 2;
   matchSessionScore.classList.toggle("hidden", !visible);
   victorySessionScore.classList.toggle("hidden", !visible);
+  victorySeriesProgress.classList.toggle("hidden", !visible || seriesTarget !== 3);
   if (!visible) return;
   const you = controller.getPlayerId();
   const ordered = [...players].sort((a, b) => Number(b.id === you) - Number(a.id === you));
   const label = ordered.map((player) => `${player.id === you ? "You" : player.name}: ${sessionWins[player.id] ?? 0}`).join("  ·  ");
-  matchSessionScore.textContent = `Session wins  ·  ${label}`;
-  victorySessionScore.textContent = `Session wins  ·  ${label}`;
+  const prefix = seriesTarget === 3 ? "First to 3" : "Session wins";
+  matchSessionScore.textContent = `${prefix}  ·  ${label}`;
+  victorySessionScore.textContent = seriesChampionId
+    ? `${label}  ·  Series champion: ${players.find((player) => player.id === seriesChampionId)?.name ?? "Player"}`
+    : `${prefix}  ·  ${label}`;
+  victorySeriesProgress.replaceChildren();
+  if (seriesTarget === 3) {
+    for (const player of ordered) {
+      const row = document.createElement("div");
+      row.className = "victory-series-row";
+      const name = document.createElement("span");
+      name.textContent = player.id === you ? "You" : player.name;
+      const marks = document.createElement("span");
+      marks.className = "victory-series-marks";
+      const wins = sessionWins[player.id] ?? 0;
+      marks.setAttribute("aria-label", `${wins} of 3 wins`);
+      for (let i = 0; i < 3; i += 1) {
+        const mark = document.createElement("span");
+        mark.className = i < wins ? "won" : "";
+        mark.setAttribute("aria-hidden", "true");
+        marks.appendChild(mark);
+      }
+      row.append(name, marks);
+      victorySeriesProgress.appendChild(row);
+    }
+  }
+  if (latestState?.winnerId && seriesChampionId === latestState.winnerId) {
+    victoryCallout.textContent = seriesChampionId === you ? "SERIES CHAMPION" : "SERIES DECIDED";
+  }
 }
 
 function showVictory(winnerName: string) {
   const isYourWin = currentMode === "online"
     ? latestState?.winnerId === controller.getPlayerId()
     : localGameType !== "ai" || latestState?.winnerId === latestConfig?.players[0]?.id;
-  victoryOverlay.dataset.outcome = isYourWin ? "win" : "rival";
+  const winnerCelebrates = isYourWin && !isSpectator;
+  const finish = victoryFinishType();
+  const moves = Math.max(1, (latestState?.turn ?? 2) - 1);
+  victoryOverlay.dataset.outcome = winnerCelebrates ? "win" : "rival";
+  victoryOverlay.dataset.finish = finish;
+  victoryCallout.textContent = winnerCelebrates ? "VICTORY / YOUR DOJO" : isSpectator ? "DUEL COMPLETE" : "RIVAL VICTORY";
+  victoryFinish.textContent = finish === "temple" ? "Temple claimed" : "Master slain";
+  victorySeal.textContent = finish === "temple" ? "門" : "勝";
   victoryTitle.textContent = isYourWin && (currentMode === "online" || localGameType === "ai")
-    ? "You won the duel!"
-    : `${winnerName} wins this round.`;
-  victorySubtitle.textContent = describeVictory();
-  victorySummary.textContent = `${Math.max(1, (latestState?.turn ?? 2) - 1)} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
+    ? "Your dojo prevails."
+    : `${winnerName} claims the duel.`;
+  victorySubtitle.textContent = finish === "temple"
+    ? "The Master reached the rival temple."
+    : "The rival Master fell.";
+  victorySummary.textContent = `${moves} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
+  victoryShareText = `${winnerName} ${finish === "temple" ? "claimed the rival temple" : "slew the rival Master"} in ${moves} moves at Sakura Showdown · Decadence Inc.`;
+  victoryShareBtn.classList.toggle("hidden", !winnerCelebrates);
+  victoryShareBtn.textContent = "Share your win";
   renderSessionScore();
   recordLocalResult();
   victoryOverlay.classList.toggle("spectator", isSpectator);
@@ -2823,8 +2999,8 @@ function showVictory(winnerName: string) {
       winnerId: latestState?.winnerId
     }
   });
-  sound.play(isYourWin ? "victory" : "modalOpen");
-  if (isYourWin) triggerConfetti();
+  sound.play(winnerCelebrates ? "victory" : "modalOpen");
+  if (winnerCelebrates) triggerConfetti();
 }
 
 function hideVictory() {
@@ -3050,6 +3226,13 @@ async function bootstrap() {
 
 
 function returnToMenu() {
+  if (firstTurnCoachTimer) {
+    window.clearTimeout(firstTurnCoachTimer);
+    firstTurnCoachTimer = undefined;
+  }
+  firstTurnCoachActive = false;
+  firstTurnCoachComplete = false;
+  renderFirstTurnCoach();
   if (aiMoveTimer) {
     window.clearTimeout(aiMoveTimer);
     aiMoveTimer = undefined;
@@ -3074,6 +3257,10 @@ function returnToMenu() {
   currentRoomCode = undefined;
   currentRoomId = undefined;
   currentRoomPrivate = false;
+  roomOwnerId = undefined;
+  seriesTarget = 0;
+  seriesChampionId = undefined;
+  sessionWins = {};
   appEl.dataset.started = "false";
   lastActivePlayerId = undefined;
   updateRoomCode();
@@ -3127,8 +3314,14 @@ landingOnlineQuickBtn?.addEventListener("click", () => setLandingTab("online"));
 landingHomePassBtn?.addEventListener("click", () => landingLocalBtn.click());
 landingHomeOnlineBtn?.addEventListener("click", () => setLandingTab("online"));
 landingRulesBtn?.addEventListener("click", toggleRules);
+gameRulesBtn.addEventListener("click", openGameRules);
+gameRulesCloseBtn.addEventListener("click", closeGameRules);
 rulesPracticeBtn?.addEventListener("click", openTutorial);
 rulesHomeBtn?.addEventListener("click", () => {
+  if (gameRulesOpen) {
+    closeGameRules();
+    return;
+  }
   rulesVisible = false;
   applyLandingView();
   landingRulesBtn?.focus();
@@ -3169,6 +3362,7 @@ tutorialNextBtn.addEventListener("click", () => {
     return;
   }
   closeTutorial(true);
+  guidedPracticeRequested = true;
   localGameType = "ai";
   aiDifficulty = "beginner";
   aiDifficultySelect.value = aiDifficulty;
@@ -3416,6 +3610,11 @@ lobbyReadyToggle?.addEventListener("change", () => {
   controller.setReady(lobbyReadyToggle.checked);
   sound.play("ready");
 });
+lobbySeriesToggle.addEventListener("change", () => {
+  if (lobbySeriesToggle.disabled) return;
+  controller.setSeriesTarget(lobbySeriesToggle.checked ? 3 : 0);
+  sound.play("select");
+});
 lobbyBackBtn?.addEventListener("click", leaveOnlineLobby);
 lobbyCloseBtn?.addEventListener("click", leaveOnlineLobby);
 exitOnlineBtn?.addEventListener("click", () => {
@@ -3488,6 +3687,25 @@ cardsResetBtn.addEventListener("click", resetCardChanges);
 cardsExportBtn.addEventListener("click", exportConfig);
 
 victoryCloseBtn.addEventListener("click", hideVictory);
+victoryShareBtn.addEventListener("click", async () => {
+  const text = victoryShareText;
+  if (!text) return;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "Sakura Showdown victory", text });
+      return;
+    }
+    await navigator.clipboard.writeText(text);
+    victoryShareBtn.textContent = "Result copied";
+    sound.play("info");
+    window.setTimeout(() => {
+      if (victoryShareText === text) victoryShareBtn.textContent = "Share your win";
+    }, 2500);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    victoryShareBtn.textContent = "Sharing unavailable";
+  }
+});
 victoryHomeBtn.addEventListener("click", returnToMenu);
 victoryRandomBtn.addEventListener("click", startRandomFive);
 victoryChooseBtn.addEventListener("click", openDraft);
@@ -3641,6 +3859,7 @@ const renderGameToText = () => {
   const selection = controller.getSelection();
   const payload = {
     mode: currentMode,
+    rulesOpen: gameRulesOpen || (rulesVisible && !landingOverlay.classList.contains("hidden")),
     networkEntry: currentMode === "online" ? networkEntry : undefined,
     localGameType,
     aiDifficulty: localGameType === "ai" ? aiDifficulty : undefined,

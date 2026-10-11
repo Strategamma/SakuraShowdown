@@ -74,6 +74,12 @@ async function main() {
     const count = (key, type) => events[key].filter((event) => event.type === type).length;
     const last = (key, type) => events[key].filter((event) => event.type === type).at(-1)?.payload;
 
+    first.send("set_series_target", { target: 3 });
+    await waitFor(() => last("first", "session_score")?.target === 3 && last("second", "session_score")?.target === 3, "shared series setting");
+    second.send("set_series_target", { target: 0 });
+    await pause(80);
+    assert.equal(last("first", "session_score")?.target, 3);
+
     first.send("ready", { ready: true });
     second.send("ready", { ready: true });
     await waitFor(() => count("first", "game_start"), "both players ready");
@@ -101,11 +107,25 @@ async function main() {
 
     win();
     await waitFor(() => last("first", "session_score")?.wins?.p1 === 2 && last("second", "session_score")?.wins?.p1 === 2, "persistent session score");
+    first.send("rematch_request");
+    await waitFor(() => count("second", "rematch_pending") === 3, "third invitation");
+    second.send("rematch_request");
+    await waitFor(() => count("first", "rematch_start") === 2, "third duel");
+    win();
+    await waitFor(() => last("second", "session_score")?.championId === "p1", "series champion");
+    first.send("rematch_request");
+    await waitFor(() => count("second", "rematch_pending") === 4, "new series invitation");
+    second.send("rematch_request");
+    await waitFor(() => count("first", "rematch_start") === 3, "new series start");
+    assert.deepEqual(last("first", "session_score")?.wins, {});
+    assert.deepEqual(last("second", "session_score")?.wins, {});
+    assert.equal(last("first", "session_score")?.target, 3);
     assert.equal(count("first", "error"), 0);
     assert.equal(count("second", "error"), 0);
-    console.log("Rematch smoke passed: invite, decline, accept, and persistent session wins.");
+    console.log("Rematch smoke passed: invite, decline, first-to-three champion, and new series reset.");
   } finally {
-    await Promise.allSettled([first?.leave(), second?.leave()]);
+    first?.connection?.close();
+    second?.connection?.close();
     server.kill("SIGTERM");
   }
 }

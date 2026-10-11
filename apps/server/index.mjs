@@ -75,6 +75,7 @@ class GameRoom extends Room {
   readyByPlayer = new Set();
   rematchVotes = new Set();
   sessionWins = new Map();
+  seriesTarget = 0;
   roomCode = "";
   isPrivate = false;
   ownerId;
@@ -90,6 +91,7 @@ class GameRoom extends Room {
       roomId: this.roomId,
       code: showCode ? this.roomCode : undefined,
       private: this.isPrivate,
+      ownerId: this.ownerId,
       started: this.gameStarted
     });
     client.send("rule_pack", this.rulePack);
@@ -99,7 +101,15 @@ class GameRoom extends Room {
       ready: Array.from(this.readyByPlayer),
       started: this.gameStarted
     });
-    client.send("session_score", { wins: Object.fromEntries(this.sessionWins) });
+    client.send("session_score", this.getSessionScore());
+  }
+
+  getSessionScore() {
+    const wins = Object.fromEntries(this.sessionWins);
+    const championId = this.seriesTarget
+      ? this.config.players.find((player) => (this.sessionWins.get(player.id) ?? 0) >= this.seriesTarget)?.id
+      : undefined;
+    return { wins, target: this.seriesTarget, championId };
   }
 
   updateMetadata() {
@@ -165,7 +175,7 @@ class GameRoom extends Room {
             this.stateData.winnerId,
             (this.sessionWins.get(this.stateData.winnerId) ?? 0) + 1
           );
-          this.broadcast("session_score", { wins: Object.fromEntries(this.sessionWins) });
+          this.broadcast("session_score", this.getSessionScore());
           this.scheduleRematchTimeout();
         }
       } catch {
@@ -246,6 +256,10 @@ class GameRoom extends Room {
       if (this.rematchVotes.size >= this.maxPlayers) {
         this.rematchVotes.clear();
         this.clearRematchTimer();
+        if (this.getSessionScore().championId) {
+          this.sessionWins.clear();
+          this.broadcast("session_score", this.getSessionScore());
+        }
         this.stateData = createInitialState(this.config, Date.now());
         this.broadcast("state", this.stateData);
         this.broadcast("rematch_start", {});
@@ -257,6 +271,17 @@ class GameRoom extends Room {
       if (!this.rematchVotes.size) return;
       this.rematchVotes.clear();
       this.broadcast("rematch_cancelled", { reason: "declined" });
+    });
+
+    this.onMessage("set_series_target", (client, payload) => {
+      if (!this.isPrivate || this.gameStarted) return;
+      if (this.playerByClient.get(client.sessionId) !== this.ownerId) return;
+      const target = payload?.target === 3 ? 3 : 0;
+      if (target === this.seriesTarget) return;
+      this.seriesTarget = target;
+      this.readyByPlayer.clear();
+      this.broadcast("session_score", this.getSessionScore());
+      this.broadcastReadyState();
     });
 
     this.onMessage("ready", (client, payload) => {
