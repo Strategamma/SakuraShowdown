@@ -6262,26 +6262,10 @@ button.has-ui-icon .ui-icon { position: relative; z-index: 2; width: 18px; heigh
 .victory-callout { color: #ffda94; font-size: .72rem; font-weight: 900; letter-spacing: .15em; }
 .victory-finish { color: #fff6e9; font-family: var(--ui-font); font-size: clamp(2rem, 6vw, 4.5rem); font-weight: 950; line-height: .96; letter-spacing: -.07em; text-transform: uppercase; }
 #victory-overlay .victory-summary { margin: 0; text-align: left; }
-#victory-share {
-  justify-self: start;
-  min-height: 46px;
-  color: #fff3de;
-  border: 1px solid rgba(255, 215, 146, .65);
-  border-radius: 4px;
-  background: #312321;
-  box-shadow: 3px 4px 0 rgba(220, 69, 90, .75);
-  font-weight: 850;
-}
-#victory-share:hover { background: #53302e; transform: translateY(-2px); box-shadow: 4px 6px 0 var(--party-coral); }
-#victory-share:active { transform: translate(2px, 2px); box-shadow: 1px 2px 0 var(--party-coral); }
 @media (max-width: 520px) {
   .victory-hero { gap: 12px; padding: 14px; }
   .victory-callout { font-size: .6rem; }
   .victory-finish { font-size: clamp(1.75rem, 8vw, 3rem); }
-  #victory-share { width: 100%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  #victory-share:hover, #victory-share:active { transform: none; }
 }
 
 #wifi-nearby-players { width: 100%; }

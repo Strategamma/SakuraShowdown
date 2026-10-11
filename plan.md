@@ -1,18 +1,15 @@
 # Goal
-Make a win feel memorable and give the winner a result worth sharing.
+Keep the rewarding win result while removing its unwanted sharing action.
 
 # Scope
-- Give Master captures and temple wins distinct result headlines and visual treatment.
-- Add a winner-only share action, preserving the existing rematch and session score flow.
+- Remove the share control and supporting code only.
+- Preserve finish-specific results, rematch, and session scores.
 
 # Approach
-- Derive the finish from the final board position and show winner identity beneath the headline.
-- Share a compact text result through native sharing or clipboard fallback.
+- Delete the share UI, handler, icon, and stale styling/memory references.
 
 # Risks
-- Do not celebrate an opponent's win from the loser's device or expose room codes in shared text.
-- Keep the result usable on small screens and with reduced motion.
+- Do not disturb the existing victory and rematch flow.
 
 # Verification
-- Check both win conditions, winner/loser/spectator copy, share fallback, and rematch state.
-- Run the prescribed game client, lint, tests, typecheck, build, and diff checks.
+- Confirm no share action remains; run targeted typecheck, lint, build, and prescribed game client.

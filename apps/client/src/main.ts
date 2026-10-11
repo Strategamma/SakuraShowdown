@@ -217,7 +217,6 @@ const victoryCallout = document.getElementById("victory-callout") as HTMLElement
 const victoryFinish = document.getElementById("victory-finish") as HTMLElement;
 const victorySeal = document.getElementById("victory-seal") as HTMLElement;
 const victorySummary = document.getElementById("victory-summary") as HTMLElement;
-const victoryShareBtn = document.getElementById("victory-share") as HTMLButtonElement;
 const victorySessionScore = document.getElementById("victory-session-score") as HTMLElement;
 const victorySeriesProgress = document.getElementById("victory-series-progress") as HTMLElement;
 const matchSessionScore = document.getElementById("match-session-score") as HTMLElement;
@@ -518,7 +517,6 @@ try {
 let currentMode: "local" | "online" = "local";
 let draftSelection = new Set<string>();
 let lastWinnerId: string | undefined;
-let victoryShareText = "";
 let pendingMove:
   | { pieceId: string; to: { x: number; y: number }; cardIds: string[] }
   | undefined;
@@ -2978,9 +2976,6 @@ function showVictory(winnerName: string) {
     ? "The Master reached the rival temple."
     : "The rival Master fell.";
   victorySummary.textContent = `${moves} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
-  victoryShareText = `${winnerName} ${finish === "temple" ? "claimed the rival temple" : "slew the rival Master"} in ${moves} moves at Sakura Showdown · Decadence Inc.`;
-  victoryShareBtn.classList.toggle("hidden", !winnerCelebrates);
-  victoryShareBtn.textContent = "Share your win";
   renderSessionScore();
   recordLocalResult();
   victoryOverlay.classList.toggle("spectator", isSpectator);
@@ -3687,25 +3682,6 @@ cardsResetBtn.addEventListener("click", resetCardChanges);
 cardsExportBtn.addEventListener("click", exportConfig);
 
 victoryCloseBtn.addEventListener("click", hideVictory);
-victoryShareBtn.addEventListener("click", async () => {
-  const text = victoryShareText;
-  if (!text) return;
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: "Sakura Showdown victory", text });
-      return;
-    }
-    await navigator.clipboard.writeText(text);
-    victoryShareBtn.textContent = "Result copied";
-    sound.play("info");
-    window.setTimeout(() => {
-      if (victoryShareText === text) victoryShareBtn.textContent = "Share your win";
-    }, 2500);
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") return;
-    victoryShareBtn.textContent = "Sharing unavailable";
-  }
-});
 victoryHomeBtn.addEventListener("click", returnToMenu);
 victoryRandomBtn.addEventListener("click", startRandomFive);
 victoryChooseBtn.addEventListener("click", openDraft);
