@@ -21,18 +21,7 @@
       <header id="top-bar">
         <div class="brand">
           <div class="logo" aria-hidden="true">
-            <svg viewBox="0 0 64 64" aria-hidden="true">
-              <defs>
-                <linearGradient id="sigil-grad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#fbe1ea" />
-                  <stop offset="1" stop-color="#d15a7b" />
-                </linearGradient>
-              </defs>
-              <circle cx="32" cy="32" r="22" fill="url(#sigil-grad)" opacity="0.9" />
-              <circle cx="24" cy="26" r="6" fill="#fff" opacity="0.7" />
-              <circle cx="40" cy="24" r="5" fill="#fff" opacity="0.6" />
-              <circle cx="36" cy="40" r="7" fill="#fff" opacity="0.55" />
-            </svg>
+            <img src="./sakura-icon.svg" width="40" height="40" alt="" />
           </div>
         </div>
         <div class="brand-text centered">
@@ -86,6 +75,7 @@
 
           <div class="board-column">
             <div id="board-stage" aria-label="Game board stage">
+              <div id="match-session-score" class="match-session-score hidden" aria-live="polite"></div>
               <div id="turn-banner" class="turn-banner" aria-live="polite">
                 <span id="turn-banner-title">Your turn</span>
                 <small id="turn-banner-detail">Choose a piece or movement card</small>
@@ -95,7 +85,7 @@
                 <span id="turn-guide-text">Choose a piece or movement card</span>
                 <span class="guide-shortcut">Esc to clear</span>
               </div>
-              <button id="hint-move" class="board-hint ghost-button emphasis-button icon-button" aria-label="Show a suggested move" data-tooltip="Highlight a strong move">
+              <button id="hint-move" class="board-hint ghost-button emphasis-button icon-button" aria-label="Ask Expert for a suggested move" data-tooltip="Ask Expert for a strong move">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 2l1.7 5.3L19 9l-5.3 1.7L12 16l-1.7-5.3L5 9l5.3-1.7L12 2zm6 12 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14z" />
                 </svg>
@@ -103,7 +93,7 @@
               <div id="canvas-container" aria-label="Game board"></div>
             </div>
             <details class="display-menu">
-              <summary aria-label="Open board display controls">Display</summary>
+              <summary aria-label="Open board display controls" title="Board display controls"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18M8 3v6m8 0v6m-5 0v6m6-6v6"/></svg><span class="sr-only">Board display controls</span></summary>
               <div class="toolbar-group board-controls board-stage-controls" aria-label="Board display controls">
               <button id="rotate-board" class="ghost-button icon-button rotate-button" aria-label="Rotate board" data-tooltip="Rotate the board 90°">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -241,7 +231,9 @@
           <button id="victory-close" class="ghost-button close-button" aria-label="Close match results">X</button>
         </div>
         <div class="victory-body">
+          <div class="victory-seal" aria-hidden="true">✿</div>
           <div id="victory-summary" class="victory-summary"></div>
+          <div id="victory-session-score" class="victory-session-score hidden" aria-live="polite"></div>
           <div class="victory-hint">Play again</div>
           <div class="victory-actions local-only">
             <button id="victory-random">Rematch · Shuffled deck</button>
@@ -252,6 +244,14 @@
             <button id="victory-rematch">Request Rematch</button>
             <button id="victory-lobby" class="ghost-button">Back to Lobby</button>
             <div id="victory-wait" class="victory-wait hidden">Waiting for opponent…</div>
+            <div id="victory-invite" class="victory-invite hidden" role="status">
+              <strong id="victory-invite-name">Your opponent wants another duel.</strong>
+              <span>Same players. Fresh board. Keep the session score.</span>
+              <div class="victory-invite-actions">
+                <button id="victory-accept">Accept Rematch</button>
+                <button id="victory-decline" class="ghost-button">Not now</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -373,7 +373,7 @@
               </button>
               <button id="landing-wifi-quick" class="play-option wifi-option">
                 <span class="play-option-icon" aria-hidden="true">⌁</span>
-                <span class="play-option-copy"><strong>Start a LAN Party</strong><small>Two devices · same Wi-Fi · private</small></span>
+                <span class="play-option-copy"><strong>Play on the Same Wi-Fi</strong><small>Host or join a nearby duel</small></span>
                 <span class="play-option-arrow" aria-hidden="true">→</span>
               </button>
             </div>
@@ -663,7 +663,7 @@
           <div class="lobby-ready">
             <label class="ready-toggle">
               <input id="lobby-ready" type="checkbox" />
-              <span>Ready</span>
+              <span id="lobby-ready-label">I'm Ready</span>
             </label>
             <div class="room-info">The duel begins when both players are ready.</div>
           </div>

@@ -206,6 +206,12 @@ const victoryOverlay = document.getElementById("victory-overlay") as HTMLElement
 const victoryTitle = document.getElementById("victory-title") as HTMLElement;
 const victorySubtitle = document.getElementById("victory-subtitle") as HTMLElement;
 const victorySummary = document.getElementById("victory-summary") as HTMLElement;
+const victorySessionScore = document.getElementById("victory-session-score") as HTMLElement;
+const matchSessionScore = document.getElementById("match-session-score") as HTMLElement;
+const victoryInvite = document.getElementById("victory-invite") as HTMLElement;
+const victoryInviteName = document.getElementById("victory-invite-name") as HTMLElement;
+const victoryAcceptBtn = document.getElementById("victory-accept") as HTMLButtonElement;
+const victoryDeclineBtn = document.getElementById("victory-decline") as HTMLButtonElement;
 const victoryCloseBtn = document.getElementById("victory-close") as HTMLButtonElement;
 const victoryRandomBtn = document.getElementById("victory-random") as HTMLButtonElement;
 const victoryChooseBtn = document.getElementById("victory-choose") as HTMLButtonElement;
@@ -436,6 +442,8 @@ let latestConfig: GameConfig | undefined;
 let latestState: GameState | undefined;
 let latestMoves: LegalMove[] = [];
 let hintSuggestions: LegalMove[] = [];
+let sessionWins: Record<string, number> = {};
+let rematchRequestedByOpponent = false;
 let editableConfig: GameConfig | undefined;
 let selectedCardIndex = 0;
 let customizeMode: "edit" | "new" = "edit";
@@ -572,33 +580,9 @@ function showMoveHint() {
     showInvalidAction("No hint is available right now.");
     return;
   }
-  const masterIds = new Set(
-    latestConfig.pieceTypes.filter((type) => type.tag === "king" || type.id === "master").map((type) => type.id)
-  );
-  const rankedMoves = [...latestMoves].sort((a, b) => {
-    const score = (candidate: LegalMove) => {
-      const target = latestState?.pieces.find(
-        (piece) => piece.alive && piece.x === candidate.to.x && piece.y === candidate.to.y
-      );
-      const piece = latestState?.pieces.find((candidatePiece) => candidatePiece.id === candidate.pieceId);
-      const opponent = latestConfig?.players.find((player) => player.id !== candidate.playerId);
-      const templeWin = Boolean(
-        piece && masterIds.has(piece.typeId) && opponent &&
-        candidate.to.x === opponent.temple.x && candidate.to.y === opponent.temple.y
-      );
-      if (target && masterIds.has(target.typeId)) return 1000;
-      if (templeWin) return 900;
-      if (target) return 100;
-      return 0;
-    };
-    return score(b) - score(a);
-  });
-  const move = rankedMoves[0];
-  hintSuggestions = rankedMoves
-    .filter((candidate, index, moves) =>
-      moves.findIndex((other) => other.to.x === candidate.to.x && other.to.y === candidate.to.y) === index
-    )
-    .slice(0, 2);
+  const move = chooseAiMove(latestMoves, latestState, latestConfig, "expert");
+  if (!move) return;
+  hintSuggestions = [move];
   pendingMove = undefined;
   controller.selectPiece(move.pieceId);
   controller.selectCard(move.cardId);
@@ -607,9 +591,7 @@ function showMoveHint() {
   window.setTimeout(() => gameConsole?.classList.remove("hint-active"), 1800);
   sound.play("question");
   renderAll();
-  statusEl.textContent = hintSuggestions.length > 1
-    ? `Hint · ${cardName} is ready. Tap move 1, or try move 2.`
-    : `Hint · ${cardName} is ready. Tap the numbered square.`;
+  statusEl.textContent = `Expert hint · ${cardName} is ready. Tap the numbered square.`;
 }
 
 function getViewPlayerId(state: GameState, config: GameConfig) {
@@ -754,9 +736,6 @@ const controller = new GameController({
           moveFeedbackTimer = undefined;
         }, 520);
       }
-      if (!previous.winnerId && state.winnerId) {
-        sound.play("victory");
-      }
     }
     renderAll();
     scheduleAiTurn();
@@ -816,23 +795,34 @@ const controller = new GameController({
   },
   onRematchStart: () => {
     setRematchPending(false);
+    rematchRequestedByOpponent = false;
+    victoryInvite.classList.add("hidden");
     hideVictory();
     lastWinnerId = undefined;
     statusEl.textContent = "Rematch started.";
+    sound.play("ready");
   },
   onRematchCancel: () => {
     setRematchPending(false);
-    queueOnlineLeaveStatus("Opponent left. Back to lobby.");
-    controller.disconnectOnline();
-    setReconnectToken("");
-    setSpectatorMode(false);
-    currentRoomCode = undefined;
-    currentRoomId = undefined;
-    currentRoomPrivate = false;
-    onlineReadyIds = new Set();
-    onlineGameStarted = true;
-    updateRoomCode();
-    showLanding(networkEntry);
+    rematchRequestedByOpponent = false;
+    victoryInvite.classList.add("hidden");
+    victoryWaitEl?.classList.remove("hidden");
+    if (victoryWaitEl) victoryWaitEl.textContent = "Rematch declined. You can ask again.";
+    showNotice("Rematch declined. Stay for another challenge or return to the lobby.");
+  },
+  onRematchRequest: ({ name }) => {
+    if (!latestState?.winnerId || isSpectator) return;
+    rematchRequestedByOpponent = true;
+    victoryInviteName.textContent = `${name} wants another duel.`;
+    victoryInvite.classList.remove("hidden");
+    victoryRematchBtn!.textContent = "Accept Rematch";
+    victoryOverlay.classList.remove("hidden");
+    victoryAcceptBtn.focus();
+    sound.play("ready");
+  },
+  onSessionScore: (wins) => {
+    sessionWins = wins;
+    renderSessionScore();
   },
   onLeave: () => {
     if (currentMode !== "online") return;
@@ -850,6 +840,7 @@ const controller = new GameController({
     currentRoomCode = undefined;
     currentRoomId = undefined;
     currentRoomPrivate = false;
+    sessionWins = {};
     onlineReadyIds = new Set();
     onlineGameStarted = true;
     updateRoomCode();
@@ -1472,6 +1463,8 @@ function renderLobbyOverlay() {
     const canReady = Boolean(playerId) && !onlineGameStarted;
     lobbyReadyToggle.disabled = !canReady;
     lobbyReadyToggle.checked = playerId ? onlineReadyIds.has(playerId) : false;
+    const readyLabel = document.getElementById("lobby-ready-label");
+    if (readyLabel) readyLabel.textContent = lobbyReadyToggle.checked ? "Ready to Duel ✓" : "I'm Ready";
   }
 
   const readyAll = maxPlayers > 0 && readyCount >= maxPlayers;
@@ -2208,8 +2201,8 @@ function renderCards() {
   setNameClass(playerNameEl, viewPlayerId === primaryId ? "primary" : "secondary");
   setNameClass(opponentNameEl, opponentMeta?.id === primaryId ? "primary" : "secondary");
   if (canvasNameTop && canvasNameBottom) {
-    canvasNameTop.textContent = opponentName;
-    canvasNameBottom.textContent = playerName;
+    canvasNameTop.textContent = currentMode === "online" ? `${opponentName} · Rival pieces` : opponentName;
+    canvasNameBottom.textContent = currentMode === "online" ? `${playerName} · Your pieces` : playerName;
     setNameClass(canvasNameTop, opponentMeta?.id === primaryId ? "primary" : "secondary");
     setNameClass(canvasNameBottom, viewPlayerId === primaryId ? "primary" : "secondary");
   }
@@ -2786,14 +2779,38 @@ function describeVictory() {
   return "The opposing Master was captured.";
 }
 
+function renderSessionScore() {
+  const players = latestConfig?.players ?? [];
+  const visible = currentMode === "online" && players.length === 2;
+  matchSessionScore.classList.toggle("hidden", !visible);
+  victorySessionScore.classList.toggle("hidden", !visible);
+  if (!visible) return;
+  const you = controller.getPlayerId();
+  const ordered = [...players].sort((a, b) => Number(b.id === you) - Number(a.id === you));
+  const label = ordered.map((player) => `${player.id === you ? "You" : player.name}: ${sessionWins[player.id] ?? 0}`).join("  ·  ");
+  matchSessionScore.textContent = `Session wins  ·  ${label}`;
+  victorySessionScore.textContent = `Session wins  ·  ${label}`;
+}
+
 function showVictory(winnerName: string) {
-  victoryTitle.textContent = `${winnerName} Wins!`;
+  const isYourWin = currentMode === "online"
+    ? latestState?.winnerId === controller.getPlayerId()
+    : localGameType !== "ai" || latestState?.winnerId === latestConfig?.players[0]?.id;
+  victoryOverlay.dataset.outcome = isYourWin ? "win" : "rival";
+  victoryTitle.textContent = isYourWin && (currentMode === "online" || localGameType === "ai")
+    ? "You won the duel!"
+    : `${winnerName} wins this round.`;
   victorySubtitle.textContent = describeVictory();
   victorySummary.textContent = `${Math.max(1, (latestState?.turn ?? 2) - 1)} moves · ${currentMode === "local" && localGameType === "ai" ? `${aiDifficulty} computer` : currentMode === "online" ? "online match" : "local match"}`;
+  renderSessionScore();
   recordLocalResult();
   victoryOverlay.classList.toggle("spectator", isSpectator);
   if (victoryWaitEl) victoryWaitEl.classList.add("hidden");
-  if (victoryRematchBtn) victoryRematchBtn.disabled = false;
+  victoryInvite.classList.toggle("hidden", !rematchRequestedByOpponent);
+  if (victoryRematchBtn) {
+    victoryRematchBtn.disabled = false;
+    victoryRematchBtn.textContent = rematchRequestedByOpponent ? "Accept Rematch" : "Request Rematch";
+  }
   victoryOverlay.classList.remove("hidden");
   postMobileBridgeEvent({
     type: "sakura.match_finished",
@@ -2803,8 +2820,8 @@ function showVictory(winnerName: string) {
       winnerId: latestState?.winnerId
     }
   });
-  sound.play("modalOpen");
-  triggerConfetti();
+  sound.play(isYourWin ? "victory" : "modalOpen");
+  if (isYourWin) triggerConfetti();
 }
 
 function hideVictory() {
@@ -2814,6 +2831,7 @@ function hideVictory() {
 
 function setRematchPending(pending: boolean) {
   if (victoryWaitEl) victoryWaitEl.classList.toggle("hidden", !pending);
+  if (victoryWaitEl && pending) victoryWaitEl.textContent = "Waiting for your opponent to accept…";
   if (victoryRematchBtn) victoryRematchBtn.disabled = pending;
 }
 
@@ -2825,8 +2843,9 @@ function triggerConfetti() {
     document.body.appendChild(container);
   }
   container.innerHTML = "";
-  const colors = ["#f472b6", "#f97316", "#facc15", "#34d399", "#60a5fa"];
-  for (let i = 0; i < 80; i += 1) {
+  if (preferences.reducedMotion) return;
+  const colors = ["#f0d8ae", "#d85f7e", "#f4b94d", "#9acfb7"];
+  for (let i = 0; i < 48; i += 1) {
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
     const left = Math.random() * 100;
@@ -3471,8 +3490,18 @@ victoryRandomBtn.addEventListener("click", startRandomFive);
 victoryChooseBtn.addEventListener("click", openDraft);
 victoryRematchBtn?.addEventListener("click", () => {
   if (currentMode !== "online") return;
+  rematchRequestedByOpponent = false;
+  victoryInvite.classList.add("hidden");
   setRematchPending(true);
   controller.requestRematch();
+});
+victoryAcceptBtn.addEventListener("click", () => victoryRematchBtn?.click());
+victoryDeclineBtn.addEventListener("click", () => {
+  rematchRequestedByOpponent = false;
+  victoryInvite.classList.add("hidden");
+  victoryRematchBtn!.textContent = "Request Rematch";
+  controller.cancelRematch();
+  sound.play("modalClose");
 });
 victoryLobbyBtn?.addEventListener("click", () => {
   if (currentMode !== "online") return;

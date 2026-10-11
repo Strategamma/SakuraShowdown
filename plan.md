@@ -1,21 +1,20 @@
 # Goal
-Replace the loud gold/maroon board with a sleek Sakura dojo and make every piece read immediately as a human.
+Unify match dialogs and controls with the Decadence/Sakura style, and make LAN rivalry rewarding and reliable.
 
 # Scope
-- Retune the board, frame, stage, lighting, temples, and team materials.
-- Refine procedural proportions and visible anatomy for small dojo boys and an older Master.
-- Preserve rules, hit targets, ownership, animations, performance, and offline support.
+- Refresh result, exit, settings, lobby, and board controls.
+- Add per-room session wins, clear piece ownership, and a two-sided rematch invitation.
+- Use Expert move selection for hints and clarify the host/join entry point.
 
 # Approach
-- Use ink, warm ivory, smoked cedar, muted sakura, and indigo with brass reserved for small accents.
-- Reduce cone-token mass; expose legs, feet, necks, hands, ears, and faces with smoother geometry.
-- Make boys shorter and lighter, while the Master remains taller through posture and layered clothing rather than bulk.
+- Reuse the menu's amber/coral physical-button language in the match UI.
+- Keep score on the room server and broadcast it to both players after each win.
+- Keep both players in the result state until a rematch is accepted or they leave.
 
 # Risks
-- Small features must remain readable at phone scale.
-- Softer colors must not weaken red/blue ownership or legal-move feedback.
-- Added geometry must stay lightweight on mobile GPUs.
+- Win and rematch events may arrive in quick succession; score and prompts must remain synchronized.
+- Live parent-site logo cannot be assumed if the site certificate cannot be verified.
 
 # Verification
-- Check both orientations, ranks, team ownership, temples, selection/legal highlights, 2D/3D views, and mobile framing.
-- Run lint, tests, typechecks, production build/budgets, and the prescribed browser client.
+- Check two-client rematch invitation, decline, acceptance, and score persistence.
+- Run lint, tests, typechecks, production build, and responsive browser checks where available.

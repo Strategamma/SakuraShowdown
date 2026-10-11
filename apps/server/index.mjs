@@ -74,6 +74,7 @@ class GameRoom extends Room {
   gameStarted = false;
   readyByPlayer = new Set();
   rematchVotes = new Set();
+  sessionWins = new Map();
   roomCode = "";
   isPrivate = false;
   ownerId;
@@ -98,6 +99,7 @@ class GameRoom extends Room {
       ready: Array.from(this.readyByPlayer),
       started: this.gameStarted
     });
+    client.send("session_score", { wins: Object.fromEntries(this.sessionWins) });
   }
 
   updateMetadata() {
@@ -159,6 +161,11 @@ class GameRoom extends Room {
         if (!this.seatsLocked) this.seatsLocked = true;
         this.broadcast("state", this.stateData);
         if (this.stateData.winnerId) {
+          this.sessionWins.set(
+            this.stateData.winnerId,
+            (this.sessionWins.get(this.stateData.winnerId) ?? 0) + 1
+          );
+          this.broadcast("session_score", { wins: Object.fromEntries(this.sessionWins) });
           this.scheduleRematchTimeout();
         }
       } catch {
@@ -232,6 +239,7 @@ class GameRoom extends Room {
       if (!this.stateData.winnerId) return;
       const playerId = this.playerByClient.get(client.sessionId);
       if (!playerId) return;
+      if (this.rematchVotes.has(playerId)) return;
       this.rematchVotes.add(playerId);
       const name = this.config.players.find((p) => p.id === playerId)?.name ?? "Player";
       this.broadcast("rematch_pending", { playerId, name }, { except: client });
@@ -245,13 +253,10 @@ class GameRoom extends Room {
     });
 
     this.onMessage("rematch_cancel", (client) => {
+      if (!this.playerByClient.get(client.sessionId)) return;
       if (!this.rematchVotes.size) return;
       this.rematchVotes.clear();
-      this.broadcast("rematch_cancelled", { reason: "cancelled" }, { except: client });
-      if (this.stateData.winnerId) {
-        this.clearRematchTimer();
-        this.disconnect();
-      }
+      this.broadcast("rematch_cancelled", { reason: "declined" });
     });
 
     this.onMessage("ready", (client, payload) => {
@@ -461,7 +466,7 @@ class GameRoom extends Room {
       this.rematchVotes.clear();
       this.broadcast("rematch_cancelled", { reason: "timeout" });
       this.disconnect();
-    }, 120000);
+    }, 300000);
   }
 
   clearRematchTimer() {

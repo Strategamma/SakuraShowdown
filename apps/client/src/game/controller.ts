@@ -20,6 +20,8 @@ export type ControllerCallbacks = {
   onNotice?: (message: string) => void;
   onRematchStart?: () => void;
   onRematchCancel?: () => void;
+  onRematchRequest?: (payload: { playerId: string; name: string }) => void;
+  onSessionScore?: (wins: Record<string, number>) => void;
   onLeave?: (code?: number) => void;
   onReadyState?: (payload: { ready: string[]; started: boolean }) => void;
   onGameStart?: () => void;
@@ -147,6 +149,8 @@ export class GameController {
       onNotice: (message) => this.callbacks.onNotice?.(message),
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
+      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
@@ -211,6 +215,8 @@ export class GameController {
       onNotice: (message) => this.callbacks.onNotice?.(message),
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
+      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
@@ -275,6 +281,8 @@ export class GameController {
       onNotice: (message) => this.callbacks.onNotice?.(message),
       onRematchStart: () => this.callbacks.onRematchStart?.(),
       onRematchCancel: () => this.callbacks.onRematchCancel?.(),
+      onRematchRequest: (payload) => this.callbacks.onRematchRequest?.(payload),
+      onSessionScore: (wins) => this.callbacks.onSessionScore?.(wins),
       onLeave: (code) => this.callbacks.onLeave?.(code),
       onReconnectToken: (token) => this.callbacks.onReconnectToken?.(token),
       onReadyState: (payload) => {
